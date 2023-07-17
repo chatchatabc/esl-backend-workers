@@ -1,6 +1,6 @@
-import { Context, Hono } from "hono";
+import { Hono } from "hono";
 import { CommonEnv } from "../../domain/models/CommonModel";
-import auth from "./AuthController";
+import auth from "./authController";
 
 const rest = new Hono<CommonEnv>();
 

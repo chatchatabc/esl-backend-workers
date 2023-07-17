@@ -10,14 +10,6 @@ export async function userCreate(
   c: Context<CommonContext>,
   body: Record<string, any>
 ) {
-  // Removed unnecessary fields
-  body = {
-    username: body.username,
-    password: body.password,
-    phone: body.phone,
-    role: body.role,
-  };
-
   // Check if user exists
   let user = await userDbGetByUsername(c, body.username);
   if (user) {

@@ -2,7 +2,7 @@ import { Hono } from "hono";
 import { CommonEnv } from "../../domain/models/CommonModel";
 import auth from "./authController";
 
-const rest = new Hono<CommonEnv>();
+const rest = new Hono<{ Bindings: CommonEnv }>();
 
 rest.route("/auth", auth);
 

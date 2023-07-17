@@ -2,7 +2,7 @@ import { Hono } from "hono";
 import rest from "./application/rest";
 import { CommonEnv } from "./domain/models/CommonModel";
 
-const app = new Hono<CommonEnv>();
+const app = new Hono<{ Bindings: CommonEnv }>();
 
 app.route("/api", rest);
 

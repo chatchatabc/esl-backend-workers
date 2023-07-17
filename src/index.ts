@@ -6,6 +6,18 @@ const app = new Hono<{ Bindings: CommonEnv }>();
 
 app.route("/api", rest);
 
-app.all("*", (c) => c.text("Not Found", 404));
+app.all("*", (c) =>
+  c.json(
+    {
+      errors: [
+        {
+          title: "Not Found",
+          message: "The requested resource could not be found.",
+        },
+      ],
+    },
+    404
+  )
+);
 
 export default app;

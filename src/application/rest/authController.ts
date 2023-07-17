@@ -21,8 +21,18 @@ auth.post("/register", async (c) => {
   return userCreate(c, body);
 });
 
-auth.all("/", (c) => {
-  return c.text("Hello, Auth!");
+auth.all("*", (c) => {
+  return c.json(
+    {
+      errors: [
+        {
+          title: "Not Found",
+          message: "The requested resource could not be found.",
+        },
+      ],
+    },
+    404
+  );
 });
 
 export default auth;

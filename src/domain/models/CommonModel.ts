@@ -1,1 +1,3 @@
-export type CommonEnv = {};
+export type CommonEnv = {
+  DB: D1Database;
+};

@@ -1,3 +1,8 @@
 name = "esl-fetch-workers"
 main = "src/index.ts"
 compatibility_date = "2023-07-17"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "esl"
+database_id = "5ac1b98b-3ca6-4079-8064-44e00c6d7f92"

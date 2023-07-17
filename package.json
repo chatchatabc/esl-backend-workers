@@ -11,7 +11,9 @@
   "scripts": {
     "start": "wrangler dev",
     "deploy": "wrangler deploy",
-    "test": "vitest"
+    "test": "vitest",
+    "d1:local": "wrangler d1 execute DB --local --file=./schema.sql",
+    "d1:remote": "wrangler d1 execute DB --file=./schema.sql"
   },
   "dependencies": {
     "hono": "^3.3.1"

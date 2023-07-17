@@ -5,6 +5,7 @@ import {
   userDbGetByUsername,
   userDbInsert,
 } from "../repositories/userRepo";
+import { roleDbGet } from "../repositories/roleRepo";
 
 export async function userCreate(
   c: Context<CommonContext>,
@@ -20,6 +21,12 @@ export async function userCreate(
   user = await userDbGetByPhone(c, body.phone);
   if (user) {
     return c.json({ error: "Phone already exists." }, 400);
+  }
+
+  // Check if role exist
+  const role = await roleDbGet(c, body.role);
+  if (!role) {
+    return c.json({ error: "Role does not exist." }, 400);
   }
 
   // Insert user

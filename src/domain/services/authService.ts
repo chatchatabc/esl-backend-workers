@@ -1,4 +1,4 @@
-import { SHA256 } from "crypto-js";
+import CryptoJS, { SHA256 } from "crypto-js";
 import { Context } from "hono";
 import { CommonContext } from "../models/CommonModel";
 import {
@@ -10,6 +10,37 @@ import { honoFailedResponse } from "./honoService";
 import { roleDbGet } from "../repositories/roleRepo";
 
 const secret = "secret";
+
+export function authCreateToken(payload: Record<string, any>) {
+  payload.iat = new Date();
+  return CryptoJS.AES.encrypt(JSON.stringify(payload), secret).toString();
+}
+
+export function authDecodeToken(token: string) {
+  if (token.startsWith("Bearer ")) token = token.slice(7, token.length);
+
+  const bytes = CryptoJS.AES.decrypt(token, secret);
+  return JSON.parse(bytes.toString(CryptoJS.enc.Utf8));
+}
+
+export function authVerifyToken(token: string) {
+  try {
+    const decoded = authDecodeToken(token);
+    if (!decoded.iat) {
+      return null;
+    }
+
+    const iat = new Date(decoded.iat);
+    const now = new Date();
+    if (now.getTime() - iat.getTime() > 1000 * 60 * 60 * 24 * 1) {
+      return null;
+    }
+
+    return decoded;
+  } catch (e) {
+    return null;
+  }
+}
 
 export function authCreateHashPassword(password: string) {
   return SHA256(password + secret).toString();
@@ -28,8 +59,15 @@ export async function authLogin(
     return honoFailedResponse(c, "Invalid password.", 401);
   }
 
+  // Create JWT token
+  const token = authCreateToken({
+    id: user.id,
+  });
+
   delete user.password;
-  return c.json({ data: user }, 200);
+  return c.json({ data: user }, 200, {
+    "x-access-token": token,
+  });
 }
 
 export async function authRegister(

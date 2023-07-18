@@ -6,6 +6,7 @@ import {
   userDbInsert,
 } from "../repositories/userRepo";
 import { roleDbGet } from "../repositories/roleRepo";
+import { honoFailedResponse } from "./honoService";
 
 export async function userCreate(
   c: Context<CommonContext>,
@@ -14,25 +15,25 @@ export async function userCreate(
   // Check if user exists by username
   let user = await userDbGetByUsername(c, body.username);
   if (user) {
-    return c.json({ error: "Username already exists." }, 400);
+    return honoFailedResponse(c, "Username already exists.", 400);
   }
 
   // Check if user exists by phone
   user = await userDbGetByPhone(c, body.phone);
   if (user) {
-    return c.json({ error: "Phone already exists." }, 400);
+    return honoFailedResponse(c, "Phone already exists.", 400);
   }
 
   // Check if role exist
   const role = await roleDbGet(c, body.role);
   if (!role) {
-    return c.json({ error: "Role does not exist." }, 400);
+    return honoFailedResponse(c, "Role does not exist.", 400);
   }
 
   // Insert user
   const insert = await userDbInsert(c, body);
   if (!insert) {
-    return c.json({ error: "Failed to create user." }, 500);
+    return honoFailedResponse(c, "Failed to create user.", 500);
   }
 
   // Return user and remove password

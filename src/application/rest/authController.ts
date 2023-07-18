@@ -1,8 +1,7 @@
 import { Hono } from "hono";
 import { CommonContext } from "../../domain/models/CommonModel";
-import { userCreate } from "../../domain/services/userService";
 import { honoFailedResponse } from "../../domain/services/honoService";
-import { authLogin } from "../../domain/services/authService";
+import { authLogin, authRegister } from "../../domain/services/authService";
 
 const auth = new Hono<CommonContext>();
 
@@ -20,7 +19,7 @@ auth.post("/register", async (c) => {
     return honoFailedResponse(c, "Role is required.", 400);
   }
 
-  return userCreate(c, body);
+  return authRegister(c, body);
 });
 
 auth.post("/login", async (c) => {

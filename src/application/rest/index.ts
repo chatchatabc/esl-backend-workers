@@ -12,6 +12,7 @@ rest.use(
     origin: ["http://localhost:3000", "https://esl-react.pages.dev"],
     allowMethods: ["*"],
     allowHeaders: ["Content-Type", "Authorization"],
+    exposeHeaders: ["x-access-token"],
   })
 );
 

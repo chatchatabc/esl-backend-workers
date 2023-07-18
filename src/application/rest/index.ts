@@ -9,7 +9,7 @@ const rest = new Hono<{ Bindings: CommonEnv }>();
 rest.use(
   "*",
   cors({
-    origin: ["http://localhost:3000"],
+    origin: ["http://localhost:3000", "https://esl-react.pages.dev"],
     allowMethods: ["*"],
     allowHeaders: ["Content-Type", "Authorization"],
   })

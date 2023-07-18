@@ -2,6 +2,7 @@ import { Hono } from "hono";
 import { CommonContext } from "../../domain/models/CommonModel";
 import { userCreate } from "../../domain/services/userService";
 import { honoFailedResponse } from "../../domain/services/honoService";
+import { authLogin } from "../../domain/services/authService";
 
 const auth = new Hono<CommonContext>();
 
@@ -20,6 +21,19 @@ auth.post("/register", async (c) => {
   }
 
   return userCreate(c, body);
+});
+
+auth.post("/login", async (c) => {
+  let body = await c.req.json();
+
+  // Check if required fields are present
+  if (!body.username || body.username === "") {
+    return honoFailedResponse(c, "Username is required.", 400);
+  } else if (!body.password || body.password === "") {
+    return honoFailedResponse(c, "Password is required.", 400);
+  }
+
+  return await authLogin(c, body);
 });
 
 auth.all("*", (c) => {

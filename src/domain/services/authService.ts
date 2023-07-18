@@ -23,5 +23,6 @@ export async function authLogin(
     return honoFailedResponse(c, "Invalid password.", 401);
   }
 
+  delete user.password;
   return c.json({ data: user }, 200);
 }

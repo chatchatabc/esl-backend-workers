@@ -1,4 +1,8 @@
-import { UserRegister, UserRegisterInput } from "../models/UserModel";
+import {
+  UserLogin,
+  UserRegister,
+  UserRegisterInput,
+} from "../models/UserModel";
 import { Env } from "../..";
 import { userDbGetByUsername, userDbInsert } from "../repositories/userRepo";
 import {
@@ -77,5 +81,22 @@ export async function authRegister(input: UserRegisterInput, env: Env) {
   }
 
   user = await userDbGetByUsername(input, env);
+  if (!user) {
+    throw utilFailedResponse("Failed to register user", 400);
+  }
+
+  delete user.password;
+  return user;
+}
+
+export async function authLogin(params: UserLogin, env: Env) {
+  let user = await userDbGetByUsername(params, env);
+  if (!user) {
+    throw utilFailedResponse("Invalid username or password", 401);
+  } else if (user.password !== utilHashHmac256(params.password)) {
+    throw utilFailedResponse("Invalid username or password", 401);
+  }
+
+  delete user.password;
   return user;
 }

@@ -1,7 +1,8 @@
 import { trpcProcedure, trpcRouterCreate } from ".";
-import { UserRegisterInput } from "../../domain/models/UserModel";
+import { UserLogin, UserRegisterInput } from "../../domain/models/UserModel";
 import {
   authCreateJsonWebToken,
+  authLogin,
   authRegister,
 } from "../../domain/services/authService";
 import { utilFailedResponse } from "../../domain/services/utilService";
@@ -31,6 +32,26 @@ export default trpcRouterCreate({
         `token=${token}; Path=/; SameSite=None; Secure; HttpOnly`
       );
 
+      return user;
+    }),
+
+  login: trpcProcedure
+    .input((values: any = {}) => {
+      if (!values.username || !values.password) {
+        throw utilFailedResponse("Missing fields for login", 400);
+      }
+      return {
+        username: values.username as string,
+        password: values.password as string,
+      };
+    })
+    .mutation(async (opts) => {
+      const user = await authLogin(opts.input, opts.ctx.env);
+      const token = authCreateJsonWebToken(user.id);
+      opts.ctx.resHeaders.append(
+        "Set-Cookie",
+        `token=${token}; Path=/; SameSite=None; Secure; HttpOnly`
+      );
       return user;
     }),
 });

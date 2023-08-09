@@ -1,12 +1,48 @@
-import { Hono } from "hono";
-import rest from "./application/rest";
-import { CommonEnv } from "./domain/models/CommonModel";
-import { honoFailedResponse } from "./domain/services/honoService";
+import { fetchRequestHandler } from "@trpc/server/adapters/fetch";
+import { utilValidateOrigin } from "./domain/services/utilService";
+import trpcRouter, { trpcContext } from "./application/trpc";
 
-const app = new Hono<{ Bindings: CommonEnv }>();
+export type Env = {
+  DB: D1Database;
+  KV: KVNamespace;
+};
 
-app.route("/api", rest);
+export default {
+  async fetch(
+    request: Request,
+    env: Env,
+    ctx: ExecutionContext
+  ): Promise<Response> {
+    // Validate origin
+    const origin = request.headers.get("Origin") ?? "";
+    if (!utilValidateOrigin(origin)) {
+      return new Response("Invalid origin", { status: 403 });
+    }
 
-app.all("*", (c) => honoFailedResponse(c, "Route not found.", 404));
+    // Handle CORS preflight requests
+    if (request.method === "OPTIONS") {
+      return new Response(null, {
+        headers: {
+          "Content-Type": "application/json",
+          "Access-Control-Allow-Origin": origin,
+          "Access-Control-Allow-Methods": "*",
+          "Access-Control-Allow-Headers": "Content-Type",
+          "Access-Control-Allow-Credentials": "true",
+        },
+        status: 204,
+      });
+    }
 
-export default app;
+    const { pathname } = new URL(request.url);
+    if (pathname.startsWith("/trpc")) {
+      return fetchRequestHandler({
+        endpoint: "/trpc",
+        req: request,
+        router: trpcRouter,
+        createContext: (e) => trpcContext({ ...e, env, ctx }),
+      });
+    }
+
+    return new Response("Not found", { status: 404 });
+  },
+};

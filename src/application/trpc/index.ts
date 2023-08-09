@@ -2,6 +2,7 @@ import { inferAsyncReturnType, initTRPC } from "@trpc/server";
 import { Env } from "../..";
 import { utilFailedResponse } from "../../domain/services/utilService";
 import { authGetTokenPayload } from "../../domain/services/authService";
+import authRouter from "./authRouter";
 
 type Props = {
   req: Request;
@@ -61,6 +62,8 @@ export const trpcMiddlewareAdmin = trpc.middleware((opts) => {
 });
 
 // tRPC Main Router
-const trpcRouter = trpcRouterCreate({});
+const trpcRouter = trpcRouterCreate({
+  auth: authRouter,
+});
 export default trpcRouter;
 export type TrpcRouter = typeof trpcRouter;

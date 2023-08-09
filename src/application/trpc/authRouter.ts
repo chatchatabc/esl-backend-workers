@@ -1,5 +1,4 @@
-import { trpcProcedure, trpcRouterCreate } from ".";
-import { UserLogin, UserRegisterInput } from "../../domain/models/UserModel";
+import { trpcProcedure, trpcRouterCreate } from "../../domain/infra/trpc";
 import {
   authCreateJsonWebToken,
   authLogin,
@@ -18,7 +17,7 @@ export default trpcRouterCreate({
         username: values.username,
         password: values.password,
         confirmPassword: values.confirmPassword,
-      } as UserRegisterInput;
+      };
     })
     .mutation(async (opts) => {
       const user = await authRegister(opts.input, opts.ctx.env);

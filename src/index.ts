@@ -1,6 +1,7 @@
 import { fetchRequestHandler } from "@trpc/server/adapters/fetch";
 import { utilValidateOrigin } from "./domain/services/utilService";
-import trpcRouter, { trpcContext } from "./application/trpc";
+import trpcRouter from "./application/trpc";
+import { trpcContext } from "./domain/infra/trpc";
 
 export type Env = {
   DB: D1Database;

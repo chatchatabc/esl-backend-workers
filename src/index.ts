@@ -33,6 +33,7 @@ export default {
       });
     }
 
+    // Handle tRPC requests
     const { pathname } = new URL(request.url);
     if (pathname.startsWith("/trpc")) {
       return fetchRequestHandler({
@@ -43,6 +44,7 @@ export default {
       });
     }
 
+    // Handle unknown requests
     return new Response("Not found", { status: 404 });
   },
 };

@@ -1,6 +1,7 @@
 import { inferAsyncReturnType, initTRPC } from "@trpc/server";
 import { Env } from "../..";
 import { utilFailedResponse } from "../../domain/services/utilService";
+import { authGetTokenPayload } from "../../domain/services/authService";
 
 type Props = {
   req: Request;
@@ -21,7 +22,7 @@ export function trpcContext({ resHeaders, req, ...props }: Props) {
   const token = tokenCookie?.split("=")[1] ?? "";
 
   // Get userID from token
-  // const userId = authGetTokenPayload(token);
+  const userId = authGetTokenPayload(token);
 
   // Set CORS headers if origin is valid
   resHeaders.append("Access-Control-Allow-Origin", origin);

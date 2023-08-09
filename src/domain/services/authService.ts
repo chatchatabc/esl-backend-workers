@@ -1,105 +1,81 @@
-import CryptoJS, { SHA256 } from "crypto-js";
-import { Context } from "hono";
-import { CommonContext } from "../models/CommonModel";
+import { UserRegister, UserRegisterInput } from "../models/UserModel";
+import { Env } from "../..";
+import { userDbGetByUsername, userDbInsert } from "../repositories/userRepo";
 import {
-  userDbGetByPhone,
-  userDbGetByUsername,
-  userDbInsert,
-} from "../repositories/userRepo";
-import { honoFailedResponse } from "./honoService";
-import { roleDbGet } from "../repositories/roleRepo";
+  utilDecodeBase64,
+  utilEncodeBase64,
+  utilFailedResponse,
+  utilHashHmac256,
+} from "./utilService";
 
-const secret = "secret";
+const jwtHeader = JSON.stringify({ alg: "HS256", typ: "JWT" });
+const base64Header = utilEncodeBase64(jwtHeader);
 
-export function authCreateToken(payload: Record<string, any>) {
-  payload.iat = new Date();
-  return CryptoJS.AES.encrypt(JSON.stringify(payload), secret).toString();
+export function authCreateJsonWebToken(id: number) {
+  const iat = Math.floor(Date.now() / 1000);
+  const exp = iat + 60 * 60 * 24 * 7; // 7 days
+
+  const jwtPayload = JSON.stringify({ exp, id });
+  const base64Payload = utilEncodeBase64(jwtPayload);
+  const signature = utilHashHmac256(`${base64Header}.${base64Payload}`);
+
+  return `${base64Header}.${base64Payload}.${signature}`;
 }
 
-export function authDecodeToken(token: string) {
-  if (token.startsWith("Bearer ")) token = token.slice(7, token.length);
-
-  const bytes = CryptoJS.AES.decrypt(token, secret);
-  return JSON.parse(bytes.toString(CryptoJS.enc.Utf8));
-}
-
-export function authVerifyToken(token: string) {
-  try {
-    const decoded = authDecodeToken(token);
-    if (!decoded.iat) {
-      return null;
-    }
-
-    const iat = new Date(decoded.iat);
-    const now = new Date();
-    if (now.getTime() - iat.getTime() > 1000 * 60 * 60 * 24 * 1) {
-      return null;
-    }
-
-    return decoded;
-  } catch (e) {
-    return null;
-  }
-}
-
-export function authCreateHashPassword(password: string) {
-  return SHA256(password + secret).toString();
-}
-
-export async function authLogin(
-  c: Context<CommonContext>,
-  body: Record<string, any>
-) {
-  let user = await userDbGetByUsername(c, body.username);
-  if (!user) {
-    return honoFailedResponse(c, "User not found.", 404);
+export function authValidateToken(token: string) {
+  const [header, payload, signature] = token.split(".");
+  if (!header || !payload || !signature) {
+    return false;
   }
 
-  if (user.password !== authCreateHashPassword(body.password)) {
-    return honoFailedResponse(c, "Invalid password.", 401);
+  const authSignature = utilHashHmac256(`${header}.${payload}`).toString();
+  if (signature !== authSignature) {
+    return false;
   }
 
-  // Create JWT token
-  const token = authCreateToken({
-    id: user.id,
-  });
-
-  delete user.password;
-  return c.json({ data: user }, 200, {
-    "x-access-token": token,
-  });
+  return true;
 }
 
-export async function authRegister(
-  c: Context<CommonContext>,
-  body: Record<string, any>
-) {
-  // Check if user exists by username
-  let user = await userDbGetByUsername(c, body.username);
+export function authGetTokenPayload(token: string) {
+  if (token.startsWith("Bearer ")) {
+    token = token.slice("bearer ".length);
+  }
+
+  if (!authValidateToken(token)) {
+    return undefined;
+  }
+
+  const payload = utilDecodeBase64(token.split(".")[1]);
+  const data = JSON.parse(payload) as { id: number; exp: number };
+
+  if (data.exp < Date.now() / 1000) {
+    return undefined;
+  }
+
+  return data.id;
+}
+
+export async function authRegister(input: UserRegisterInput, env: Env) {
+  let user = await userDbGetByUsername(input, env);
   if (user) {
-    return honoFailedResponse(c, "Username already exists.", 400);
+    throw utilFailedResponse("User already exists", 400);
   }
 
-  // Check if user exists by phone
-  user = await userDbGetByPhone(c, body.phone);
-  if (user) {
-    return honoFailedResponse(c, "Phone already exists.", 400);
+  // Create user registration
+  const password = utilHashHmac256(input.password).toString();
+  const register: UserRegister = {
+    ...input,
+    password,
+    roleId: 2,
+    credit: 0,
+  };
+
+  // Insert user registration
+  const query = await userDbInsert(register, env);
+  if (!query) {
+    throw utilFailedResponse("Failed to register user", 400);
   }
 
-  // Check if role exist
-  const role = await roleDbGet(c, body.role);
-  if (!role) {
-    return honoFailedResponse(c, "Role does not exist.", 400);
-  }
-
-  // Insert user
-  const insert = await userDbInsert(c, body);
-  if (!insert) {
-    return honoFailedResponse(c, "Failed to create user.", 500);
-  }
-
-  // Return user and remove password
-  user = await userDbGetByUsername(c, body.username);
-  delete user?.password;
-  return c.json({ data: user });
+  user = await userDbGetByUsername(input, env);
+  return user;
 }

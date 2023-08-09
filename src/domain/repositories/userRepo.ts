@@ -1,56 +1,33 @@
-import { Context } from "hono";
-import { CommonContext } from "../models/CommonModel";
-import { User } from "../models/UserModel";
-import { authCreateHashPassword } from "../services/authService";
+import { Env } from "../..";
+import { User, UserRegister } from "../models/UserModel";
 
-export async function userDbInsert(
-  c: Context<CommonContext>,
-  body: Record<string, any>
+export async function userDbGetByUsername(
+  params: { username: string },
+  env: Env
 ) {
-  const { username, password, phone, role } = body;
-  const date = new Date();
+  const { username } = params;
 
+  const results = (await env.DB.prepare(
+    "SELECT * FROM users WHERE username = ?"
+  )
+    .bind(username)
+    .first()) as User | null;
+
+  return results;
+}
+
+export async function userDbInsert(body: UserRegister, env: Env) {
+  const { username, password, roleId, credit } = body;
+  const date = Date.now();
   try {
-    const results = await c.env.DB.prepare(
-      "INSERT INTO users (username, password, phone, createdAt, updatedAt, role) VALUES (?, ?, ?, ?, ?, ?)"
+    await env.DB.prepare(
+      "INSERT INTO users (username, password, createdAt, updatedAt, roleId, credit) VALUES (?, ?, ?, ?, ?, ?)"
     )
-      .bind(
-        username,
-        authCreateHashPassword(password),
-        phone,
-        date.toISOString(),
-        date.toISOString(),
-        role
-      )
-      .run<User>();
-
+      .bind(username, password, date, date, roleId, credit)
+      .run();
     return true;
   } catch (e) {
     console.log(e);
     return false;
   }
-}
-
-export async function userDbGetByUsername(
-  c: Context<CommonContext>,
-  value: string
-) {
-  const results = (await c.env.DB.prepare(
-    "SELECT * FROM users WHERE username = ?"
-  )
-    .bind(value)
-    .first()) as User | null;
-
-  return results;
-}
-
-export async function userDbGetByPhone(
-  c: Context<CommonContext>,
-  value: string
-) {
-  const results = (await c.env.DB.prepare("SELECT * FROM users WHERE phone = ?")
-    .bind(value)
-    .first()) as User | null;
-
-  return results;
 }

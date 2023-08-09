@@ -1,8 +1,15 @@
-name = "esl-fetch-workers"
+name = "esl-trpc"
 main = "src/index.ts"
-compatibility_date = "2023-07-17"
+compatibility_date = "2023-07-18"
+
+kv_namespaces = [
+  { binding = "KV", id = "0a083bd1f2e846c98605e26ba56f3e97", preview_id = "504101e8d62b435697d8a445d102925d" },
+]
 
 [[d1_databases]]
 binding = "DB"
 database_name = "esl"
 database_id = "5ac1b98b-3ca6-4079-8064-44e00c6d7f92"
+
+[triggers]
+crons = ["20,50 * * * *", "*/30 * * * *"]

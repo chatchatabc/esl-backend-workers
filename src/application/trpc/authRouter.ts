@@ -1,4 +1,8 @@
-import { trpcProcedure, trpcRouterCreate } from "../../domain/infra/trpc";
+import {
+  trpcMiddlewareUser,
+  trpcProcedure,
+  trpcRouterCreate,
+} from "../../domain/infra/trpc";
 import {
   authCreateJsonWebToken,
   authLogin,
@@ -53,4 +57,12 @@ export default trpcRouterCreate({
       );
       return user;
     }),
+
+  logout: trpcProcedure.mutation((opts) => {
+    opts.ctx.resHeaders.append(
+      "Set-Cookie",
+      `token=; Path=/; SameSite=None; Secure; HttpOnly; Max-Age=0`
+    );
+    return true;
+  }),
 });

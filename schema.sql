@@ -94,8 +94,8 @@ CREATE TABLE IF NOT EXISTS logsCredit (id INTEGER PRIMARY KEY, title TEXT, sende
 * createdAt (timestamp)
 * updatedAt (timestamp)
 */
-DROP TABLE IF EXISTS messageSchedules;
-CREATE TABLE IF NOT EXISTS messageSchedules (id INTEGER PRIMARY KEY, title TEXT NOT NULL, senderId INTEGER NOT NULL, receiverId INTEGER NOT NULL, message TEXT NOT NULL, cron TEXT NOT NULL, sendAt INTEGER, status INTEGER NOT NULL, createdAt INTEGER NOT NULL, updatedAt INTEGER NOT NULL);
+DROP TABLE IF EXISTS messages;
+CREATE TABLE IF NOT EXISTS messages (id INTEGER PRIMARY KEY, title TEXT NOT NULL, senderId INTEGER NOT NULL, receiverId INTEGER NOT NULL, message TEXT NOT NULL, cron TEXT NOT NULL, sendAt INTEGER, status INTEGER NOT NULL, createdAt INTEGER NOT NULL, updatedAt INTEGER NOT NULL);
 
 /**
 * id (integer)

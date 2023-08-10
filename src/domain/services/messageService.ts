@@ -1,3 +1,8 @@
+import { Env } from "../..";
+import { MessageCreate } from "../models/MessageModel";
+import { messageDbCreate } from "../repositories/messageRepo";
+import { utilFailedResponse } from "./utilService";
+
 const baseUrl = "https://smsv2.market.alicloudapi.com/sms/sendv2";
 
 /**
@@ -28,4 +33,13 @@ export async function messageSend(params: { content: string; mobile: string }) {
     console.log(e);
     return null;
   }
+}
+
+export async function messageCreate(params: MessageCreate, env: Env) {
+  const query = messageDbCreate(params, env);
+  if (!query) {
+    throw utilFailedResponse("Unable to save message", 500);
+  }
+
+  return true;
 }

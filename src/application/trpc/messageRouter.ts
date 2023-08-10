@@ -13,7 +13,7 @@ export default trpcRouterCreate({
       ) {
         throw utilFailedResponse("Missing input fields", 400);
       } else if (values.sendAt && values.sendAt % (10 * 60 * 1000) !== 0) {
-        throw utilFailedResponse("Invalid sendAt", 400);
+        throw utilFailedResponse("Invalid schedule to send message", 400);
       }
 
       return {

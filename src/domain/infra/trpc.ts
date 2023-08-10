@@ -22,7 +22,12 @@ export function trpcContext({ resHeaders, req, ...props }: Props) {
   const token = tokenCookie?.trim()?.slice(6);
 
   // Get userID from token
-  const userId = authGetTokenPayload(token ?? "");
+  const userId = authGetTokenPayload(token ?? "") ?? 0;
+
+  // Clear cookie if token is invalid
+  if (!userId && token) {
+    resHeaders.append("Set-Cookie", "token=; Max-Age=0");
+  }
 
   // Set CORS headers if origin is valid
   resHeaders.append("Access-Control-Allow-Origin", origin);
@@ -47,7 +52,7 @@ export const trpcProcedure = trpc.procedure;
 // tRPC procedure with user middleware
 export const trpcProcedureUser = trpcProcedure.use(
   trpc.middleware((opts) => {
-    if (!opts.ctx.userId) {
+    if (opts.ctx.userId === 0) {
       throw utilFailedResponse("Invalid Token", 403);
     }
     return opts.next(opts);

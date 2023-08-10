@@ -1,4 +1,5 @@
 import { Env } from "../..";
+import { CommonPagination } from "../models/CommonModel";
 import { User, UserRegister } from "../models/UserModel";
 
 export async function userDbGetByUsername(
@@ -44,6 +45,31 @@ export async function userDbGet(params: { userId: number }, env: Env) {
   } catch (e) {
     console.log(e);
     return null;
+  }
+}
+
+export async function userDbGetAll(params: CommonPagination, env: Env) {
+  const { page, size } = params;
+  try {
+    const users = await env.DB.prepare("SELECT * FROM users LIMIT ? OFFSET ?")
+      .bind(size, (page - 1) * size)
+      .all<User>();
+
+    return users;
+  } catch (e) {
+    console.log(e);
+    return undefined;
+  }
+}
+
+export async function userDbGetAllTotal(env: Env) {
+  try {
+    const stmt = env.DB.prepare("SELECT COUNT(*) AS total FROM messages");
+    const total = await stmt.first("total");
+    return Number(total);
+  } catch (e) {
+    console.log(e);
+    return undefined;
   }
 }
 

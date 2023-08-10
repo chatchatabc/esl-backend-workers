@@ -1,5 +1,9 @@
 import { trpcProcedureAdmin, trpcRouterCreate } from "../../domain/infra/trpc";
 import {
+  MessageCreateInput,
+  MessageSendInput,
+} from "../../domain/models/MessageModel";
+import {
   messageCreate,
   messageGetAll,
   messageSend,
@@ -26,13 +30,7 @@ export default trpcRouterCreate({
         title: values.title,
         cron: values.cron,
         sendAt: values.sendAt,
-      } as {
-        message: string;
-        receiverId: number;
-        title: string;
-        cron: string;
-        sendAt?: number;
-      };
+      } as MessageCreateInput;
     })
     .mutation((opts) => {
       const { userId, env } = opts.ctx;
@@ -69,11 +67,7 @@ export default trpcRouterCreate({
         receiverId: values.receiverId,
         title: values.title,
         message: values.message,
-      } as {
-        receiverId: number;
-        title: string;
-        message: string;
-      };
+      } as MessageSendInput;
     })
     .mutation((opts) => {
       const { userId, env } = opts.ctx;

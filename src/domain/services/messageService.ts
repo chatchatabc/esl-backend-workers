@@ -28,8 +28,8 @@ export async function messageGetAll(
   }
 
   const total = await messageDbGetAllTotal(env);
-  if (!total) {
-    throw utilFailedResponse("Unable to get messages", 500);
+  if (!total && total !== 0) {
+    throw utilFailedResponse("Unable to get total messages", 500);
   }
 
   return {

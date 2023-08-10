@@ -38,9 +38,7 @@ export function authValidateToken(token: string) {
   if (!header || !payload || !signature) {
     return false;
   }
-  console.log(header, payload, signature);
   const authSignature = utilHashHmac256(`${header}.${payload}`).toString();
-  console.log(authSignature, signature);
   if (signature !== authSignature) {
     return false;
   }

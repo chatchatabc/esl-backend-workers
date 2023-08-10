@@ -64,17 +64,15 @@ export async function scheduleDbValidateBooking(
   env: Env
 ) {
   const { start, end, teacherId } = booking;
-  const day = new Date(start).getDay();
+  const diff = end - start;
+  const startTime = utilGetTimestampTimeOnly(start);
+  const endTime = startTime + diff;
+  const day = new Date(start).getUTCDay();
 
   try {
     const stmt = env.DB.prepare(
       "SELECT COUNT(*) AS total FROM schedules WHERE teacherId = ? AND startTime <= ? AND endTime >= ? AND day = ?"
-    ).bind(
-      teacherId,
-      utilGetTimestampTimeOnly(start),
-      utilGetTimestampTimeOnly(end),
-      day
-    );
+    ).bind(teacherId, startTime, endTime, day);
     const total = await stmt.first("total");
     if (total === 0) {
       return false;

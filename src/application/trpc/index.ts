@@ -5,6 +5,7 @@ import logsRouter from "./logsRouter";
 import userRouter from "./userRouter";
 import scheduleRouter from "./scheduleRouter";
 import teacherRouter from "./teacherRouter";
+import messageRouter from "./messageRouter";
 
 // tRPC Main Router
 const trpcRouter = trpcRouterCreate({
@@ -14,6 +15,7 @@ const trpcRouter = trpcRouterCreate({
   schedule: scheduleRouter,
   user: userRouter,
   teacher: teacherRouter,
+  message: messageRouter,
 });
 
 export default trpcRouter;

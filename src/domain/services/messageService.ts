@@ -20,8 +20,6 @@ export async function messageSend(params: { content: string; mobile: string }) {
   const url = new URL(baseUrl);
   url.search = new URLSearchParams(params).toString();
 
-  console.log(url.toString());
-
   try {
     const response = await fetch(url, request);
     const data = await response.json();

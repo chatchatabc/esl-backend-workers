@@ -106,5 +106,5 @@ CREATE TABLE IF NOT EXISTS messageSchedules (id INTEGER PRIMARY KEY, title TEXT 
 * updatedAt (timestamp)
 */
 DROP TABLE IF EXISTS messageTemplates;
-CREATE TABLE IF NOT EXISTS messageTemplates (id INTEGER PRIMARY KEY, title TEXT, senderId INTEGER NOT NULL, receiverId INTEGER NOT NULL, amount INTEGER NOT NULL, status INTEGER NOT NULL, createdAt INTEGER NOT NULL, updatedAt INTEGER NOT NULL);
-
+CREATE TABLE IF NOT EXISTS messageTemplates (id INTEGER PRIMARY KEY, title TEXT NOT NULL, message TEXT NOT NULL, status INTEGER NOT NULL, createdAt INTEGER NOT NULL, updatedAt INTEGER NOT NULL);
+INSERT INTO messageTemplates (title, message, status, createdAt, updatedAt) VALUES ('Phone Verification', '【恰恰英语】您的手机验证码是#code#，有效期仅5分钟。', 1, 0, 0);

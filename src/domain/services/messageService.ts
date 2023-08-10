@@ -1,6 +1,10 @@
 import { Env } from "../..";
-import { MessageCreate } from "../models/MessageModel";
-import { messageDbCreate } from "../repositories/messageRepo";
+import { Message, MessageCreate } from "../models/MessageModel";
+import {
+  messageDbCreate,
+  messageDbGetAll,
+  messageDbGetAllTotal,
+} from "../repositories/messageRepo";
 import { utilFailedResponse } from "./utilService";
 
 const baseUrl = "https://smsv2.market.alicloudapi.com/sms/sendv2";
@@ -42,4 +46,25 @@ export async function messageCreate(params: MessageCreate, env: Env) {
   }
 
   return true;
+}
+
+export async function messageGetAll(
+  params: { page: number; size: number },
+  env: Env
+) {
+  const query = await messageDbGetAll(params, env);
+  if (!query) {
+    throw utilFailedResponse("Unable to get messages", 500);
+  }
+
+  const total = await messageDbGetAllTotal(env);
+  if (!total) {
+    throw utilFailedResponse("Unable to get messages", 500);
+  }
+
+  return {
+    ...params,
+    content: query.results as Message[],
+    total,
+  };
 }

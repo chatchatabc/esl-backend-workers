@@ -1,5 +1,5 @@
 import { Env } from "../..";
-import { MessageCreate } from "../models/MessageModel";
+import { Message, MessageCreate } from "../models/MessageModel";
 
 export async function messageDbCreate(params: MessageCreate, env: Env) {
   try {
@@ -31,5 +31,33 @@ export async function messageDbCreate(params: MessageCreate, env: Env) {
   } catch (e) {
     console.log(e);
     return false;
+  }
+}
+
+export async function messageDbGetAll(
+  params: { page: number; size: number },
+  env: Env
+) {
+  const { page, size } = params;
+  try {
+    const stmt = env.DB.prepare(
+      "SELECT * FROM messages ORDER BY updatedAt DESC LIMIT ? OFFSET ?"
+    ).bind(size, (page - 1) * size);
+    const results = await stmt.all<Message>();
+    return results;
+  } catch (e) {
+    console.log(e);
+    return undefined;
+  }
+}
+
+export async function messageDbGetAllTotal(env: Env) {
+  try {
+    const stmt = env.DB.prepare("SELECT COUNT(*) AS total FROM messages");
+    const total = await stmt.first("total");
+    return total;
+  } catch (e) {
+    console.log(e);
+    return undefined;
   }
 }

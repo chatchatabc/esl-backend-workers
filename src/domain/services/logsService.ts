@@ -9,6 +9,7 @@ import {
   logsDbUpdateCredit,
 } from "../repositories/logsRepo";
 import { Env } from "../..";
+import { LogsCredit } from "../models/LogsModel";
 
 export async function logsGetAllCredit(
   params: { userId: number; page: number; size: number },
@@ -26,7 +27,7 @@ export async function logsGetAllCredit(
   }
 
   return {
-    content: logs.results,
+    content: logs.results as LogsCredit[],
     page,
     size,
     totalElements,

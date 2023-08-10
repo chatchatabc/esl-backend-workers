@@ -1,5 +1,5 @@
 import { Env } from "../..";
-import { BookingCreate } from "../models/BookingModel";
+import { Booking, BookingCreate } from "../models/BookingModel";
 import { LogsCreditCreate } from "../models/LogsModel";
 import {
   bookingDbCancel,
@@ -97,7 +97,7 @@ export async function bookingGetAllByUser(
   }
 
   return {
-    content: bookings.results,
+    content: bookings.results as Booking[],
     totalElements,
     page,
     size,

@@ -1,10 +1,12 @@
 import { Env } from "../..";
-import { Message, MessageCreate } from "../models/MessageModel";
+import { smsSend } from "../infra/sms";
+import { Message, MessageCreate, MessageSend } from "../models/MessageModel";
 import {
   messageDbCreate,
   messageDbGetAll,
   messageDbGetAllTotal,
 } from "../repositories/messageRepo";
+import { userGet } from "./userService";
 import { utilFailedResponse } from "./utilService";
 
 export async function messageCreate(params: MessageCreate, env: Env) {
@@ -35,4 +37,32 @@ export async function messageGetAll(
     content: query.results as Message[],
     total,
   };
+}
+
+export async function messageSend(params: MessageSend, env: Env) {
+  const receiver = await userGet({ userId: params.receiverId }, env);
+  if (!receiver) {
+    throw utilFailedResponse("Unable to get the receiver information", 500);
+  }
+
+  const sms = await smsSend({
+    mobile: receiver.phone ?? "",
+    content: params.message,
+  });
+  if (!sms) {
+    throw utilFailedResponse("Unable to send the message", 500);
+  }
+
+  const message: MessageCreate = {
+    ...params,
+    sendAt: Date.now(),
+    status: 2,
+    cron: "0 0 1 1 1",
+  };
+  const query = messageDbCreate(message, env);
+  if (!query) {
+    throw utilFailedResponse("Unable save the message", 500);
+  }
+
+  return true;
 }

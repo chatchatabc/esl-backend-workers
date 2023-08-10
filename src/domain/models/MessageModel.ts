@@ -5,12 +5,15 @@ export type Message = {
 } & MessageCreate;
 
 export type MessageCreate = {
-  senderId: number;
-  receiverId: number;
   status: number;
   sendAt?: number | null;
 
   cron: string;
+} & MessageSend;
+
+export type MessageSend = {
+  senderId: number;
+  receiverId: number;
   title: string;
   message: string;
 };

@@ -2,6 +2,7 @@ import { trpcProcedureAdmin, trpcRouterCreate } from "../../domain/infra/trpc";
 import {
   messageCreate,
   messageGetAll,
+  messageSend,
 } from "../../domain/services/messageService";
 import { utilFailedResponse } from "../../domain/services/utilService";
 
@@ -56,5 +57,30 @@ export default trpcRouterCreate({
     .query((opts) => {
       const { page = 1, size = 10 } = opts.input;
       return messageGetAll({ page, size }, opts.ctx.env);
+    }),
+
+  send: trpcProcedureAdmin
+    .input((values: any = {}) => {
+      if (!values.receiverId || !values.title || !values.message) {
+        throw utilFailedResponse("Missing input fields", 400);
+      }
+
+      return {
+        receiverId: values.receiverId,
+        title: values.title,
+        message: values.message,
+      } as {
+        receiverId: number;
+        title: string;
+        message: string;
+      };
+    })
+    .mutation((opts) => {
+      const { userId, env } = opts.ctx;
+      const data = {
+        ...opts.input,
+        senderId: userId,
+      };
+      return messageSend(data, env);
     }),
 });

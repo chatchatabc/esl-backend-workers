@@ -30,7 +30,11 @@ export function utilFailedResponse(message: string, status: number = 500) {
 }
 
 export function utilValidateOrigin(origin: string) {
-  const allowedOrigins = ["https://esl-cca.pages.dev", "http://localhost:3000"];
+  const allowedOrigins = [
+    "https://esl-cca.pages.dev",
+    "http://localhost:3000",
+    "https://esl-admin.pages.dev",
+  ];
   return allowedOrigins.includes(origin);
 }
 

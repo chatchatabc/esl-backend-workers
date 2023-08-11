@@ -52,12 +52,12 @@ export default {
     // Handle unknown requests
     return new Response("Not found", { status: 404 });
   },
-  async scheduler(event: ScheduledEvent, env: Env, ctx: ExecutionContext) {
+  async scheduled(event: ScheduledEvent, env: Env, ctx: ExecutionContext) {
     if (event.cron === "*/10 * * * *") {
       const date = new Date();
       date.setSeconds(0, 0);
 
-      ctx.waitUntil(cronSendScheduledMessages(env));
+      ctx.waitUntil(cronSendScheduledMessages(date.getTime(), env));
       ctx.waitUntil(cronSendCronMessages(date.getTime(), env));
     }
   },

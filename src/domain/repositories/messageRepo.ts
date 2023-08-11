@@ -58,7 +58,7 @@ export async function messageDbGetAllByDate(
   const { start, end } = params;
   try {
     const stmt = env.DB.prepare(
-      "SELECT * FROM messages ORDER BY updatedAt DESC WHERE sendAt >= ? AND sendAt <= ?"
+      "SELECT * FROM messages WHERE sendAt >= ? AND sendAt <= ?"
     ).bind(start, end);
     const results = await stmt.all<Message>();
     return results;
@@ -70,9 +70,7 @@ export async function messageDbGetAllByDate(
 
 export async function messageDbGetAllWithCron(env: Env) {
   try {
-    const stmt = env.DB.prepare(
-      "SELECT * FROM messages ORDER BY updatedAt DESC WHERE sendAt is NULL"
-    );
+    const stmt = env.DB.prepare("SELECT * FROM messages WHERE sendAt is NULL");
     const results = await stmt.all<Message>();
     return results;
   } catch (e) {

@@ -5,9 +5,9 @@ import {
   bookingDbGetAllByDateStart,
   bookingDbUpdateMany,
 } from "../repositories/bookingRepo";
-import { userDbGet } from "../repositories/userRepo";
 import { messageGetAllByDate, messageGetAllWithCron } from "./messageService";
 import cron from "cron-parser";
+import { userGet } from "./userService";
 
 export async function cronRemindClass(env: Env) {
   const start = Date.now();
@@ -30,8 +30,8 @@ export async function cronRemindClass(env: Env) {
 
   for (const booking of bookings) {
     const userId = booking.studentId ?? 0;
-    const student = await userDbGet({ userId }, env);
-    const teacher = await userDbGet({ userId: booking.teacherId }, env);
+    const student = await userGet({ userId }, env);
+    const teacher = await userGet({ userId: booking.teacherId }, env);
 
     if (!userIds.includes(userId) && student && teacher && student.phone) {
       const startTime = dateFormatter.format(new Date(booking.start));
@@ -57,22 +57,23 @@ export async function cronRemindClass(env: Env) {
  * @param env { Env }
  * @returns { boolean }
  */
-export async function cronSendScheduledMessages(env: Env) {
-  const start = Date.now() - 1 * 60 * 1000;
-  const end = start + 2 * 60 * 1000;
+export async function cronSendScheduledMessages(timestamp: number, env: Env) {
+  const start = timestamp - 1 * 60 * 1000;
+  const end = timestamp + 1 * 60 * 1000;
   const messages = await messageGetAllByDate({ start, end }, env);
   if (!messages) {
     throw new Error("Failed to get messages");
   }
 
   for (const message of messages) {
-    const receiver = await userDbGet({ userId: message.receiverId }, env);
+    const receiver = await userGet({ userId: message.receiverId }, env);
     if (receiver && receiver.phone) {
       // await smsSend({
       //   content: message.message,
       //   mobile: receiver.phone!,
       // });
-      env.KV.put("scheduledMessage", message.message);
+      await env.KV.put("scheduledMessage", message.message);
+      console.log("Scheduled message sent: ", message.message);
     }
   }
 
@@ -91,18 +92,21 @@ export async function cronSendCronMessages(timestamp: number, env: Env) {
     throw new Error("Failed to get messages");
   }
 
+  console.log("Cron Messages: ", messages);
+
   for (const message of messages) {
     const parsedCron = cron.parseExpression(message.cron);
     const next = parsedCron.next().toDate().getTime();
 
     if (next === timestamp) {
-      const receiver = await userDbGet({ userId: message.receiverId }, env);
+      const receiver = await userGet({ userId: message.receiverId }, env);
       if (receiver && receiver.phone) {
         // await smsSend({
         //   content: message.message,
         //   mobile: receiver.phone!,
         // });
-        env.KV.put("cronMessage", message.message);
+        await env.KV.put("cronMessage", message.message);
+        console.log("Cron message sent: ", message.message);
       }
     }
   }

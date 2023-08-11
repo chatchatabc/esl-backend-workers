@@ -12,25 +12,13 @@ export type Message = {
   cron: string;
 };
 
-export type MessageCreate = {
-  status: number;
-  senderId: number;
-} & MessageCreateInput;
+export type MessageCreate = Omit<Message, "id" | "createdAt" | "updatedAt">;
 
-export type MessageCreateInput = {
-  receiverId: number;
-  sendAt?: number;
-  title: string;
-  message: string;
-  cron: string;
-};
+export type MessageCreateInput = Omit<MessageCreate, "status" | "senderId">;
 
-export type MessageSend = {
-  senderId: number;
-} & MessageSendInput;
+export type MessageSend = Pick<
+  Message,
+  "senderId" | "receiverId" | "title" | "message"
+>;
 
-export type MessageSendInput = {
-  receiverId: number;
-  title: string;
-  message: string;
-};
+export type MessageSendInput = Omit<MessageSend, "senderId">;

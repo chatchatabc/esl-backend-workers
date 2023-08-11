@@ -99,12 +99,13 @@ CREATE TABLE IF NOT EXISTS messages (id INTEGER PRIMARY KEY, title TEXT NOT NULL
 
 /**
 * id (integer)
+* signature (text)
 * title (text)
 * message (text)
-* status (integer)
+* status (integer) [1: pending, 2: accepted, 3: rejected, -1: deleted]
 * createdAt (timestamp)
 * updatedAt (timestamp)
 */
 DROP TABLE IF EXISTS messageTemplates;
-CREATE TABLE IF NOT EXISTS messageTemplates (id INTEGER PRIMARY KEY, title TEXT NOT NULL, message TEXT NOT NULL, status INTEGER NOT NULL, createdAt INTEGER NOT NULL, updatedAt INTEGER NOT NULL);
-INSERT INTO messageTemplates (title, message, status, createdAt, updatedAt) VALUES ('Phone Verification', '【恰恰英语】您的手机验证码是#code#，有效期仅5分钟。', 1, 0, 0);
+CREATE TABLE IF NOT EXISTS messageTemplates (id INTEGER PRIMARY KEY, signature TEXT NOT NULL, title TEXT NOT NULL, message TEXT NOT NULL, status INTEGER NOT NULL, createdAt INTEGER NOT NULL, updatedAt INTEGER NOT NULL);
+INSERT INTO messageTemplates (title, message, status, signature, createdAt, updatedAt) VALUES ('Phone Verification', '您的手机验证码是#code#，有效期仅5分钟。', 2, '恰恰英语', 0, 0);

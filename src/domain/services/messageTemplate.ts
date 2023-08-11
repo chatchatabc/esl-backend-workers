@@ -1,4 +1,5 @@
 import { Env } from "../..";
+import { smsCreateTemplate } from "../infra/sms";
 import { CommonPagination } from "../models/CommonModel";
 import { MessageTemplate, MessageTemplateCreate } from "../models/MessageModel";
 import {
@@ -12,6 +13,18 @@ export async function messageTemplateCreate(
   params: MessageTemplateCreate,
   env: Env
 ) {
+  const smsApi = await smsCreateTemplate({
+    content: params.message,
+    signature: params.signature,
+  });
+  if (!smsApi) {
+    throw utilFailedResponse("Cannot create message template", 500);
+  } else if (!smsApi.result) {
+    throw utilFailedResponse(smsApi.reason, 400);
+  } else {
+    params.templateId = smsApi.result;
+  }
+
   const query = await messageTemplateDbCreate(params, env);
   if (!query) {
     throw utilFailedResponse("Cannot create message template", 500);

@@ -135,7 +135,7 @@ export async function scheduleGetAllByUser(
   }
 
   return {
-    content: query.results,
+    content: query.results as Schedule[],
     total,
     page,
     size,

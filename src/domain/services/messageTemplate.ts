@@ -1,6 +1,11 @@
 import { Env } from "../..";
-import { MessageTemplateCreate } from "../models/MessageModel";
-import { messageTemplateDbCreate } from "../repositories/messageTemplateRepo";
+import { CommonPagination } from "../models/CommonModel";
+import { MessageTemplate, MessageTemplateCreate } from "../models/MessageModel";
+import {
+  messageTemplateDbCreate,
+  messageTemplateDbGetAll,
+  messageTemplateDbGetAllTotal,
+} from "../repositories/messageTemplateRepo";
 import { utilFailedResponse } from "./utilService";
 
 export async function messageTemplateCreate(
@@ -13,4 +18,25 @@ export async function messageTemplateCreate(
   }
 
   return true;
+}
+
+export async function messageTemplateGetAll(
+  params: CommonPagination,
+  env: Env
+) {
+  const messageTemplates = await messageTemplateDbGetAll(params, env);
+  if (!messageTemplates) {
+    throw utilFailedResponse("Cannot get message templates", 500);
+  }
+
+  const totalElements = await messageTemplateDbGetAllTotal(env);
+  if (!totalElements && totalElements !== 0) {
+    throw utilFailedResponse("Cannot get message templates", 500);
+  }
+
+  return {
+    ...params,
+    content: messageTemplates.results as MessageTemplate[],
+    totalElements,
+  };
 }

@@ -1,7 +1,10 @@
 import { trpcProcedureAdmin, trpcRouterCreate } from "../../domain/infra/trpc";
 import { CommonPaginationInput } from "../../domain/models/CommonModel";
 import { MessageTemplateCreateInput } from "../../domain/models/MessageModel";
-import { messageTemplateCreate } from "../../domain/services/messageTemplate";
+import {
+  messageTemplateCreate,
+  messageTemplateGetAll,
+} from "../../domain/services/messageTemplate";
 import { utilFailedResponse } from "../../domain/services/utilService";
 
 export default trpcRouterCreate({
@@ -21,6 +24,18 @@ export default trpcRouterCreate({
         ...opts.input,
         status: 1,
       };
-      messageTemplateCreate(data, opts.ctx.env);
+      return messageTemplateCreate(data, opts.ctx.env);
+    }),
+
+  getAll: trpcProcedureAdmin
+    .input((values: any = {}) => {
+      return {
+        page: values.page,
+        size: values.size,
+      } as CommonPaginationInput;
+    })
+    .query((opts) => {
+      const { page = 1, size = 10 } = opts.input;
+      return messageTemplateGetAll({ page, size }, opts.ctx.env);
     }),
 });

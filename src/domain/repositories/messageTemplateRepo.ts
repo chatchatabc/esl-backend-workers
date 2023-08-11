@@ -7,11 +7,11 @@ export async function messageTemplateDbCreate(
   env: Env
 ) {
   try {
-    const { title, message, status, signature } = params;
+    const { title, message, status, signature, smsId } = params;
     const date = Date.now();
     const stmt = env.DB.prepare(
-      "INSERT INTO messageTemplates (title, message, signature, status, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?)"
-    ).bind(title, message, signature, status, date, date);
+      "INSERT INTO messageTemplates (title, message, signature, smsId, status, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?, ?)"
+    ).bind(title, message, signature, smsId, status, date, date);
     await stmt.run();
     return true;
   } catch (e) {

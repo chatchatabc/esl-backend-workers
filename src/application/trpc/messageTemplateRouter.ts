@@ -24,7 +24,7 @@ export default trpcRouterCreate({
       const data = {
         ...opts.input,
         status: 1,
-        templateId: 0,
+        smsId: 0,
       };
 
       return messageTemplateCreate(data, opts.ctx.env);

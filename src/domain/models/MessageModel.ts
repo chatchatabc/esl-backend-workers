@@ -33,7 +33,7 @@ export type MessageTemplate = {
   createdAt: number;
   updatedAt: number;
 
-  templateId: number;
+  smsId: number;
   title: string;
   signature: string;
   message: string;
@@ -47,5 +47,5 @@ export type MessageTemplateCreate = Omit<
 
 export type MessageTemplateCreateInput = Omit<
   MessageTemplateCreate,
-  "status" | "templateId"
+  "status" | "smsId"
 >;

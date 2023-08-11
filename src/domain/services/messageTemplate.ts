@@ -22,7 +22,7 @@ export async function messageTemplateCreate(
   } else if (!smsApi.result) {
     throw utilFailedResponse(smsApi.reason, 400);
   } else {
-    params.templateId = smsApi.result;
+    params.smsId = smsApi.result;
   }
 
   const query = await messageTemplateDbCreate(params, env);

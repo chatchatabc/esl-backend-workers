@@ -1,3 +1,5 @@
+import { User } from "./UserModel";
+
 export type Message = {
   id: number;
   createdAt: number;
@@ -10,6 +12,9 @@ export type Message = {
   title: string;
   message: string;
   cron: string;
+
+  receiver?: User;
+  sender?: User;
 };
 
 export type MessageCreate = Omit<Message, "id" | "createdAt" | "updatedAt">;

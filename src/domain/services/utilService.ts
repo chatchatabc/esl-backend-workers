@@ -18,6 +18,9 @@ export function utilFailedResponse(message: string, status: number = 500) {
     case 404:
       code = "NOT_FOUND";
       break;
+    case 501:
+      code = "NOT_IMPLEMENTED";
+      break;
   }
 
   return new TRPCError({

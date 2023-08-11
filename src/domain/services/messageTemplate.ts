@@ -4,8 +4,10 @@ import { CommonPagination } from "../models/CommonModel";
 import { MessageTemplate, MessageTemplateCreate } from "../models/MessageModel";
 import {
   messageTemplateDbCreate,
+  messageTemplateDbGet,
   messageTemplateDbGetAll,
   messageTemplateDbGetAllTotal,
+  messageTemplateDbUpdate,
 } from "../repositories/messageTemplateRepo";
 import { utilFailedResponse } from "./utilService";
 
@@ -28,6 +30,31 @@ export async function messageTemplateCreate(
   const query = await messageTemplateDbCreate(params, env);
   if (!query) {
     throw utilFailedResponse("Cannot create message template", 500);
+  }
+
+  return true;
+}
+
+export async function messageTemplateVerify(
+  params: { templateId: number },
+  env: Env
+) {
+  const template = await messageTemplateDbGet(params, env);
+  if (!template) {
+    throw utilFailedResponse("Cannot get message template", 500);
+  }
+
+  // TODO: Verify message template
+  const verify = true; // Manually verify for now
+  if (!verify) {
+    throw utilFailedResponse("Cannot verify message template", 500);
+  } else {
+    template.status = 2;
+  }
+
+  const update = await messageTemplateDbUpdate(template, env);
+  if (!update) {
+    throw utilFailedResponse("Cannot update message template", 500);
   }
 
   return true;

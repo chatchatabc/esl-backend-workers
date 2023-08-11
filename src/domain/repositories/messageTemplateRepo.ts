@@ -48,3 +48,36 @@ export async function messageTemplateDbGetAllTotal(env: Env) {
     return undefined;
   }
 }
+
+export async function messageTemplateDbGet(
+  params: { templateId: number },
+  env: Env
+) {
+  try {
+    const stmt = env.DB.prepare(
+      "SELECT * FROM messageTemplates WHERE id = ?"
+    ).bind(params.templateId);
+    return await stmt.first<MessageTemplate>();
+  } catch (e) {
+    console.log(e);
+    return undefined;
+  }
+}
+
+export async function messageTemplateDbUpdate(
+  params: MessageTemplate,
+  env: Env
+) {
+  try {
+    const { id, title, message, signature, status } = params;
+    const date = Date.now();
+    const stmt = env.DB.prepare(
+      "UPDATE messageTemplates SET title = ?, message = ?, signature = ?, status = ?, updatedAt = ? WHERE id = ?"
+    ).bind(title, message, signature, status, date, id);
+    await stmt.run();
+    return true;
+  } catch (e) {
+    console.log(e);
+    return false;
+  }
+}

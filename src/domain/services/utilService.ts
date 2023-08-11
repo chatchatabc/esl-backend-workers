@@ -113,3 +113,15 @@ export function utilGenerateRandomCode(length = 6) {
 
   return token;
 }
+
+export function utilDateFormatter(locale: string, date: Date) {
+  return new Intl.DateTimeFormat(locale, {
+    dateStyle: "medium",
+  }).format(date);
+}
+
+export function utilTimeFormatter(locale: string, date: Date) {
+  return new Intl.DateTimeFormat(locale, {
+    timeStyle: "short",
+  }).format(date);
+}

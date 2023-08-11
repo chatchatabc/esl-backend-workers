@@ -1,6 +1,7 @@
 import { Env } from "../..";
 import { Booking, BookingCreate } from "../models/BookingModel";
 import { LogsCreditCreate } from "../models/LogsModel";
+import { MessageCreate } from "../models/MessageModel";
 import { User } from "../models/UserModel";
 
 export async function bookingDbTotalByUser(id: number, env: Env) {
@@ -92,19 +93,24 @@ export async function bookingDbCancel(
 }
 
 export async function bookingDbInsert(
-  values: BookingCreate,
-  teacher: User,
-  student: User,
-  logsCredit: LogsCreditCreate,
+  params: {
+    booking: BookingCreate;
+    teacher: User;
+    student: User;
+    logsCredit: LogsCreditCreate;
+    message: MessageCreate;
+  },
   bindings: Env
 ) {
+  const { booking, teacher, student, logsCredit, message } = params;
+
   const {
     start = null,
     end = null,
     teacherId = null,
     studentId = null,
     status = null,
-  } = values;
+  } = booking;
   const date = Date.now();
 
   try {
@@ -137,8 +143,27 @@ export async function bookingDbInsert(
       date,
       date
     );
+    const messageStmt = bindings.DB.prepare(
+      "INSERT INTO messages (senderId, receiverId, title, message, status, cron, sendAt, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)"
+    ).bind(
+      message.senderId,
+      message.receiverId,
+      message.title,
+      message.message,
+      message.status,
+      message.cron,
+      message.sendAt,
+      date,
+      date
+    );
 
-    await bindings.DB.batch([bookingStmt, userStmt, logsStmt, teacherStmt]);
+    await bindings.DB.batch([
+      bookingStmt,
+      userStmt,
+      logsStmt,
+      teacherStmt,
+      messageStmt,
+    ]);
     return true;
   } catch (e) {
     console.log(e);

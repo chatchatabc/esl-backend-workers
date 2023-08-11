@@ -1,6 +1,7 @@
 import { Env } from "../..";
 import { Booking, BookingCreate } from "../models/BookingModel";
 import { LogsCreditCreate } from "../models/LogsModel";
+import { MessageCreate } from "../models/MessageModel";
 import {
   bookingDbCancel,
   bookingDbGet,
@@ -12,7 +13,11 @@ import {
 import { scheduleDbValidateBooking } from "../repositories/scheduleRepo";
 import { teacherGet } from "./teacherService";
 import { userGet } from "./userService";
-import { utilFailedResponse } from "./utilService";
+import {
+  utilDateFormatter,
+  utilFailedResponse,
+  utilTimeFormatter,
+} from "./utilService";
 
 export async function bookingCreate(values: BookingCreate, env: Env) {
   if (values.studentId === values.teacherId) {
@@ -66,18 +71,39 @@ export async function bookingCreate(values: BookingCreate, env: Env) {
   teacher.user.credit += price;
   student.credit -= price;
 
+  const message: MessageCreate = {
+    senderId: 1,
+    receiverId: student.id,
+    title: "Class Reminder",
+    message: `【恰恰英语】您好，${student.firstName}！\n提醒您：您与${
+      teacher.alias
+    }的课程安排如下：\n日期：${utilDateFormatter(
+      "zh-CN",
+      new Date(start)
+    )}\n时间：${utilTimeFormatter(
+      "zh-CN",
+      new Date(start)
+    )}\n课程：口语练习\n请您按时准备好，参加课程。`,
+    status: 1,
+    cron: "0 0 1 1 1",
+    sendAt: values.start - 10 * 60 * 1000,
+  };
+
   const success = await bookingDbInsert(
-    values,
-    teacher.user,
-    student,
-    logsCredit,
+    {
+      booking: values,
+      teacher: teacher.user,
+      student,
+      logsCredit,
+      message,
+    },
     env
   );
   if (!success) {
     throw utilFailedResponse("Failed to create Booking", 500);
   }
 
-  return success;
+  return true;
 }
 
 export async function bookingGetAllByUser(

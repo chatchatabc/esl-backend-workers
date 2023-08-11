@@ -49,7 +49,7 @@ export default trpcRouterCreate({
 
   updateManyByTeacher: trpcProcedureUser
     .input((values: any = {}) => {
-      if (!values.schedules) {
+      if (!values.schedules || values.schedules.length === 0) {
         throw utilFailedResponse("Missing schedules", 400);
       }
 
@@ -95,7 +95,7 @@ export default trpcRouterCreate({
 
   createMany: trpcProcedureUser
     .input((values: any = {}) => {
-      if (!values.schedules) {
+      if (!values.schedules || values.schedules.length === 0) {
         throw utilFailedResponse("Missing schedules", 400);
       }
 

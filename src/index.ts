@@ -6,6 +6,7 @@ import {
   cronSendCronMessages,
   cronSendScheduledMessages,
 } from "./domain/services/cronService";
+import cron from "cron-parser";
 
 export type Env = {
   DB: D1Database;
@@ -53,12 +54,12 @@ export default {
     return new Response("Not found", { status: 404 });
   },
   async scheduled(event: ScheduledEvent, env: Env, ctx: ExecutionContext) {
-    if (event.cron === "*/10 * * * *") {
-      const date = new Date();
-      date.setSeconds(0, 0);
+    if (event.cron === "9,19,29,39,49,59 * * * *") {
+      const parsedCron = cron.parseExpression("*/10 * * * *");
+      const timestamp = parsedCron.next().toDate().getTime();
 
-      ctx.waitUntil(cronSendScheduledMessages(date.getTime(), env));
-      ctx.waitUntil(cronSendCronMessages(date.getTime(), env));
+      ctx.waitUntil(cronSendScheduledMessages(timestamp, env));
+      ctx.waitUntil(cronSendCronMessages(timestamp, env));
     }
   },
 };

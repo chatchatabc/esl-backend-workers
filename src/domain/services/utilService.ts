@@ -73,14 +73,8 @@ export function utilCheckScheduleOverlap(schedules: ScheduleCreate[]) {
   let overlapped = false;
   // Fix the day and convert the time to timestamp
   const newSchedules = schedules.map((schedule, index) => {
-    const day = new Date(schedule.startTime).getUTCDay();
-    const startTime = utilGetTimestampTimeOnly(schedule.startTime);
-    const endTime = startTime + (schedule.endTime - schedule.startTime);
     return {
       ...schedule,
-      startTime,
-      endTime,
-      day,
       id: index,
     };
   });

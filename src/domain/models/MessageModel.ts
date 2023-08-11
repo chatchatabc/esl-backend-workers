@@ -31,6 +31,7 @@ export type MessageSendInput = Omit<MessageSend, "senderId">;
 export type MessageTemplate = {
   id: number;
   title: string;
+  signature: string;
   message: string;
   status: number;
   createdAt: number;
@@ -39,7 +40,7 @@ export type MessageTemplate = {
 
 export type MessageTemplateCreate = Pick<
   MessageTemplate,
-  "title" | "message" | "status"
+  "title" | "message" | "status" | "signature"
 >;
 
 export type MessageTemplateCreateInput = Omit<MessageTemplateCreate, "status">;

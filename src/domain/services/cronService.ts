@@ -1,10 +1,13 @@
 import { Env } from "../..";
+import { smsSend } from "../infra/sms";
 import {
   bookingDbGetAllByDateEnd,
   bookingDbGetAllByDateStart,
   bookingDbUpdateMany,
 } from "../repositories/bookingRepo";
 import { userDbGet } from "../repositories/userRepo";
+import { messageGetAllByDate, messageGetAllWithCron } from "./messageService";
+import cron from "cron-parser";
 
 export async function cronRemindClass(env: Env) {
   const start = Date.now();
@@ -43,6 +46,64 @@ export async function cronRemindClass(env: Env) {
       //   mobile: student.phone,
       // });
       userIds.push(userId);
+    }
+  }
+
+  return true;
+}
+
+/**
+ * Send all current scheduled messages when cron job is triggered
+ * @param env { Env }
+ * @returns { boolean }
+ */
+export async function cronSendScheduledMessages(env: Env) {
+  const start = Date.now() - 1 * 60 * 1000;
+  const end = start + 2 * 60 * 1000;
+  const messages = await messageGetAllByDate({ start, end }, env);
+  if (!messages) {
+    throw new Error("Failed to get messages");
+  }
+
+  for (const message of messages) {
+    const receiver = await userDbGet({ userId: message.receiverId }, env);
+    if (receiver && receiver.phone) {
+      // await smsSend({
+      //   content: message.message,
+      //   mobile: receiver.phone!,
+      // });
+      env.KV.put("scheduledMessage", message.message);
+    }
+  }
+
+  return true;
+}
+
+/**
+ * Send all cron messages when cron job is triggered
+ * @param timestamp { number }
+ * @param env { Env }
+ * @returns { boolean }
+ */
+export async function cronSendCronMessages(timestamp: number, env: Env) {
+  const messages = await messageGetAllWithCron(env);
+  if (!messages) {
+    throw new Error("Failed to get messages");
+  }
+
+  for (const message of messages) {
+    const parsedCron = cron.parseExpression(message.cron);
+    const next = parsedCron.next().toDate().getTime();
+
+    if (next === timestamp) {
+      const receiver = await userDbGet({ userId: message.receiverId }, env);
+      if (receiver && receiver.phone) {
+        // await smsSend({
+        //   content: message.message,
+        //   mobile: receiver.phone!,
+        // });
+        env.KV.put("cronMessage", message.message);
+      }
     }
   }
 

@@ -2,6 +2,10 @@ import { fetchRequestHandler } from "@trpc/server/adapters/fetch";
 import { utilValidateOrigin } from "./domain/services/utilService";
 import trpcRouter from "./application/trpc";
 import { trpcContext } from "./domain/infra/trpc";
+import {
+  cronSendCronMessages,
+  cronSendScheduledMessages,
+} from "./domain/services/cronService";
 
 export type Env = {
   DB: D1Database;
@@ -47,5 +51,14 @@ export default {
 
     // Handle unknown requests
     return new Response("Not found", { status: 404 });
+  },
+  async scheduler(event: ScheduledEvent, env: Env, ctx: ExecutionContext) {
+    if (event.cron === "*/10 * * * *") {
+      const date = new Date();
+      date.setSeconds(0, 0);
+
+      ctx.waitUntil(cronSendScheduledMessages(env));
+      ctx.waitUntil(cronSendCronMessages(date.getTime(), env));
+    }
   },
 };

@@ -4,7 +4,9 @@ import { Message, MessageCreate, MessageSend } from "../models/MessageModel";
 import {
   messageDbCreate,
   messageDbGetAll,
+  messageDbGetAllByDate,
   messageDbGetAllTotal,
+  messageDbGetAllWithCron,
 } from "../repositories/messageRepo";
 import { userGet } from "./userService";
 import { utilFailedResponse } from "./utilService";
@@ -37,6 +39,27 @@ export async function messageGetAll(
     content: query.results as Message[],
     total,
   };
+}
+
+export async function messageGetAllByDate(
+  params: { start: number; end: number },
+  env: Env
+) {
+  const query = await messageDbGetAllByDate(params, env);
+  if (!query) {
+    throw utilFailedResponse("Unable to get messages", 500);
+  }
+
+  return query.results as Message[];
+}
+
+export async function messageGetAllWithCron(env: Env) {
+  const query = await messageDbGetAllWithCron(env);
+  if (!query) {
+    throw utilFailedResponse("Unable to get messages", 500);
+  }
+
+  return query.results as Message[];
 }
 
 export async function messageSend(params: MessageSend, env: Env) {

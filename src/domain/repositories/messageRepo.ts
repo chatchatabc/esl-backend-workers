@@ -51,6 +51,36 @@ export async function messageDbGetAll(
   }
 }
 
+export async function messageDbGetAllByDate(
+  params: { start: number; end: number },
+  env: Env
+) {
+  const { start, end } = params;
+  try {
+    const stmt = env.DB.prepare(
+      "SELECT * FROM messages ORDER BY updatedAt DESC WHERE sendAt >= ? AND sendAt <= ?"
+    ).bind(start, end);
+    const results = await stmt.all<Message>();
+    return results;
+  } catch (e) {
+    console.log(e);
+    return undefined;
+  }
+}
+
+export async function messageDbGetAllWithCron(env: Env) {
+  try {
+    const stmt = env.DB.prepare(
+      "SELECT * FROM messages ORDER BY updatedAt DESC WHERE sendAt is NULL"
+    );
+    const results = await stmt.all<Message>();
+    return results;
+  } catch (e) {
+    console.log(e);
+    return undefined;
+  }
+}
+
 export async function messageDbGetAllTotal(env: Env) {
   try {
     const stmt = env.DB.prepare("SELECT COUNT(*) AS total FROM messages");

@@ -10,13 +10,14 @@ import { utilFailedResponse } from "../../domain/services/utilService";
 export default trpcRouterCreate({
   create: trpcProcedureAdmin
     .input((values: any = {}) => {
-      if (!values.title || !values.message) {
+      if (!values.title || !values.message || !values.signature) {
         throw utilFailedResponse("Missing input fields", 400);
       }
 
       return {
         title: values.title,
         message: values.message,
+        signature: values.signature,
       } as MessageTemplateCreateInput;
     })
     .mutation((opts) => {

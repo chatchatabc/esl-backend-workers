@@ -19,7 +19,7 @@ export default trpcRouterCreate({
         message: values.message,
       } as MessageTemplateCreateInput;
     })
-    .query((opts) => {
+    .mutation((opts) => {
       const data = {
         ...opts.input,
         status: 1,

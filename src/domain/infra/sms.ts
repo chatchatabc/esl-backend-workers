@@ -20,7 +20,7 @@ export async function smsSend(params: { content: string; mobile: string }) {
   // Remove the country code
   params.mobile = params.mobile.replace("+86", "");
 
-  const url = new URL(baseUrl + "/sendSms");
+  const url = new URL(baseUrl + "/sendv2");
   url.search = new URLSearchParams(params).toString();
 
   try {

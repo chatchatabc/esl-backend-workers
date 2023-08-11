@@ -99,6 +99,7 @@ CREATE TABLE IF NOT EXISTS messages (id INTEGER PRIMARY KEY, title TEXT NOT NULL
 
 /**
 * id (integer)
+* templateId (integer) [From SMS api]
 * signature (text)
 * title (text)
 * message (text)
@@ -107,5 +108,5 @@ CREATE TABLE IF NOT EXISTS messages (id INTEGER PRIMARY KEY, title TEXT NOT NULL
 * updatedAt (timestamp)
 */
 DROP TABLE IF EXISTS messageTemplates;
-CREATE TABLE IF NOT EXISTS messageTemplates (id INTEGER PRIMARY KEY, signature TEXT NOT NULL, title TEXT NOT NULL, message TEXT NOT NULL, status INTEGER NOT NULL, createdAt INTEGER NOT NULL, updatedAt INTEGER NOT NULL);
-INSERT INTO messageTemplates (title, message, status, signature, createdAt, updatedAt) VALUES ('Phone Verification', '您的手机验证码是#code#，有效期仅5分钟。', 2, '恰恰英语', 0, 0);
+CREATE TABLE IF NOT EXISTS messageTemplates (id INTEGER PRIMARY KEY, templateId INTEGER UNIQUE NOT NULL, signature TEXT NOT NULL, title TEXT NOT NULL, message TEXT NOT NULL, status INTEGER NOT NULL, createdAt INTEGER NOT NULL, updatedAt INTEGER NOT NULL);
+INSERT INTO messageTemplates (title, message, status, signature, templateId, createdAt, updatedAt) VALUES ('Phone Verification', '您的手机验证码是#code#，有效期仅5分钟。', 2, '恰恰英语', 5332, 0, 0);

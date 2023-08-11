@@ -30,17 +30,22 @@ export type MessageSendInput = Omit<MessageSend, "senderId">;
 
 export type MessageTemplate = {
   id: number;
+  createdAt: number;
+  updatedAt: number;
+
+  templateId: number;
   title: string;
   signature: string;
   message: string;
   status: number;
-  createdAt: number;
-  updatedAt: number;
 };
 
-export type MessageTemplateCreate = Pick<
+export type MessageTemplateCreate = Omit<
   MessageTemplate,
-  "title" | "message" | "status" | "signature"
+  "id" | "createdAt" | "updatedAt"
 >;
 
-export type MessageTemplateCreateInput = Omit<MessageTemplateCreate, "status">;
+export type MessageTemplateCreateInput = Omit<
+  MessageTemplateCreate,
+  "status" | "templateId"
+>;

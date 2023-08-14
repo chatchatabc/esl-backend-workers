@@ -1,12 +1,7 @@
-import {
-  trpcProcedure,
-  trpcProcedureUser,
-  trpcRouterCreate,
-} from "../../domain/infra/trpc";
+import { trpcProcedureUser, trpcRouterCreate } from "../../domain/infra/trpc";
 import {
   Schedule,
   ScheduleCreateInput,
-  ScheduleUpdateInput,
 } from "../../domain/models/ScheduleModel";
 import {
   scheduleCreateMany,
@@ -59,7 +54,9 @@ export default trpcRouterCreate({
           !schedule.id ||
           !schedule.endTime ||
           !schedule.startTime ||
-          !schedule.teacherId
+          !schedule.teacherId ||
+          !schedule.createdAt ||
+          !schedule.updatedAt
         ) {
           throw utilFailedResponse("Missing fields in schedules", 400);
         } else if (schedule.startTime > schedule.endTime) {
@@ -76,7 +73,7 @@ export default trpcRouterCreate({
 
       return values as {
         userId?: number;
-        schedules: ScheduleUpdateInput[];
+        schedules: Schedule[];
       };
     })
     .mutation((opts) => {

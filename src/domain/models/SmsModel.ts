@@ -3,3 +3,9 @@ export type SmsCreateResponse = {
   reason: string;
   result: number | null;
 };
+
+export type SmsSendResponse = {
+  reason: string;
+  result: string;
+  error_code: number;
+};

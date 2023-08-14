@@ -1,4 +1,4 @@
-import { SmsCreateResponse } from "../models/SmsModel";
+import { SmsCreateResponse, SmsSendResponse } from "../models/SmsModel";
 
 const baseUrl = "https://smsv2.market.alicloudapi.com/sms";
 const appCode = "b567b7be3fe7490c853ef2b222623294";
@@ -26,7 +26,7 @@ export async function smsSend(params: { content: string; mobile: string }) {
   try {
     const response = await fetch(url, request);
     const data = await response.json();
-    return data;
+    return data as SmsSendResponse;
   } catch (e) {
     console.log(e);
     return null;

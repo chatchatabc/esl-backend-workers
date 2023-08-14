@@ -3,15 +3,18 @@ import { CommonPagination } from "../models/CommonModel";
 import {
   User,
   UserContactInformation,
+  UserCreate,
   UserPersonalInformation,
 } from "../models/UserModel";
 import {
   userDbGet,
   userDbGetAll,
   userDbGetAllTotal,
+  userDbGetByUsername,
+  userDbInsert,
   userDbUpdate,
 } from "../repositories/userRepo";
-import { utilFailedResponse } from "./utilService";
+import { utilFailedResponse, utilHashHmac256 } from "./utilService";
 
 export async function userGet(params: { userId: number }, env: Env) {
   const user = await userDbGet(params, env);
@@ -59,6 +62,27 @@ export async function userUpdateProfile(
   const query = await userDbUpdate(user, env);
   if (!query) {
     throw utilFailedResponse("Error", 500);
+  }
+
+  delete user.password;
+  return user;
+}
+
+export async function userCreate(params: UserCreate, env: Env) {
+  let user = await userDbGetByUsername({ username: params.username }, env);
+  if (user) {
+    throw utilFailedResponse("Username already exists", 400);
+  }
+
+  params.password = utilHashHmac256(params.password);
+  const create = await userDbInsert(params, env);
+  if (!create) {
+    throw utilFailedResponse("Error, unable to create user", 500);
+  }
+
+  user = await userDbGetByUsername({ username: params.username }, env);
+  if (!user) {
+    throw utilFailedResponse("Error, unable to get user", 500);
   }
 
   delete user.password;

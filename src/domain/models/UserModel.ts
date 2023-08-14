@@ -8,6 +8,7 @@ export type User = {
 
   id: number;
   roleId: number;
+  status: number;
   createdAt: number;
   updatedAt: number;
   credit: number;

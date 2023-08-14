@@ -71,6 +71,7 @@ export async function authRegister(input: UserRegister, env: Env) {
   input.password = utilHashHmac256(input.password);
   const register: UserCreate = {
     ...input,
+    status: 1,
     roleId: 2,
     credit: 0,
   };

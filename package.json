@@ -19,6 +19,7 @@
   "dependencies": {
     "@trpc/server": "^10.37.1",
     "cron-parser": "^4.8.1",
-    "crypto-js": "^4.1.1"
+    "crypto-js": "^4.1.1",
+    "valibot": "^0.12.0"
   }
 }

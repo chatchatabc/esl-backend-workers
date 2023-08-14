@@ -114,6 +114,20 @@ export async function authGetPhoneToken(params: { userId: number }, env: Env) {
     throw utilFailedResponse("Cannot find phone number", 404);
   }
 
+  // Check if user has verified phone number
+  if (user.phoneVerifiedAt) {
+    throw utilFailedResponse("Phone number already verified", 400);
+  }
+
+  // Check if user has sent phone token in the last 60 seconds
+  const lastSent = await env.KV.get(user.phone);
+  if (lastSent && Date.now() - Number(lastSent) < 60 * 1000) {
+    throw utilFailedResponse(
+      "Please wait 60 seconds before sending again",
+      400
+    );
+  }
+
   // Generate 6 digits token
   const randomToken = utilGenerateRandomCode();
 
@@ -131,6 +145,12 @@ export async function authGetPhoneToken(params: { userId: number }, env: Env) {
     content: `【恰恰英语】您的手机验证码是${randomToken}，有效期仅5分钟。`,
   };
   const response = await smsSend(message);
+  if (!response || response.error_code === 0) {
+    throw utilFailedResponse("Failed to send message", 500);
+  }
+
+  // Save timestamp to KV
+  await env.KV.put(user.phone, JSON.stringify(Date.now()));
 
   return response;
 }

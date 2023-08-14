@@ -1,6 +1,6 @@
 import { Env } from "../..";
 import { CommonPagination } from "../models/CommonModel";
-import { User, UserRegister } from "../models/UserModel";
+import { User, UserCreate } from "../models/UserModel";
 
 export async function userDbGetByUsername(
   params: { username: string },
@@ -17,14 +17,38 @@ export async function userDbGetByUsername(
   return results;
 }
 
-export async function userDbInsert(body: UserRegister, env: Env) {
-  const { username, password, roleId, credit } = body;
+export async function userDbInsert(body: UserCreate, env: Env) {
+  const {
+    username,
+    password,
+    roleId,
+    credit,
+    email = null,
+    phone = null,
+    firstName = null,
+    lastName = null,
+    phoneVerifiedAt = null,
+    emailVerifiedAt = null,
+  } = body;
   const date = Date.now();
   try {
     await env.DB.prepare(
-      "INSERT INTO users (username, password, createdAt, updatedAt, roleId, credit) VALUES (?, ?, ?, ?, ?, ?)"
+      "INSERT INTO users (username, password, createdAt, updatedAt, roleId, credit, email, phone, firstName, lastName, phoneVerifiedAt, emailVerifiedAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
     )
-      .bind(username, password, date, date, roleId, credit)
+      .bind(
+        username,
+        password,
+        date,
+        date,
+        roleId,
+        credit,
+        email,
+        phone,
+        firstName,
+        lastName,
+        phoneVerifiedAt,
+        emailVerifiedAt
+      )
       .run();
     return true;
   } catch (e) {

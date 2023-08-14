@@ -123,14 +123,24 @@ export function utilGenerateRandomCode(length = 6) {
   return token;
 }
 
-export function utilDateFormatter(locale: string, date: Date) {
+export function utilDateFormatter(
+  locale: string,
+  date: Date,
+  timeZone: string = "Asia/Shanghai"
+) {
   return new Intl.DateTimeFormat(locale, {
     dateStyle: "medium",
+    timeZone,
   }).format(date);
 }
 
-export function utilTimeFormatter(locale: string, date: Date) {
+export function utilTimeFormatter(
+  locale: string,
+  date: Date,
+  timeZone: string = "Asia/Shanghai"
+) {
   return new Intl.DateTimeFormat(locale, {
     timeStyle: "short",
+    timeZone,
   }).format(date);
 }

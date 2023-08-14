@@ -1,7 +1,7 @@
 import type { Schedule, ScheduleCreate } from "../models/ScheduleModel";
 import type { BookingCreate } from "../models/BookingModel";
 import { Env } from "../..";
-import { utilGetTimestampTimeOnly } from "../services/utilService";
+import { utilGetScheduleTimeAndDay } from "../services/utilService";
 
 export async function scheduleDbGetAllByUser(
   params: { userId: number },
@@ -64,15 +64,12 @@ export async function scheduleDbValidateBooking(
   env: Env
 ) {
   const { start, end, teacherId } = booking;
-  const diff = end - start;
-  const startTime = utilGetTimestampTimeOnly(start);
-  const endTime = startTime + diff;
-  const day = new Date(start).getUTCDay();
+  const [startTime, endTime] = utilGetScheduleTimeAndDay(start, end);
 
   try {
     const stmt = env.DB.prepare(
-      "SELECT COUNT(*) AS total FROM schedules WHERE teacherId = ? AND startTime <= ? AND endTime >= ? AND day = ?"
-    ).bind(teacherId, startTime, endTime, day);
+      "SELECT COUNT(*) AS total FROM schedules WHERE teacherId = ? AND startTime <= ? AND endTime >= ?"
+    ).bind(teacherId, startTime, endTime);
     const total = await stmt.first("total");
     if (total === 0) {
       return false;
@@ -107,10 +104,9 @@ export async function scheduleDbGetOverlapMany(
     const totals = await env.DB.batch<Record<string, any>>(
       schedules.map((schedule) => {
         return env.DB.prepare(
-          "SELECT COUNT(*) AS total FROM schedules WHERE (teacherId = ? AND day = ? AND ((startTime <= ? AND endTime > ?) OR (startTime < ? AND endTime >= ?)))"
+          "SELECT COUNT(*) AS total FROM schedules WHERE (teacherId = ? AND ((startTime <= ? AND endTime > ?) OR (startTime < ? AND endTime >= ?)))"
         ).bind(
           schedule.teacherId,
-          schedule.day,
           schedule.startTime,
           schedule.startTime,
           schedule.endTime,

@@ -32,12 +32,12 @@ export type UserRole = {
   id: number;
 };
 
-export type UserRegisterInput = UserLogin & {
-  confirmPassword: string;
-};
-
 export type UserLogin = Pick<User, "username"> & {
   password: string;
+};
+
+export type UserRegister = UserLogin & {
+  confirmPassword: string;
 };
 
 export type UserCreate = Omit<

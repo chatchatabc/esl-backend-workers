@@ -6,6 +6,7 @@ import {
 import {
   UserContactInformation,
   UserPersonalInformation,
+  UserRegister,
 } from "../../domain/models/UserModel";
 import {
   authCreateJsonWebToken,
@@ -23,15 +24,16 @@ import {
 export default trpcRouterCreate({
   register: trpcProcedure
     .input((values: any = {}) => {
-      if (!values.username || !values.password || !values.confirmPassword) {
+      const { username, password, confirmPassword, ...other } = values;
+      if (!username || !password || !confirmPassword) {
         throw utilFailedResponse("Missing fields for register", 400);
+      } else if (password !== confirmPassword) {
+        throw utilFailedResponse("Password not match", 400);
+      } else if (other && Object.keys(other).length > 0) {
+        throw utilFailedResponse("Unknown fields present", 400);
       }
 
-      return {
-        username: values.username,
-        password: values.password,
-        confirmPassword: values.confirmPassword,
-      };
+      return values as UserRegister;
     })
     .mutation(async (opts) => {
       const user = await authRegister(opts.input, opts.ctx.env);

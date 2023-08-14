@@ -5,6 +5,7 @@ import { trpcContext } from "./domain/infra/trpc";
 import {
   cronSendCronMessages,
   cronSendScheduledMessages,
+  cronValidateClass,
 } from "./domain/services/cronService";
 import cron from "cron-parser";
 
@@ -60,6 +61,7 @@ export default {
 
       ctx.waitUntil(cronSendScheduledMessages(timestamp, env));
       ctx.waitUntil(cronSendCronMessages(timestamp, env));
+      ctx.waitUntil(cronValidateClass(env));
     }
   },
 };

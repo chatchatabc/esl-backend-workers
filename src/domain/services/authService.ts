@@ -1,8 +1,4 @@
-import {
-  UserLogin,
-  UserRegister,
-  UserRegisterInput,
-} from "../models/UserModel";
+import { UserCreate, UserLogin, UserRegister } from "../models/UserModel";
 import { Env } from "../..";
 import {
   userDbGet,
@@ -17,7 +13,7 @@ import {
   utilGenerateRandomCode,
   utilHashHmac256,
 } from "./utilService";
-import { messageSend } from "./messageService";
+import { smsSend } from "../infra/sms";
 
 const jwtHeader = JSON.stringify({ alg: "HS256", typ: "JWT" });
 const base64Header = utilEncodeBase64(jwtHeader);
@@ -65,17 +61,16 @@ export function authGetTokenPayload(token: string) {
   return data.id;
 }
 
-export async function authRegister(input: UserRegisterInput, env: Env) {
+export async function authRegister(input: UserRegister, env: Env) {
   let user = await userDbGetByUsername(input, env);
   if (user) {
     throw utilFailedResponse("User already exists", 400);
   }
 
   // Create user registration
-  const password = utilHashHmac256(input.password).toString();
-  const register: UserRegister = {
+  input.password = utilHashHmac256(input.password);
+  const register: UserCreate = {
     ...input,
-    password,
     roleId: 2,
     credit: 0,
   };
@@ -135,7 +130,7 @@ export async function authGetPhoneToken(params: { userId: number }, env: Env) {
     mobile: user.phone,
     content: `【恰恰英语】您的手机验证码是${randomToken}，有效期仅5分钟。`,
   };
-  const response = await messageSend(message);
+  const response = await smsSend(message);
 
   return response;
 }

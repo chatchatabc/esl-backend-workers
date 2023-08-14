@@ -1,9 +1,5 @@
 import { Env } from "../..";
-import {
-  Schedule,
-  ScheduleCreateInput,
-  ScheduleUpdateInput,
-} from "../models/ScheduleModel";
+import { Schedule, ScheduleCreateInput } from "../models/ScheduleModel";
 import {
   scheduleDbDeleteMany,
   scheduleDbGetAllByUser,
@@ -15,11 +11,11 @@ import {
 import {
   utilCheckScheduleOverlap,
   utilFailedResponse,
-  utilGetTimestampTimeOnly,
+  utilGetScheduleTimeAndDay,
 } from "./utilService";
 
 export async function scheduleUpdateMany(
-  params: { userId: number; schedules: ScheduleUpdateInput[] },
+  params: { userId: number; schedules: Schedule[] },
   env: Env
 ) {
   let { userId, schedules } = params;
@@ -43,15 +39,16 @@ export async function scheduleUpdateMany(
 
   // Fix day & time format
   const newSchedules = schedules.map((schedule) => {
-    const day = new Date(schedule.startTime).getUTCDay();
-    const startTime = utilGetTimestampTimeOnly(schedule.startTime);
-    const endTime = startTime + (schedule.endTime - schedule.startTime);
+    const [startTime, endTime, day] = utilGetScheduleTimeAndDay(
+      schedule.startTime,
+      schedule.endTime
+    );
     return {
-      id: schedule.id,
+      ...schedule,
       teacherId: userId,
-      day,
       startTime,
       endTime,
+      day,
     };
   });
 
@@ -93,9 +90,11 @@ export async function scheduleCreateMany(
 
   // Fix day & time format
   const newSchedules = schedules.map((schedule) => {
-    const day = new Date(schedule.startTime).getUTCDay();
-    const startTime = utilGetTimestampTimeOnly(schedule.startTime);
-    const endTime = startTime + (schedule.endTime - schedule.startTime);
+    const [startTime, endTime, day] = utilGetScheduleTimeAndDay(
+      schedule.startTime,
+      schedule.endTime
+    );
+
     return {
       teacherId: userId,
       startTime,

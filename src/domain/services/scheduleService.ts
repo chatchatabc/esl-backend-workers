@@ -1,5 +1,9 @@
 import { Env } from "../..";
-import { Schedule, ScheduleCreateInput } from "../models/ScheduleModel";
+import {
+  Schedule,
+  ScheduleCreateInput,
+  ScheduleUpdateInput,
+} from "../models/ScheduleModel";
 import {
   scheduleDbDeleteMany,
   scheduleDbGetAllByUser,
@@ -15,7 +19,7 @@ import {
 } from "./utilService";
 
 export async function scheduleUpdateMany(
-  params: { userId: number; schedules: Schedule[] },
+  params: { userId: number; schedules: ScheduleUpdateInput[] },
   env: Env
 ) {
   let { userId, schedules } = params;
@@ -37,14 +41,20 @@ export async function scheduleUpdateMany(
     throw utilFailedResponse("Unauthorized", 401);
   }
 
-  // Fix day & time format
+  // Fix ScheduleUpdateInput
   const newSchedules = schedules.map((schedule) => {
+    const oldSchedule = oldSchedules.find((s) => s.id === schedule.id);
+    if (!oldSchedule) {
+      throw utilFailedResponse("Individual schedule not found", 404);
+    }
+
     const [startTime, endTime, day] = utilGetScheduleTimeAndDay(
       schedule.startTime,
       schedule.endTime
     );
+
     return {
-      ...schedule,
+      ...oldSchedule,
       teacherId: userId,
       startTime,
       endTime,

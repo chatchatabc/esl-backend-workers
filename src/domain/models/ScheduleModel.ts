@@ -1,26 +1,17 @@
 export type Schedule = {
   id: number;
-} & ScheduleCreate;
-
-export type ScheduleCreate = {
+  teacherId: number;
   day: number;
-} & ScheduleCreateInput;
-
-export type ScheduleDayAndUser = {
-  day: number;
-  userId: number;
-};
-
-export type ScheduleTime = {
   startTime: number;
   endTime: number;
+  createdAt: number;
+  updatedAt: number;
 };
 
-export type ScheduleUpdateInput = {
-  id: number;
-  teacherId: number;
-} & ScheduleTime;
+export type ScheduleCreate = Omit<Schedule, "id" | "createdAt" | "updatedAt">;
+export type ScheduleCreateInput = Omit<ScheduleCreate, "day">;
 
-export type ScheduleCreateInput = {
-  teacherId: number;
-} & ScheduleTime;
+export type ScheduleUpdateInput = Omit<
+  Schedule,
+  "createdAt" | "updatedAt" | "day"
+>;

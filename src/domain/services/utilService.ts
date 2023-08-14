@@ -59,6 +59,16 @@ export function utilGetTimestampTimeOnly(timestamp: number) {
   return timestampTimeOnly;
 }
 
+export function utilGetScheduleTimeAndDay(startTime: number, endTime: number) {
+  const day = new Date(startTime).getUTCDay();
+  const diff = endTime - startTime;
+  const startTimeOfDay =
+    utilGetTimestampTimeOnly(startTime) + day * 24 * 60 * 60 * 1000;
+  const endTimeOfDay = startTimeOfDay + diff;
+
+  return [startTimeOfDay, endTimeOfDay, day];
+}
+
 export function utilGetTimestampDateOnly(timestamp: number) {
   const day = new Date(timestamp).getUTCDay();
 
@@ -83,7 +93,6 @@ export function utilCheckScheduleOverlap(schedules: ScheduleCreate[]) {
     const overlap = newSchedules.find((schedule) => {
       return (
         schedule.id !== old.id &&
-        schedule.day === old.day &&
         ((schedule.startTime >= old.startTime &&
           schedule.startTime < old.endTime) ||
           (schedule.endTime > old.startTime && schedule.endTime <= old.endTime))

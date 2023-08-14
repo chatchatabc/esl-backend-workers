@@ -9,6 +9,7 @@ import {
   userCreate,
   userGet,
   userGetAll,
+  userGetAllRole,
 } from "../../domain/services/userService";
 import { utilFailedResponse } from "../../domain/services/utilService";
 
@@ -40,18 +41,34 @@ export default trpcRouterCreate({
       return userGetAll({ page, size }, opts.ctx.env);
     }),
 
+  getAllRole: trpcProcedureAdmin
+    .input((values: any = {}) => {
+      return {
+        page: values.page,
+        size: values.size,
+      } as CommonPaginationInput;
+    })
+    .query((opts) => {
+      const { page = 1, size = 10 } = opts.input;
+      return userGetAllRole({ page, size }, opts.ctx.env);
+    }),
+
   create: trpcProcedureAdmin
     .input((values: any = {}) => {
-      const { username, password, roleId, credit, confirmPassword, ...others } =
+      const { username, password, roleId, credit, confirmPassword, status } =
         values;
 
-      console.log(values);
-      if (!username || !password || !roleId || !credit || !confirmPassword) {
+      if (
+        !username ||
+        !password ||
+        !roleId ||
+        !credit ||
+        !confirmPassword ||
+        !status
+      ) {
         throw utilFailedResponse("Missing values", 400);
       } else if (values.password !== values.confirmPassword) {
         throw utilFailedResponse("Password not match", 400);
-      } else if (others && Object.keys(others).length > 0) {
-        throw utilFailedResponse("Unknown values present", 400);
       }
 
       return values as UserCreateInput;

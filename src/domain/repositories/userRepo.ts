@@ -1,6 +1,6 @@
 import { Env } from "../..";
 import { CommonPagination } from "../models/CommonModel";
-import { User, UserCreate } from "../models/UserModel";
+import { User, UserCreate, UserRole } from "../models/UserModel";
 
 export async function userDbGetByUsername(
   params: { username: string },
@@ -23,6 +23,7 @@ export async function userDbInsert(body: UserCreate, env: Env) {
     password,
     roleId,
     credit,
+    status,
     email = null,
     phone = null,
     firstName = null,
@@ -33,7 +34,7 @@ export async function userDbInsert(body: UserCreate, env: Env) {
   const date = Date.now();
   try {
     await env.DB.prepare(
-      "INSERT INTO users (username, password, createdAt, updatedAt, roleId, credit, email, phone, firstName, lastName, phoneVerifiedAt, emailVerifiedAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+      "INSERT INTO users (username, password, createdAt, updatedAt, roleId, credit, email, phone, firstName, lastName, phoneVerifiedAt, emailVerifiedAt, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
     )
       .bind(
         username,
@@ -47,7 +48,8 @@ export async function userDbInsert(body: UserCreate, env: Env) {
         firstName,
         lastName,
         phoneVerifiedAt,
-        emailVerifiedAt
+        emailVerifiedAt,
+        status
       )
       .run();
     return true;
@@ -86,9 +88,34 @@ export async function userDbGetAll(params: CommonPagination, env: Env) {
   }
 }
 
+export async function userDbGetAllRole(params: CommonPagination, env: Env) {
+  const { page, size } = params;
+  try {
+    const roles = await env.DB.prepare("SELECT * FROM roles LIMIT ? OFFSET ?")
+      .bind(size, (page - 1) * size)
+      .all<UserRole>();
+
+    return roles;
+  } catch (e) {
+    console.log(e);
+    return undefined;
+  }
+}
+
 export async function userDbGetAllTotal(env: Env) {
   try {
-    const stmt = env.DB.prepare("SELECT COUNT(*) AS total FROM messages");
+    const stmt = env.DB.prepare("SELECT COUNT(*) AS total FROM users");
+    const total = await stmt.first("total");
+    return Number(total);
+  } catch (e) {
+    console.log(e);
+    return undefined;
+  }
+}
+
+export async function userDbGetAllRoleTotal(env: Env) {
+  try {
+    const stmt = env.DB.prepare("SELECT COUNT(*) AS total FROM roles");
     const total = await stmt.first("total");
     return Number(total);
   } catch (e) {

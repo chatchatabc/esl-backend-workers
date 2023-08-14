@@ -5,10 +5,12 @@ import {
   UserContactInformation,
   UserCreate,
   UserPersonalInformation,
+  UserRole,
 } from "../models/UserModel";
 import {
   userDbGet,
   userDbGetAll,
+  userDbGetAllRole,
   userDbGetAllTotal,
   userDbGetByUsername,
   userDbInsert,
@@ -46,6 +48,24 @@ export async function userGetAll(params: CommonPagination, env: Env) {
     ...params,
     content: users as User[],
     totalElements: total,
+  };
+}
+
+export async function userGetAllRole(params: CommonPagination, env: Env) {
+  const roles = await userDbGetAllRole(params, env);
+  if (!roles) {
+    throw utilFailedResponse("Unable to get roles", 500);
+  }
+
+  const totalElements = await userDbGetAllTotal(env);
+  if (!totalElements && totalElements !== 0) {
+    throw utilFailedResponse("Unable to get roles total", 500);
+  }
+
+  return {
+    ...params,
+    content: roles.results as UserRole[],
+    totalElements,
   };
 }
 

@@ -1,8 +1,10 @@
+import { merge, number, object } from "valibot";
 import {
   trpcProcedureAdmin,
   trpcProcedureUser,
   trpcRouterCreate,
 } from "../../domain/infra/trpc";
+import { CommonPaginationInput } from "../../domain/schemas/CommonSchema";
 import {
   logsApproveCredit,
   logsGetAllCredit,
@@ -25,6 +27,12 @@ export default trpcRouterCreate({
       };
 
       return logsGetAllCredit(data, env);
+    }),
+
+  getCreditAllByUser: trpcProcedureAdmin
+    .input(merge([CommonPaginationInput, object({ userId: number() })]))
+    .query((opts) => {
+      return logsGetAllCredit(opts.input, opts.ctx.env);
     }),
 
   approveCredit: trpcProcedureAdmin

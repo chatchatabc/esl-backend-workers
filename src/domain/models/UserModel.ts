@@ -1,39 +1,32 @@
 export type User = {
-  username: string;
-  password?: string;
-  firstName?: string | null;
-  lastName?: string | null;
-  phone?: string | null;
-  email?: string | null;
-
   id: number;
-  roleId: number;
-  status: number;
   createdAt: number;
   updatedAt: number;
   credit: number;
-  phoneVerifiedAt?: number | null;
-  emailVerifiedAt?: number | null;
+  status: number;
+  roleId: number;
+  username: string;
+  password?: string;
+
+  phoneVerifiedAt: number | null;
+  emailVerifiedAt: number | null;
+  firstName: string | null;
+  lastName: string | null;
+  phone: string | null;
+  email: string | null;
 
   role?: UserRole;
 };
 
-export type UserPersonalInformation = Pick<User, "firstName" | "lastName">;
-
-export type UserContactInformation = Pick<
+export type UserCreate = Omit<
   User,
-  "phone" | "email" | "phoneVerifiedAt" | "emailVerifiedAt"
->;
+  "id" | "createdAt" | "updatedAt" | "role" | "password"
+> & { password: string };
 
-export type UserRole = {
-  name: string;
-  createdAt: string;
-  updatedAt: string;
+export type UserUpdate = Omit<User, "role">;
 
-  id: number;
-};
-
-export type UserLogin = Pick<User, "username"> & {
+export type UserLogin = {
+  username: string;
   password: string;
 };
 
@@ -41,13 +34,14 @@ export type UserRegister = UserLogin & {
   confirmPassword: string;
 };
 
-export type UserCreate = Omit<
-  User,
-  "id" | "createdAt" | "updatedAt" | "role"
-> & {
-  password: string;
-};
+export type UserUpdateInput = Omit<
+  UserUpdate,
+  "createdAt" | "updatedAt" | "password" | "phoneVerifiedAt" | "emailVerifiedAt"
+>;
 
-export type UserCreateInput = UserCreate & {
-  confirmPassword: string;
+export type UserRole = {
+  name: string;
+  createdAt: string;
+  updatedAt: string;
+  id: number;
 };

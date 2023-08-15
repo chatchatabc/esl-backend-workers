@@ -4,12 +4,16 @@ import {
   trpcRouterCreate,
 } from "../../domain/infra/trpc";
 import { CommonPaginationInput } from "../../domain/models/CommonModel";
-import { UserCreateInput } from "../../domain/models/UserModel";
+import {
+  UserCreateInput,
+  UserUpdateInput,
+} from "../../domain/schemas/UserSchema";
 import {
   userCreate,
   userGet,
   userGetAll,
   userGetAllRole,
+  userUpdate,
 } from "../../domain/services/userService";
 import { utilFailedResponse } from "../../domain/services/utilService";
 
@@ -53,32 +57,17 @@ export default trpcRouterCreate({
       return userGetAllRole({ page, size }, opts.ctx.env);
     }),
 
-  create: trpcProcedureAdmin
-    .input((values: any = {}) => {
-      const { username, password, roleId, credit, confirmPassword, status } =
-        values;
+  create: trpcProcedureAdmin.input(UserCreateInput).mutation((opts) => {
+    const { confirmPassword, password } = opts.input;
 
-      if (
-        !username ||
-        !password ||
-        !roleId ||
-        !credit ||
-        !confirmPassword ||
-        !status
-      ) {
-        throw utilFailedResponse("Missing values", 400);
-      } else if (values.password !== values.confirmPassword) {
-        throw utilFailedResponse("Password not match", 400);
-      }
+    if (confirmPassword !== password) {
+      throw utilFailedResponse("Password not match", 400);
+    }
 
-      return values as UserCreateInput;
-    })
-    .mutation((opts) => {
-      const data = {
-        ...opts.input,
-        confirmPassword: undefined,
-      };
+    return userCreate(opts.input, opts.ctx.env);
+  }),
 
-      return userCreate(data, opts.ctx.env);
-    }),
+  update: trpcProcedureAdmin.input(UserUpdateInput).mutation((opts) => {
+    return userUpdate(opts.input, opts.ctx.env);
+  }),
 });

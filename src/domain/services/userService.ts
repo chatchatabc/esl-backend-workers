@@ -26,7 +26,7 @@ export async function userGet(params: { userId: number }, env: Env) {
   }
 
   delete user.password;
-  return user;
+  return user as User;
 }
 
 export async function userGetByUsername(

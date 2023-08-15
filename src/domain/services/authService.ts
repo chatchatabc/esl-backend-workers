@@ -1,4 +1,3 @@
-import { UserCreate, UserLogin, UserRegister } from "../models/UserModel";
 import { Env } from "../..";
 import {
   userDbGet,
@@ -14,6 +13,7 @@ import {
   utilHashHmac256,
 } from "./utilService";
 import { smsSend } from "../infra/sms";
+import { UserCreate, UserLogin, UserRegister } from "../models/UserModel";
 
 const jwtHeader = JSON.stringify({ alg: "HS256", typ: "JWT" });
 const base64Header = utilEncodeBase64(jwtHeader);
@@ -74,6 +74,12 @@ export async function authRegister(input: UserRegister, env: Env) {
     status: 1,
     roleId: 2,
     credit: 0,
+    phone: null,
+    phoneVerifiedAt: null,
+    emailVerifiedAt: null,
+    email: null,
+    firstName: null,
+    lastName: null,
   };
 
   // Insert user registration

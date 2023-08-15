@@ -168,5 +168,5 @@ export async function userAddCredit(
   }
 
   delete user.password;
-  return user;
+  return user as User;
 }

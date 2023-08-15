@@ -1,4 +1,4 @@
-import { number, object, string } from "valibot";
+import { coerce, number, object, string } from "valibot";
 import {
   trpcProcedureAdmin,
   trpcProcedureUser,
@@ -109,7 +109,12 @@ export default trpcRouterCreate({
     }),
 
   addCredit: trpcProcedureAdmin
-    .input(object({ userId: number(), amount: number() }))
+    .input(
+      object({
+        userId: coerce(number(), Number),
+        amount: coerce(number(), Number),
+      })
+    )
     .mutation((opts) => {
       const senderId = opts.ctx.userId;
       const receiverId = opts.input.userId;

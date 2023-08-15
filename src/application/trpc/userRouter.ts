@@ -18,6 +18,7 @@ import {
   userUpdate,
 } from "../../domain/services/userService";
 import { utilFailedResponse } from "../../domain/services/utilService";
+import { userDbGet, userDbUpdate } from "../../domain/repositories/userRepo";
 
 export default trpcRouterCreate({
   get: trpcProcedureUser.input(object({ userId: number() })).query((opts) => {
@@ -67,4 +68,23 @@ export default trpcRouterCreate({
   update: trpcProcedureAdmin.input(UserUpdateInput).mutation((opts) => {
     return userUpdate(opts.input, opts.ctx.env);
   }),
+
+  verifyPhone: trpcProcedureAdmin
+    .input(object({ userId: number() }))
+    .mutation(async (opts) => {
+      const user = await userDbGet(opts.input, opts.ctx.env);
+      if (!user) {
+        throw utilFailedResponse("User not found", 400);
+      } else if (user.phoneVerifiedAt) {
+        throw utilFailedResponse("Phone already verified", 400);
+      }
+      user.phoneVerifiedAt = Date.now();
+
+      const save = await userDbUpdate(user, opts.ctx.env);
+      if (!save) {
+        throw utilFailedResponse("Failed to save", 400);
+      }
+
+      return true;
+    }),
 });

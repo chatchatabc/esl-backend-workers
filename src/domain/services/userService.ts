@@ -2,10 +2,9 @@ import { Env } from "../..";
 import { CommonPagination } from "../models/CommonModel";
 import {
   User,
-  UserContactInformation,
   UserCreate,
-  UserPersonalInformation,
   UserRole,
+  UserUpdateInput,
 } from "../models/UserModel";
 import {
   userDbGet,
@@ -69,11 +68,8 @@ export async function userGetAllRole(params: CommonPagination, env: Env) {
   };
 }
 
-export async function userUpdateProfile(
-  params: UserPersonalInformation & UserContactInformation & { userId: number },
-  env: Env
-) {
-  let user = await userDbGet({ userId: params.userId ?? 0 }, env);
+export async function userUpdateProfile(params: UserUpdateInput, env: Env) {
+  let user = await userDbGet({ userId: params.id ?? 0 }, env);
   if (!user) {
     throw utilFailedResponse("Unable to get user", 500);
   }
@@ -82,6 +78,22 @@ export async function userUpdateProfile(
   const query = await userDbUpdate(user, env);
   if (!query) {
     throw utilFailedResponse("Error", 500);
+  }
+
+  delete user.password;
+  return user;
+}
+
+export async function userUpdate(params: UserUpdateInput, env: Env) {
+  let user = await userDbGet({ userId: params.id }, env);
+  if (!user) {
+    throw utilFailedResponse("Unable to get user", 500);
+  }
+  user = { ...user, ...params };
+
+  const query = await userDbUpdate(user, env);
+  if (!query) {
+    throw utilFailedResponse("Error, unable to update user", 500);
   }
 
   delete user.password;

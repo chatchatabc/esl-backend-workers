@@ -24,12 +24,12 @@ export async function userDbInsert(body: UserCreate, env: Env) {
     roleId,
     credit,
     status,
-    email = null,
-    phone = null,
-    firstName = null,
-    lastName = null,
-    phoneVerifiedAt = null,
-    emailVerifiedAt = null,
+    email,
+    phone,
+    firstName,
+    lastName,
+    phoneVerifiedAt,
+    emailVerifiedAt,
   } = body;
   const date = Date.now();
   try {
@@ -126,22 +126,24 @@ export async function userDbGetAllRoleTotal(env: Env) {
 
 export async function userDbUpdate(params: User, env: Env) {
   const {
-    id = null,
-    username = null,
-    password = null,
-    roleId = null,
-    firstName = null,
-    lastName = null,
-    phone = null,
-    email = null,
-    phoneVerifiedAt = null,
-    emailVerifiedAt = null,
+    id,
+    username,
+    password,
+    roleId,
+    firstName,
+    lastName,
+    phone,
+    email,
+    phoneVerifiedAt,
+    emailVerifiedAt,
+    status,
+    credit,
   } = params;
 
   const date = new Date().getTime();
   try {
-    const query = await env.DB.prepare(
-      "UPDATE users SET username = ?, password = ?, roleId = ?, updatedAt = ?, firstName = ?, lastName = ?, phone = ?, email = ?, phoneVerifiedAt = ?, emailVerifiedAt = ? WHERE id = ?"
+    await env.DB.prepare(
+      "UPDATE users SET username = ?, password = ?, roleId = ?, updatedAt = ?, firstName = ?, lastName = ?, phone = ?, email = ?, phoneVerifiedAt = ?, emailVerifiedAt = ?, status = ?, credit = ? WHERE id = ?"
     )
       .bind(
         username,
@@ -154,6 +156,8 @@ export async function userDbUpdate(params: User, env: Env) {
         email,
         phoneVerifiedAt,
         emailVerifiedAt,
+        status,
+        credit,
         id
       )
       .run();

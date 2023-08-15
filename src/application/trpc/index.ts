@@ -7,6 +7,7 @@ import scheduleRouter from "./scheduleRouter";
 import teacherRouter from "./teacherRouter";
 import messageRouter from "./messageRouter";
 import messageTemplateRouter from "./messageTemplateRouter";
+import roleRouter from "./roleRouter";
 
 // tRPC Main Router
 const trpcRouter = trpcRouterCreate({
@@ -18,6 +19,7 @@ const trpcRouter = trpcRouterCreate({
   teacher: teacherRouter,
   message: messageRouter,
   messageTemplate: messageTemplateRouter,
+  role: roleRouter,
 });
 
 export default trpcRouter;

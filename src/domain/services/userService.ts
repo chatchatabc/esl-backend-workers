@@ -27,6 +27,19 @@ export async function userGet(params: { userId: number }, env: Env) {
   return user;
 }
 
+export async function userGetByUsername(
+  params: { username: string },
+  env: Env
+) {
+  const user = await userDbGetByUsername(params, env);
+  if (!user) {
+    throw utilFailedResponse("Unable to get user", 500);
+  }
+
+  delete user.password;
+  return user;
+}
+
 export async function userGetAll(params: CommonPagination, env: Env) {
   const query = await userDbGetAll(params, env);
   if (!query) {

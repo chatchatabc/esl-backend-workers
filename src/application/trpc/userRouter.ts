@@ -1,3 +1,4 @@
+import { number, object, string } from "valibot";
 import {
   trpcProcedureAdmin,
   trpcProcedureUser,
@@ -13,24 +14,20 @@ import {
   userGet,
   userGetAll,
   userGetAllRole,
+  userGetByUsername,
   userUpdate,
 } from "../../domain/services/userService";
 import { utilFailedResponse } from "../../domain/services/utilService";
 
 export default trpcRouterCreate({
-  get: trpcProcedureUser
-    .input((values: any = {}) => {
-      if (!values.userId) {
-        throw utilFailedResponse("Missing values", 400);
-      }
+  get: trpcProcedureUser.input(object({ userId: number() })).query((opts) => {
+    return userGet(opts.input, opts.ctx.env);
+  }),
 
-      return {
-        userId: values.userId,
-      } as { userId: number };
-    })
+  getByUsername: trpcProcedureAdmin
+    .input(object({ username: string() }))
     .query((opts) => {
-      const { userId } = opts.input;
-      return userGet({ userId }, opts.ctx.env);
+      return userGetByUsername(opts.input, opts.ctx.env);
     }),
 
   getAll: trpcProcedureAdmin

@@ -168,3 +168,18 @@ export async function userDbUpdate(params: User, env: Env) {
     return null;
   }
 }
+
+export async function userDbGetRole(params: { roleId: number }, env: Env) {
+  const { roleId } = params;
+
+  try {
+    const role = await env.DB.prepare("SELECT * FROM roles WHERE id = ?")
+      .bind(roleId)
+      .first<UserRole>();
+
+    return role;
+  } catch (e) {
+    console.log(e);
+    return null;
+  }
+}

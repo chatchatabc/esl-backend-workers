@@ -3,11 +3,8 @@ import {
   trpcProcedureUser,
   trpcRouterCreate,
 } from "../../domain/infra/trpc";
-import {
-  UserContactInformation,
-  UserPersonalInformation,
-  UserRegister,
-} from "../../domain/models/UserModel";
+import { UserRegister } from "../../domain/models/UserModel";
+import { UserRegisterProfile } from "../../domain/schemas/UserSchema";
 import {
   authCreateJsonWebToken,
   authGetPhoneToken,
@@ -16,10 +13,7 @@ import {
   authValidatePhoneToken,
 } from "../../domain/services/authService";
 import { userGet, userUpdateProfile } from "../../domain/services/userService";
-import {
-  utilFailedResponse,
-  utilValidateChineseMobileNumber,
-} from "../../domain/services/utilService";
+import { utilFailedResponse } from "../../domain/services/utilService";
 
 export default trpcRouterCreate({
   register: trpcProcedure
@@ -84,28 +78,21 @@ export default trpcRouterCreate({
   }),
 
   updateProfile: trpcProcedureUser
-    .input((values: any = {}) => {
-      if (!values.firstName || !values.lastName || !values.phone) {
-        throw utilFailedResponse("Missing values", 400);
+    .input(UserRegisterProfile)
+    .mutation(async (opts) => {
+      const { userId, env } = opts.ctx;
+
+      const user = await userGet({ userId }, env);
+      if (!user) {
+        throw utilFailedResponse("User not found", 400);
       }
 
-      if (!utilValidateChineseMobileNumber(values.phone)) {
-        throw utilFailedResponse("Invalid phone number", 400);
-      }
+      const newData = {
+        ...user,
+        ...opts.input,
+      };
 
-      const data = {
-        firstName: values.firstName,
-        lastName: values.lastName,
-        email: values.email,
-        phone: `+86${values.phone}`,
-      } as UserPersonalInformation & UserContactInformation;
-
-      return data;
-    })
-    .mutation((opts) => {
-      const { userId = 0, env } = opts.ctx;
-
-      return userUpdateProfile({ ...opts.input, userId }, env);
+      return userUpdateProfile(newData, env);
     }),
 
   getPhoneToken: trpcProcedure.query((opts) => {

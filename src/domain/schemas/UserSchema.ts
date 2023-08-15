@@ -12,7 +12,7 @@ import {
   withDefault,
 } from "valibot";
 
-export const User = object({
+const Schema = object({
   id: coerce(
     number("Invalid ID, must be a number", [
       minValue(1, "ID must be greater than 0"),
@@ -81,11 +81,7 @@ export const User = object({
   ),
 });
 
-export const UserUpdate = omit(User, [
-  "updatedAt",
-  "createdAt",
-  "confirmPassword",
-]);
+export const User = omit(Schema, ["confirmPassword"]);
 
 export const UserUpdateInput = omit(User, [
   "updatedAt",
@@ -93,18 +89,17 @@ export const UserUpdateInput = omit(User, [
   "phoneVerifiedAt",
   "emailVerifiedAt",
   "password",
-  "confirmPassword",
 ]);
 
-export const UserCreateInput = omit(User, ["updatedAt", "createdAt", "id"]);
+export const UserCreateInput = omit(Schema, ["updatedAt", "createdAt", "id"]);
 
-export const UserRegister = pick(User, [
+export const UserRegister = pick(Schema, [
   "username",
   "password",
   "confirmPassword",
 ]);
 
-export const UserRegisterProfile = pick(User, [
+export const UserRegisterProfile = pick(Schema, [
   "firstName",
   "lastName",
   "phone",

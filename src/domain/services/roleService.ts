@@ -1,6 +1,11 @@
 import { Env } from "../..";
 import { CommonPagination } from "../models/CommonModel";
-import { roleDbGet, roleDbGetAll } from "../repositories/roleRepo";
+import { UserRole } from "../models/UserModel";
+import {
+  roleDbGet,
+  roleDbGetAll,
+  roleDbGetAllTotal,
+} from "../repositories/roleRepo";
 import { utilFailedResponse } from "./utilService";
 
 export async function roleGet(params: { roleId: number }, env: Env) {
@@ -9,7 +14,7 @@ export async function roleGet(params: { roleId: number }, env: Env) {
     throw utilFailedResponse("Role not found", 404);
   }
 
-  return role;
+  return role as UserRole;
 }
 
 export async function roleGetAll(params: CommonPagination, env: Env) {
@@ -18,5 +23,14 @@ export async function roleGetAll(params: CommonPagination, env: Env) {
     throw utilFailedResponse("Roles not found", 404);
   }
 
-  return roles;
+  const total = await roleDbGetAllTotal(env);
+  if (!total && total !== 0) {
+    throw utilFailedResponse("Roles total not found", 404);
+  }
+
+  return {
+    content: roles.results as UserRole[],
+    totalElements: total,
+    ...params,
+  };
 }

@@ -26,3 +26,14 @@ export async function roleDbGetAll(params: CommonPagination, env: Env) {
     return null;
   }
 }
+
+export async function roleDbGetAllTotal(env: Env) {
+  try {
+    const stmt = env.DB.prepare("SELECT COUNT(*) AS total FROM roles");
+    const total = await stmt.first("total");
+    return Number(total);
+  } catch (e) {
+    console.log(e);
+    return null;
+  }
+}

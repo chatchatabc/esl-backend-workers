@@ -1,3 +1,6 @@
+import { Input } from "valibot";
+import { UserCreateInput } from "../schemas/UserSchema";
+
 export type User = {
   id: number;
   createdAt: number;
@@ -17,6 +20,8 @@ export type User = {
 
   role?: UserRole;
 };
+
+export type UserCreateInput = Input<typeof UserCreateInput>;
 
 export type UserCreate = Omit<
   User,

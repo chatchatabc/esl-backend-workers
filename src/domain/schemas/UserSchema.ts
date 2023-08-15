@@ -103,3 +103,10 @@ export const UserRegister = pick(User, [
   "password",
   "confirmPassword",
 ]);
+
+export const UserRegisterProfile = pick(User, [
+  "firstName",
+  "lastName",
+  "phone",
+  "email",
+]);

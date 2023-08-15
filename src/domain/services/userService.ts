@@ -1,5 +1,6 @@
 import { Env } from "../..";
 import { CommonPagination } from "../models/CommonModel";
+import { LogsCreditCreate } from "../models/LogsModel";
 import {
   User,
   UserCreate,
@@ -7,6 +8,7 @@ import {
   UserUpdateInput,
 } from "../models/UserModel";
 import {
+  userDbAddCredit,
   userDbGet,
   userDbGetAll,
   userDbGetAllRole,
@@ -128,6 +130,41 @@ export async function userCreate(params: UserCreate, env: Env) {
   user = await userDbGetByUsername({ username: params.username }, env);
   if (!user) {
     throw utilFailedResponse("Error, unable to get user", 500);
+  }
+
+  delete user.password;
+  return user;
+}
+
+export async function userAddCredit(
+  params: {
+    receiverId: number;
+    senderId: number;
+    amount: number;
+  },
+  env: Env
+) {
+  const user = await userGet({ userId: params.receiverId }, env);
+  if (!user) {
+    throw utilFailedResponse("Unable to get user", 500);
+  }
+
+  user.credit += params.amount;
+  if (user.credit < 0) {
+    throw utilFailedResponse("Insufficient credit", 400);
+  }
+
+  const logsCredit: LogsCreditCreate = {
+    receiverId: params.receiverId,
+    senderId: params.senderId,
+    amount: params.amount,
+    status: 2,
+    title: "Top-up",
+  };
+
+  const query = await userDbAddCredit({ user, logsCredit }, env);
+  if (!query) {
+    throw utilFailedResponse("Unable to add credit", 500);
   }
 
   delete user.password;

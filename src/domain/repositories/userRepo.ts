@@ -1,5 +1,6 @@
 import { Env } from "../..";
 import { CommonPagination } from "../models/CommonModel";
+import { LogsCreditCreate } from "../models/LogsModel";
 import { User, UserCreate, UserRole } from "../models/UserModel";
 
 export async function userDbGetByUsername(
@@ -166,6 +167,36 @@ export async function userDbUpdate(params: User, env: Env) {
   } catch (e) {
     console.log(e);
     return null;
+  }
+}
+
+export async function userDbAddCredit(
+  params: { user: User; logsCredit: LogsCreditCreate },
+  env: Env
+) {
+  const { user, logsCredit } = params;
+  const date = Date.now();
+  try {
+    const userStmt = env.DB.prepare(
+      "UPDATE users SET credit = ? WHERE id = ?"
+    ).bind(user.credit, user.id);
+    const logCreditStmt = env.DB.prepare(
+      "INSERT INTO logsCredit (receiverId, senderId, amount, title, status, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?, ?)"
+    ).bind(
+      logsCredit.receiverId,
+      logsCredit.senderId,
+      logsCredit.amount,
+      logsCredit.title,
+      logsCredit.status,
+      date,
+      date
+    );
+
+    await env.DB.batch([userStmt, logCreditStmt]);
+    return true;
+  } catch (e) {
+    console.log(e);
+    return false;
   }
 }
 

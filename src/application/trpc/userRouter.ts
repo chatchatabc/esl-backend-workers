@@ -10,6 +10,7 @@ import {
   UserUpdateInput,
 } from "../../domain/schemas/UserSchema";
 import {
+  userAddCredit,
   userCreate,
   userGet,
   userGetAll,
@@ -105,5 +106,16 @@ export default trpcRouterCreate({
       }
 
       return true;
+    }),
+
+  addCredit: trpcProcedureAdmin
+    .input(object({ userId: number(), amount: number() }))
+    .mutation((opts) => {
+      const senderId = opts.ctx.userId;
+      const receiverId = opts.input.userId;
+      return userAddCredit(
+        { amount: opts.input.amount, senderId, receiverId },
+        opts.ctx.env
+      );
     }),
 });

@@ -107,7 +107,7 @@ export async function scheduleCreateMany(
     );
 
     return {
-      teacherId: userId,
+      userId,
       startTime,
       endTime,
       day,
@@ -140,7 +140,7 @@ export async function scheduleGetAll(params: SchedulePagination, env: Env) {
   }
 
   return {
-    content: query.results,
+    content: query.results as Schedule[],
     totalElements: totalElements as number,
     page: params.page,
     size: params.size,

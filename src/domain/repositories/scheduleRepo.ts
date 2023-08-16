@@ -65,7 +65,7 @@ export async function scheduleDbGetAllTotal(
 export async function scheduleDbUpdateMany(schedules: Schedule[], env: Env) {
   try {
     const stmt = env.DB.prepare(
-      "UPDATE schedules SET startTime = ?, endTime = ?, updatedAt = ?, teacherId = ?, day = ? WHERE id = ?"
+      "UPDATE schedules SET startTime = ?, endTime = ?, updatedAt = ?, userId = ?, day = ? WHERE id = ?"
     );
     await env.DB.batch(
       schedules.map((schedule) => {
@@ -73,7 +73,7 @@ export async function scheduleDbUpdateMany(schedules: Schedule[], env: Env) {
           schedule.startTime,
           schedule.endTime,
           Date.now(),
-          schedule.teacherId,
+          schedule.userId,
           schedule.day,
           schedule.id
         );
@@ -131,9 +131,9 @@ export async function scheduleDbGetOverlapMany(
     const totals = await env.DB.batch<Record<string, any>>(
       schedules.map((schedule) => {
         return env.DB.prepare(
-          "SELECT COUNT(*) AS total FROM schedules WHERE (teacherId = ? AND ((startTime <= ? AND endTime > ?) OR (startTime < ? AND endTime >= ?)))"
+          "SELECT COUNT(*) AS total FROM schedules WHERE (userId = ? AND ((startTime <= ? AND endTime > ?) OR (startTime < ? AND endTime >= ?)))"
         ).bind(
-          schedule.teacherId,
+          schedule.userId,
           schedule.startTime,
           schedule.startTime,
           schedule.endTime,
@@ -162,13 +162,13 @@ export async function scheduleDbInsertMany(
 ) {
   try {
     const stmt = env.DB.prepare(
-      "INSERT INTO schedules (teacherId, startTime, endTime, day, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?)"
+      "INSERT INTO schedules (userId, startTime, endTime, day, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?)"
     );
     await env.DB.batch(
       schedules.map((schedule) => {
         const date = Date.now();
         return stmt.bind(
-          schedule.teacherId,
+          schedule.userId,
           schedule.startTime,
           schedule.endTime,
           schedule.day,

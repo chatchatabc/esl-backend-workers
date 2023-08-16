@@ -1,10 +1,10 @@
 import { trpcProcedureUser, trpcRouterCreate } from "../../domain/infra/trpc";
-import {
-  Schedule,
-  ScheduleCreateInput,
-  ScheduleUpdateInput,
-} from "../../domain/models/ScheduleModel";
+import { Schedule } from "../../domain/models/ScheduleModel";
 import { CommonPaginationInput } from "../../domain/schemas/CommonSchema";
+import {
+  ScheduleCreateManyInput,
+  ScheduleUpdateManyInput,
+} from "../../domain/schemas/ScheduleSchema";
 import {
   scheduleCreateMany,
   scheduleDeleteMany,
@@ -22,93 +22,30 @@ export default trpcRouterCreate({
     return scheduleGetAll(opts.input, opts.ctx.env);
   }),
 
-  updateManyByTeacher: trpcProcedureUser
-    .input((values: any = {}) => {
-      if (!values.schedules || values.schedules.length === 0) {
-        throw utilFailedResponse("Missing schedules", 400);
-      }
-
-      // Clean up the schedules input
-      values.schedule = values.schedules.map((schedule: Schedule) => {
-        if (
-          !schedule.id ||
-          !schedule.endTime ||
-          !schedule.startTime ||
-          !schedule.teacherId
-        ) {
-          throw utilFailedResponse("Missing fields in schedules", 400);
-        } else if (schedule.startTime > schedule.endTime) {
-          throw utilFailedResponse("Start time should not be after end time");
-        }
-
-        return {
-          id: schedule.id,
-          teacherId: schedule.teacherId,
-          startTime: schedule.startTime,
-          endTime: schedule.endTime,
-        };
-      });
-
-      return values as {
-        userId?: number;
-        schedules: ScheduleUpdateInput[];
-      };
-    })
+  updateMany: trpcProcedureUser
+    .input(ScheduleUpdateManyInput)
     .mutation((opts) => {
-      const { userId = 0, env } = opts.ctx;
+      const { userId, env } = opts.ctx;
+      const { schedules } = opts.input;
 
-      // If admin is updating a user's schedule
-      if (opts.input.userId && userId === 1) {
-        return scheduleUpdateMany(
-          { userId: opts.input.userId, schedules: opts.input.schedules },
-          env
-        );
+      if (
+        !schedules.every((schedule) => {
+          return schedule.startTime < schedule.endTime;
+        })
+      ) {
+        throw utilFailedResponse("Invalid time range");
       }
 
-      return scheduleUpdateMany({ ...opts.input, userId }, env);
+      return scheduleUpdateMany({ userId, schedules }, env);
     }),
 
   createMany: trpcProcedureUser
-    .input((values: any = {}) => {
-      if (!values.schedules || values.schedules.length === 0) {
-        throw utilFailedResponse("Missing schedules", 400);
-      }
-
-      values.schedules = values.schedules.map((value: any) => {
-        if (!value.teacherId || !value.startTime || !value.endTime) {
-          throw utilFailedResponse(
-            "Missing fields teacherId, startTime, and endTime",
-            400
-          );
-        } else if (value.startTime > value.endTime) {
-          throw utilFailedResponse("Start time cannot be after end time", 400);
-        }
-
-        return {
-          teacherId: value.teacherId,
-          startTime: value.startTime,
-          endTime: value.endTime,
-        };
-      });
-
-      return values as {
-        schedules: ScheduleCreateInput[];
-        userId?: number;
-      };
-    })
+    .input(ScheduleCreateManyInput)
     .mutation((opts) => {
-      const { userId = 0, env } = opts.ctx;
+      const { userId, env } = opts.ctx;
       const { schedules } = opts.input;
 
-      // If admin is creating a user's schedule
-      if (opts.input.userId && userId === 1) {
-        return scheduleCreateMany(
-          { userId: opts.input.userId, schedules },
-          env
-        );
-      }
-
-      return scheduleCreateMany({ userId, schedules }, opts.ctx.env);
+      return scheduleCreateMany({ userId, schedules }, env);
     }),
 
   deleteMany: trpcProcedureUser

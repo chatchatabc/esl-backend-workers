@@ -1,8 +1,10 @@
+import { Input } from "valibot";
 import { CommonPagination } from "./CommonModel";
+import { ScheduleUpdateInput } from "../schemas/ScheduleSchema";
 
 export type Schedule = {
   id: number;
-  teacherId: number;
+  userId: number;
   day: number;
   startTime: number;
   endTime: number;
@@ -11,12 +13,9 @@ export type Schedule = {
 };
 
 export type ScheduleCreate = Omit<Schedule, "id" | "createdAt" | "updatedAt">;
-export type ScheduleCreateInput = Omit<ScheduleCreate, "day">;
+export type ScheduleCreateInput = Pick<Schedule, "startTime" | "endTime">;
 
-export type ScheduleUpdateInput = Omit<
-  Schedule,
-  "createdAt" | "updatedAt" | "day"
->;
+export type ScheduleUpdateInput = Input<typeof ScheduleUpdateInput>;
 
 export type SchedulePagination = {
   userId?: number;

@@ -18,9 +18,26 @@ export const CommonPaginationInput = transform(
         Number
       )
     ),
+    status: optional(
+      coerce(
+        number("Invalid status value, should be a number", [
+          minValue(1, "Status should be greater than 0"),
+        ]),
+        Number
+      )
+    ),
+    userId: optional(
+      coerce(
+        number("Invalid userId value, should be a number", [
+          minValue(1, "userId should be greater than 0"),
+        ]),
+        Number
+      )
+    ),
   }),
   (input) => {
     return {
+      ...input,
       page: input.page ?? 1,
       size: input.size ?? 10,
     };

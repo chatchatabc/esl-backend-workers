@@ -144,3 +144,17 @@ export function utilTimeFormatter(
     timeZone,
   }).format(date);
 }
+
+export function utilQueryAddWhere(query: string, where: string) {
+  if (!query.includes("WHERE")) {
+    query += " WHERE";
+  }
+
+  if (query.endsWith("WHERE")) {
+    query += ` (${where})`;
+  } else {
+    query += ` AND (${where})`;
+  }
+
+  return query;
+}

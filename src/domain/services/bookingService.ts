@@ -1,11 +1,17 @@
 import { Env } from "../..";
-import { Booking, BookingCreate } from "../models/BookingModel";
+import {
+  Booking,
+  BookingCreate,
+  BookingPagination,
+} from "../models/BookingModel";
 import { LogsCreditCreate } from "../models/LogsModel";
 import { MessageCreate } from "../models/MessageModel";
 import {
   bookingDbCancel,
   bookingDbGet,
+  bookingDbGetAll,
   bookingDbGetAllByUser,
+  bookingDbGetAllTotal,
   bookingDbGetOverlap,
   bookingDbGetTotalByUser,
   bookingDbInsert,
@@ -75,15 +81,13 @@ export async function bookingCreate(values: BookingCreate, env: Env) {
     senderId: 1,
     receiverId: student.id,
     title: "Class Reminder",
-    message: `【恰恰英语】您好，${student.firstName}！\n提醒您：您与${
-      teacher.alias
-    }的课程安排如下：\n日期：${utilDateFormatter(
+    message: `【恰恰英语】你好！您的课程安排在${utilDateFormatter(
       "zh-CN",
       new Date(start)
-    )}\n时间：${utilTimeFormatter(
+    )}，时间是${utilTimeFormatter(
       "zh-CN",
       new Date(start)
-    )}\n课程：口语练习\n请您按时准备好，参加课程。`,
+    )}。我们将专注于口语练习。请准时到达，以充分利用本次课程。到时见！`,
     status: 1,
     cron: "0 0 1 1 1",
     sendAt: values.start - 10 * 60 * 1000,
@@ -106,10 +110,7 @@ export async function bookingCreate(values: BookingCreate, env: Env) {
   return true;
 }
 
-export async function bookingGetAllByUser(
-  params: { userId: number; page: number; size: number },
-  env: Env
-) {
+export async function bookingGetAllByUser(params: BookingPagination, env: Env) {
   const { page, size, userId } = params;
 
   const bookings = await bookingDbGetAllByUser(params, env);
@@ -127,6 +128,24 @@ export async function bookingGetAllByUser(
     totalElements,
     page,
     size,
+  };
+}
+
+export async function bookingGetAll(params: BookingPagination, env: Env) {
+  const bookings = await bookingDbGetAll(params, env);
+  if (!bookings) {
+    throw utilFailedResponse("Cannot GET", 500);
+  }
+
+  const totalElements = await bookingDbGetAllTotal(params, env);
+  if (totalElements === null) {
+    throw utilFailedResponse("Cannot GET total", 500);
+  }
+
+  return {
+    ...params,
+    content: bookings.results as Booking[],
+    totalElements,
   };
 }
 

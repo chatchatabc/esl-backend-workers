@@ -1,37 +1,22 @@
-import {
-  trpcProcedure,
-  trpcProcedureUser,
-  trpcRouterCreate,
-} from "../../domain/infra/trpc";
+import { trpcProcedureUser, trpcRouterCreate } from "../../domain/infra/trpc";
 import { BookingCreate } from "../../domain/models/BookingModel";
+import { CommonPaginationInput } from "../../domain/schemas/CommonSchema";
 import {
   bookingCancel,
   bookingCreate,
+  bookingGetAll,
   bookingGetAllByUser,
 } from "../../domain/services/bookingService";
 import { utilFailedResponse } from "../../domain/services/utilService";
 
 export default trpcRouterCreate({
-  getAll: trpcProcedureUser
-    .input((values: any = {}) => {
-      return {
-        page: values.page,
-        size: values.size,
-      } as {
-        page?: number;
-        size?: number;
-      };
-    })
-    .query((opts) => {
-      const { page, size } = opts.input;
-      const data = {
-        page: page ?? 1,
-        size: size ?? 10,
-        userId: opts.ctx.userId ?? 0,
-      };
+  getAll: trpcProcedureUser.input(CommonPaginationInput).query((opts) => {
+    if (opts.ctx.user?.roleId !== 1) {
+      opts.input.userId = opts.ctx.user?.id;
+    }
 
-      return bookingGetAllByUser(data, opts.ctx.env);
-    }),
+    return bookingGetAll(opts.input, opts.ctx.env);
+  }),
 
   getAllByUser: trpcProcedureUser
     .input((values: any = {}) => {
@@ -82,7 +67,7 @@ export default trpcRouterCreate({
       } as BookingCreate;
     })
     .mutation(async (opts) => {
-      opts.input.studentId = opts.ctx.userId ?? 0;
+      opts.input.studentId = opts.ctx.user?.id ?? 0;
       return bookingCreate(opts.input, opts.ctx.env);
     }),
 
@@ -98,7 +83,7 @@ export default trpcRouterCreate({
       };
     })
     .mutation((opts) => {
-      opts.input.studentId = opts.ctx.userId ?? 0;
+      opts.input.studentId = opts.ctx.user?.id ?? 0;
       return bookingCancel(opts.input, opts.ctx.env);
     }),
 });

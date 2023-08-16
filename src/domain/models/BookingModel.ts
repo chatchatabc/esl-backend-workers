@@ -1,3 +1,4 @@
+import { CommonPagination } from "./CommonModel";
 import type { User } from "./UserModel";
 
 export type Booking = {
@@ -22,3 +23,8 @@ export type BookingCreate = {
 
   message?: string;
 };
+
+export type BookingPagination = {
+  userId?: number;
+  status?: number;
+} & CommonPagination;

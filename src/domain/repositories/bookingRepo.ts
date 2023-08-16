@@ -1,8 +1,13 @@
 import { Env } from "../..";
-import { Booking, BookingCreate } from "../models/BookingModel";
+import {
+  Booking,
+  BookingCreate,
+  BookingPagination,
+} from "../models/BookingModel";
 import { LogsCreditCreate } from "../models/LogsModel";
 import { MessageCreate } from "../models/MessageModel";
 import { User } from "../models/UserModel";
+import { utilQueryAddWhere } from "../services/utilService";
 
 export async function bookingDbTotalByUser(id: number, env: Env) {
   try {
@@ -18,18 +23,83 @@ export async function bookingDbTotalByUser(id: number, env: Env) {
 }
 
 export async function bookingDbGetAllByUser(
-  params: { userId: number; page: number; size: number },
+  params: BookingPagination,
   env: Env
 ) {
-  const { userId, page, size } = params;
+  const { userId, page, size, status } = params;
+
+  const queryParams = [userId, userId];
+  let query = "SELECT * FROM bookings WHERE (teacherId = ? OR studentId = ?)";
+  if (status) {
+    query += " AND status = ?";
+    queryParams.push(status);
+  }
+  query += " LIMIT ?, ?";
+  queryParams.push((page - 1) * size, size);
 
   try {
-    const results = await env.DB.prepare(
-      "SELECT * FROM bookings WHERE ((teacherId = ? OR studentId = ?) AND status = 1) LIMIT ? OFFSET ?"
-    )
-      .bind(userId, userId, size, (page - 1) * size)
+    const results = await env.DB.prepare(query)
+      .bind(...queryParams)
       .all<Booking>();
 
+    return results;
+  } catch (e) {
+    console.log(e);
+    return null;
+  }
+}
+
+export async function bookingDbGetAll(params: BookingPagination, env: Env) {
+  const { userId, page, size, status } = params;
+
+  console.log(params);
+  const queryParams = [];
+  let query = "SELECT * FROM bookings";
+  if (userId) {
+    query = utilQueryAddWhere(query, "teacherId = ? OR studentId = ?");
+    queryParams.push(userId, userId);
+  }
+  if (status) {
+    query = utilQueryAddWhere(query, "status = ?");
+    queryParams.push(status);
+  }
+  query += " LIMIT ?, ?";
+  queryParams.push((page - 1) * size, size);
+
+  try {
+    const results = await env.DB.prepare(query)
+      .bind(...queryParams)
+      .all<Booking>();
+
+    return results;
+  } catch (e) {
+    console.log(e);
+    return null;
+  }
+}
+
+export async function bookingDbGetAllTotal(
+  params: BookingPagination,
+  env: Env
+) {
+  const { userId, status } = params;
+
+  const queryParams = [];
+  let query = "SELECT COUNT(*) AS total FROM bookings";
+
+  if (userId) {
+    query = utilQueryAddWhere(query, "teacherId = ? OR studentId = ?");
+    queryParams.push(userId, userId);
+  }
+  if (status) {
+    query = utilQueryAddWhere(query, "status = ?");
+    queryParams.push(status);
+  }
+
+  try {
+    const results = await env.DB.prepare(query)
+      .bind(...queryParams)
+      .first("total");
     return results;
   } catch (e) {
     console.log(e);
@@ -231,7 +301,7 @@ export async function bookingDbGetOverlap(
 }
 
 export async function bookingDbGetTotalByUser(
-  params: { userId: number },
+  params: { userId?: number },
   env: Env
 ) {
   const { userId } = params;

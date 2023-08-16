@@ -114,15 +114,16 @@ export async function bookingGetAll(params: BookingPagination, env: Env) {
     throw utilFailedResponse("Cannot GET", 500);
   }
 
-  const totalElements = await bookingDbGetAllTotal(params, env);
+  const totalElements: null | number = await bookingDbGetAllTotal(params, env);
   if (totalElements === null) {
     throw utilFailedResponse("Cannot GET total", 500);
   }
 
   return {
-    ...params,
     content: bookings.results as Booking[],
     totalElements,
+    page: params.page,
+    size: params.size,
   };
 }
 

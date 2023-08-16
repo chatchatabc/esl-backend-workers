@@ -59,7 +59,7 @@ export async function bookingDbGetAllTotal(
   try {
     const results = await env.DB.prepare(query)
       .bind(...queryParams)
-      .first("total");
+      .first<number>("total");
     return results;
   } catch (e) {
     console.log(e);

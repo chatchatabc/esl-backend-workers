@@ -12,7 +12,6 @@ import { utilQueryAddWhere } from "../services/utilService";
 export async function bookingDbGetAll(params: BookingPagination, env: Env) {
   const { userId, page, size, status } = params;
 
-  console.log(params);
   const queryParams = [];
   let query = "SELECT * FROM bookings";
   if (userId) {

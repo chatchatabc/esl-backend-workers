@@ -10,10 +10,8 @@ import {
   bookingDbCancel,
   bookingDbGet,
   bookingDbGetAll,
-  bookingDbGetAllByUser,
   bookingDbGetAllTotal,
   bookingDbGetOverlap,
-  bookingDbGetTotalByUser,
   bookingDbInsert,
 } from "../repositories/bookingRepo";
 import { scheduleDbValidateBooking } from "../repositories/scheduleRepo";
@@ -108,27 +106,6 @@ export async function bookingCreate(values: BookingCreate, env: Env) {
   }
 
   return true;
-}
-
-export async function bookingGetAllByUser(params: BookingPagination, env: Env) {
-  const { page, size, userId } = params;
-
-  const bookings = await bookingDbGetAllByUser(params, env);
-  if (!bookings) {
-    throw utilFailedResponse("Cannot GET", 500);
-  }
-
-  const totalElements = await bookingDbGetTotalByUser({ userId }, env);
-  if (totalElements === null) {
-    throw utilFailedResponse("Cannot GET total", 500);
-  }
-
-  return {
-    content: bookings.results as Booking[],
-    totalElements,
-    page,
-    size,
-  };
 }
 
 export async function bookingGetAll(params: BookingPagination, env: Env) {

@@ -9,46 +9,6 @@ import { MessageCreate } from "../models/MessageModel";
 import { User } from "../models/UserModel";
 import { utilQueryAddWhere } from "../services/utilService";
 
-export async function bookingDbTotalByUser(id: number, env: Env) {
-  try {
-    const stmt = env.DB.prepare(
-      "SELECT COUNT(*) AS total FROM bookings WHERE teacherId = ? OR studentId = ?"
-    ).bind(id, id);
-    const total = await stmt.first("total");
-    return total as number;
-  } catch (e) {
-    console.log(e);
-    return null;
-  }
-}
-
-export async function bookingDbGetAllByUser(
-  params: BookingPagination,
-  env: Env
-) {
-  const { userId, page, size, status } = params;
-
-  const queryParams = [userId, userId];
-  let query = "SELECT * FROM bookings WHERE (teacherId = ? OR studentId = ?)";
-  if (status) {
-    query += " AND status = ?";
-    queryParams.push(status);
-  }
-  query += " LIMIT ?, ?";
-  queryParams.push((page - 1) * size, size);
-
-  try {
-    const results = await env.DB.prepare(query)
-      .bind(...queryParams)
-      .all<Booking>();
-
-    return results;
-  } catch (e) {
-    console.log(e);
-    return null;
-  }
-}
-
 export async function bookingDbGetAll(params: BookingPagination, env: Env) {
   const { userId, page, size, status } = params;
 

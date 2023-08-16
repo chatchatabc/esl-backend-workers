@@ -5,7 +5,6 @@ import {
   bookingCancel,
   bookingCreate,
   bookingGetAll,
-  bookingGetAllByUser,
 } from "../../domain/services/bookingService";
 import { utilFailedResponse } from "../../domain/services/utilService";
 
@@ -17,25 +16,6 @@ export default trpcRouterCreate({
 
     return bookingGetAll(opts.input, opts.ctx.env);
   }),
-
-  getAllByUser: trpcProcedureUser
-    .input((values: any = {}) => {
-      return {
-        userId: values.userId,
-        page: values.page,
-        size: values.size,
-      } as { userId: number; page?: number; size?: number };
-    })
-    .query((opts) => {
-      const { page, size, ...others } = opts.input;
-      const data = {
-        page: page ?? 1,
-        size: size ?? 10,
-        ...others,
-      };
-
-      return bookingGetAllByUser(data, opts.ctx.env);
-    }),
 
   create: trpcProcedureUser
     .input((values: any = {}) => {

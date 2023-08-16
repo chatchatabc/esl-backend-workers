@@ -124,31 +124,21 @@ export async function bookingDbCancel(
 export async function bookingDbInsert(
   params: {
     booking: BookingCreate;
-    teacher: User;
     student: User;
     logsCredit: LogsCreditCreate;
     message: MessageCreate;
   },
   bindings: Env
 ) {
-  const { booking, teacher, student, logsCredit, message } = params;
+  const { booking, student, logsCredit, message } = params;
 
-  const {
-    start = null,
-    end = null,
-    teacherId = null,
-    studentId = null,
-    status = null,
-  } = booking;
+  const { start, end, teacherId, studentId, status } = booking;
   const date = Date.now();
 
   try {
     const userStmt = bindings.DB.prepare(
       "UPDATE users SET credit = ? WHERE id = ?"
     ).bind(student.credit, student.id);
-    const teacherStmt = bindings.DB.prepare(
-      "UPDATE users SET credit = ? WHERE id = ?"
-    ).bind(teacher.credit, teacher.id);
     const bookingStmt = bindings.DB.prepare(
       "INSERT INTO bookings (start, end, teacherId, status, studentId, amount, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
     ).bind(
@@ -186,13 +176,7 @@ export async function bookingDbInsert(
       date
     );
 
-    await bindings.DB.batch([
-      bookingStmt,
-      userStmt,
-      logsStmt,
-      teacherStmt,
-      messageStmt,
-    ]);
+    await bindings.DB.batch([bookingStmt, userStmt, logsStmt, messageStmt]);
     return true;
   } catch (e) {
     console.log(e);

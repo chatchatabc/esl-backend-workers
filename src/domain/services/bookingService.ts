@@ -24,11 +24,11 @@ import {
 } from "./utilService";
 
 export async function bookingCreate(values: BookingCreate, env: Env) {
-  if (values.studentId === values.teacherId) {
-    throw utilFailedResponse("Cannot booked own schedule", 400);
+  if (values.start >= values.end) {
+    throw utilFailedResponse("Start time must be before end time", 400);
   }
 
-  const student = await userGet({ userId: values.studentId ?? 0 }, env);
+  const student = await userGet({ userId: values.studentId }, env);
   if (!student) {
     throw utilFailedResponse("Student does not exist", 400);
   }
@@ -53,39 +53,30 @@ export async function bookingCreate(values: BookingCreate, env: Env) {
     throw utilFailedResponse("Booking overlaps", 400);
   }
 
-  const dateTimeFormatter = new Intl.DateTimeFormat("en", {
-    dateStyle: "medium",
-    timeStyle: "short",
-  });
   const start = new Date(values.start).getTime();
   const end = new Date(values.end).getTime();
   const price = teacher.price * ((end - start) / 1800000);
   if (price > student.credit) {
     throw utilFailedResponse("Not enough credit", 400);
   }
+  values.amount = price;
 
+  const startDateFormat = utilDateFormatter("zh-CN", new Date(start));
+  const startTimeFormat = utilTimeFormatter("zh-CN", new Date(start));
   const logsCredit = {
     senderId: student.id,
     receiverId: teacher.user.id,
     amount: price,
-    title: `Class ${dateTimeFormatter.format(new Date(values.start))}`,
-    status: 1,
+    title: `Class ${startDateFormat} ${startTimeFormat}`,
+    status: 2,
   };
-
-  teacher.user.credit += price;
   student.credit -= price;
 
   const message: MessageCreate = {
     senderId: 1,
     receiverId: student.id,
     title: "Class Reminder",
-    message: `【恰恰英语】你好！您的课程安排在${utilDateFormatter(
-      "zh-CN",
-      new Date(start)
-    )}，时间是${utilTimeFormatter(
-      "zh-CN",
-      new Date(start)
-    )}。我们将专注于口语练习。请准时到达，以充分利用本次课程。到时见！`,
+    message: `【恰恰英语】你好！您的课程安排在${startDateFormat}，时间是${startTimeFormat}。我们将专注于口语练习。请准时到达，以充分利用本次课程。到时见！`,
     status: 1,
     cron: "0 0 1 1 1",
     sendAt: values.start - 10 * 60 * 1000,
@@ -94,7 +85,6 @@ export async function bookingCreate(values: BookingCreate, env: Env) {
   const success = await bookingDbInsert(
     {
       booking: values,
-      teacher: teacher.user,
       student,
       logsCredit,
       message,

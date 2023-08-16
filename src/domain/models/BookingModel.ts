@@ -17,9 +17,9 @@ export type BookingCreate = {
   teacherId: number;
   start: number;
   end: number;
-  studentId?: number;
-  status?: number;
-  amount?: number;
+  studentId: number;
+  status: number;
+  amount: number;
 
   message?: string;
 };

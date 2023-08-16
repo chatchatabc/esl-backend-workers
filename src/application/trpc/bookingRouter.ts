@@ -1,5 +1,5 @@
 import { trpcProcedureUser, trpcRouterCreate } from "../../domain/infra/trpc";
-import { BookingCreate } from "../../domain/models/BookingModel";
+import { BookingCreateInput } from "../../domain/schemas/BookingSchema";
 import { CommonPaginationInput } from "../../domain/schemas/CommonSchema";
 import {
   bookingCancel,
@@ -16,40 +16,11 @@ export default trpcRouterCreate({
     return bookingGetAll(opts.input, env);
   }),
 
-  create: trpcProcedureUser
-    .input((values: any = {}) => {
-      if (
-        !values.end ||
-        !values.start ||
-        !values.studentId ||
-        !values.teacherId
-      ) {
-        throw utilFailedResponse("Missing fields", 400);
-      } else if (values.start > values.end) {
-        throw utilFailedResponse("Incorrect start and end date", 400);
-      } else if (values.start % 1800 !== 0) {
-        throw utilFailedResponse("Incorrect start date", 400);
-      } else if (values.end % 1800 !== 0) {
-        throw utilFailedResponse("Incorrect end date", 400);
-      } else if (values.start <= Date.now() || values.end <= Date.now()) {
-        throw utilFailedResponse(
-          "Cannot booked schedule past the current time.",
-          400
-        );
-      }
-
-      return {
-        end: values.end,
-        start: values.start,
-        teacherId: values.teacherId,
-        status: 1,
-      } as BookingCreate;
-    })
-    .mutation(async (opts) => {
-      const { userId, env } = opts.ctx;
-      opts.input.studentId = userId;
-      return bookingCreate(opts.input, env);
-    }),
+  create: trpcProcedureUser.input(BookingCreateInput).mutation(async (opts) => {
+    const { userId, env } = opts.ctx;
+    const studentId = userId;
+    return bookingCreate({ ...opts.input, studentId, amount: 0 }, env);
+  }),
 
   cancel: trpcProcedureUser
     .input((values: any = {}) => {

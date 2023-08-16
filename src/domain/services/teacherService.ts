@@ -14,7 +14,7 @@ export async function teacherGet(params: { userId: number }, env: Env) {
     throw utilFailedResponse("Cannot get teacher", 500);
   }
 
-  return teacher;
+  return teacher as Teacher;
 }
 
 export async function teacherGetAll(params: CommonPagination, env: Env) {

@@ -10,11 +10,10 @@ import { utilFailedResponse } from "../../domain/services/utilService";
 
 export default trpcRouterCreate({
   getAll: trpcProcedureUser.input(CommonPaginationInput).query((opts) => {
-    if (opts.ctx.user?.roleId !== 1) {
-      opts.input.userId = opts.ctx.user?.id;
-    }
+    const { userId, env } = opts.ctx;
+    opts.input.userId = userId;
 
-    return bookingGetAll(opts.input, opts.ctx.env);
+    return bookingGetAll(opts.input, env);
   }),
 
   create: trpcProcedureUser
@@ -47,8 +46,9 @@ export default trpcRouterCreate({
       } as BookingCreate;
     })
     .mutation(async (opts) => {
-      opts.input.studentId = opts.ctx.user?.id ?? 0;
-      return bookingCreate(opts.input, opts.ctx.env);
+      const { userId, env } = opts.ctx;
+      opts.input.studentId = userId;
+      return bookingCreate(opts.input, env);
     }),
 
   cancel: trpcProcedureUser
@@ -63,7 +63,8 @@ export default trpcRouterCreate({
       };
     })
     .mutation((opts) => {
-      opts.input.studentId = opts.ctx.user?.id ?? 0;
-      return bookingCancel(opts.input, opts.ctx.env);
+      const { userId, env } = opts.ctx;
+      opts.input.studentId = userId;
+      return bookingCancel(opts.input, env);
     }),
 });

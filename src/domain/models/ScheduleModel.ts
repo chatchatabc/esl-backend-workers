@@ -1,3 +1,5 @@
+import { CommonPagination } from "./CommonModel";
+
 export type Schedule = {
   id: number;
   teacherId: number;
@@ -15,3 +17,7 @@ export type ScheduleUpdateInput = Omit<
   Schedule,
   "createdAt" | "updatedAt" | "day"
 >;
+
+export type SchedulePagination = {
+  userId?: number;
+} & CommonPagination;

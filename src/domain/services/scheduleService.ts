@@ -2,12 +2,13 @@ import { Env } from "../..";
 import {
   Schedule,
   ScheduleCreateInput,
+  SchedulePagination,
   ScheduleUpdateInput,
 } from "../models/ScheduleModel";
 import {
   scheduleDbDeleteMany,
-  scheduleDbGetAllByUser,
-  scheduleDbGetAllTotalByUser,
+  scheduleDbGetAll,
+  scheduleDbGetAllTotal,
   scheduleDbGetOverlapMany,
   scheduleDbInsertMany,
   scheduleDbUpdateMany,
@@ -25,7 +26,7 @@ export async function scheduleUpdateMany(
   let { userId, schedules } = params;
 
   // Get old schedules
-  const query = await scheduleDbGetAllByUser({ userId }, env);
+  const query = await scheduleDbGetAll({ userId, page: 1, size: 10000 }, env);
   if (!query) {
     throw utilFailedResponse("Cannot GET Schedules", 500);
   }
@@ -128,25 +129,20 @@ export async function scheduleCreateMany(
   return true;
 }
 
-export async function scheduleGetAllByUser(
-  params: { userId: number; page: number; size: number },
-  env: Env
-) {
-  const { page, size } = params;
-
-  const query = await scheduleDbGetAllByUser(params, env);
+export async function scheduleGetAll(params: SchedulePagination, env: Env) {
+  const query = await scheduleDbGetAll(params, env);
   if (!query) {
     throw utilFailedResponse("Cannot GET Schedules", 500);
   }
-  const total = await scheduleDbGetAllTotalByUser(params.userId, env);
-  if (total === null) {
+  const totalElements = await scheduleDbGetAllTotal(params, env);
+  if (totalElements === null) {
     throw utilFailedResponse("Cannot GET Total Schedules", 500);
   }
 
   return {
-    content: query.results as Schedule[],
-    total,
-    page,
-    size,
+    content: query.results,
+    totalElements: totalElements as number,
+    page: params.page,
+    size: params.size,
   };
 }

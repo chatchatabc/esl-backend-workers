@@ -4,10 +4,11 @@ import {
   ScheduleCreateInput,
   ScheduleUpdateInput,
 } from "../../domain/models/ScheduleModel";
+import { CommonPaginationInput } from "../../domain/schemas/CommonSchema";
 import {
   scheduleCreateMany,
   scheduleDeleteMany,
-  scheduleGetAllByUser,
+  scheduleGetAll,
   scheduleUpdateMany,
 } from "../../domain/services/scheduleService";
 import { utilFailedResponse } from "../../domain/services/utilService";
@@ -17,31 +18,9 @@ export default trpcRouterCreate({
     return "Get Schedule";
   }),
 
-  getAllByUser: trpcProcedureUser
-    .input((values: any = {}) => {
-      if (!values.userId) {
-        throw utilFailedResponse("Missing values", 400);
-      }
-
-      return {
-        userId: values.userId,
-        page: values.page,
-        size: values.size,
-      } as {
-        userId: number;
-        page?: number;
-        size?: number;
-      };
-    })
-    .query((opts) => {
-      const { page, size, ...others } = opts.input;
-      const data = {
-        page: page ?? 1,
-        size: size ?? 10,
-        ...others,
-      };
-      return scheduleGetAllByUser(data, opts.ctx.env);
-    }),
+  getAll: trpcProcedureUser.input(CommonPaginationInput).query((opts) => {
+    return scheduleGetAll(opts.input, opts.ctx.env);
+  }),
 
   updateManyByTeacher: trpcProcedureUser
     .input((values: any = {}) => {

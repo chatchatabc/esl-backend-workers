@@ -1,21 +1,61 @@
-import type { Schedule, ScheduleCreate } from "../models/ScheduleModel";
+import type {
+  Schedule,
+  ScheduleCreate,
+  SchedulePagination,
+} from "../models/ScheduleModel";
 import type { BookingCreate } from "../models/BookingModel";
 import { Env } from "../..";
-import { utilGetScheduleTimeAndDay } from "../services/utilService";
+import {
+  utilGetScheduleTimeAndDay,
+  utilQueryAddWhere,
+} from "../services/utilService";
+import { CommonPaginationInput } from "../models/CommonModel";
 
-export async function scheduleDbGetAllByUser(
-  params: { userId: number },
+export async function scheduleDbGetAll(params: SchedulePagination, env: Env) {
+  const { userId, page, size } = params;
+
+  const queryParams = [];
+  let query = "SELECT * FROM schedules";
+
+  if (userId) {
+    query = utilQueryAddWhere(query, "userId = ?");
+    queryParams.push(userId);
+  }
+
+  query += " ORDER BY createdAt DESC";
+  query += " LIMIT ?, ?";
+  queryParams.push((page - 1) * size, size);
+
+  try {
+    const results = await env.DB.prepare(query)
+      .bind(...queryParams)
+      .all<Schedule>();
+    return results;
+  } catch (e) {
+    console.log(e);
+    return null;
+  }
+}
+
+export async function scheduleDbGetAllTotal(
+  params: CommonPaginationInput,
   env: Env
 ) {
   const { userId } = params;
 
+  const queryParams = [];
+  let query = "SELECT COUNT(*) AS total FROM schedules";
+
+  if (userId) {
+    query = utilQueryAddWhere(query, "userId = ?");
+    queryParams.push(userId);
+  }
+
   try {
-    const results = await env.DB.prepare(
-      "SELECT * FROM schedules WHERE teacherId = ?"
-    )
-      .bind(userId)
-      .all<Schedule>();
-    return results;
+    const total = await env.DB.prepare(query)
+      .bind(...queryParams)
+      .first<number>("total");
+    return total;
   } catch (e) {
     console.log(e);
     return null;
@@ -43,19 +83,6 @@ export async function scheduleDbUpdateMany(schedules: Schedule[], env: Env) {
   } catch (e) {
     console.log(e);
     return false;
-  }
-}
-
-export async function scheduleDbGetAllTotalByUser(id: number, env: Env) {
-  try {
-    const stmt = env.DB.prepare(
-      "SELECT COUNT(*) AS total FROM schedules WHERE teacherId = ?"
-    ).bind(id);
-    const total = await stmt.first("total");
-    return total as number;
-  } catch (e) {
-    console.log(e);
-    return null;
   }
 }
 

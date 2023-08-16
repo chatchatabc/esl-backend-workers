@@ -2,6 +2,7 @@ import { inferAsyncReturnType, initTRPC } from "@trpc/server";
 import { Env } from "../..";
 import { authGetTokenPayload } from "../services/authService";
 import { utilFailedResponse } from "../services/utilService";
+import { userDbGet } from "../repositories/userRepo";
 
 type Props = {
   req: Request;
@@ -11,7 +12,7 @@ type Props = {
 };
 
 // tRPC Router context
-export function trpcContext({ resHeaders, req, ...props }: Props) {
+export async function trpcContext({ resHeaders, req, env, ...props }: Props) {
   const origin = req.headers.get("Origin") ?? "";
 
   // Get token from cookie
@@ -23,9 +24,10 @@ export function trpcContext({ resHeaders, req, ...props }: Props) {
 
   // Get userID from token
   const userId = authGetTokenPayload(token ?? "") ?? 0;
+  const user = await userDbGet({ userId }, env);
 
   // Clear cookie if token is invalid
-  if (!userId && token) {
+  if (!user && token) {
     resHeaders.append("Set-Cookie", "token=; Max-Age=0");
   }
 
@@ -35,7 +37,7 @@ export function trpcContext({ resHeaders, req, ...props }: Props) {
   resHeaders.append("Access-Control-Allow-Headers", "Content-Type");
   resHeaders.append("Access-Control-Allow-Credentials", "true");
 
-  return { ...props, resHeaders, req, userId };
+  return { ...props, resHeaders, env, req, user };
 }
 
 // Initialize tRPC with context
@@ -52,7 +54,7 @@ export const trpcProcedure = trpc.procedure;
 // tRPC procedure with user middleware
 export const trpcProcedureUser = trpcProcedure.use(
   trpc.middleware((opts) => {
-    if (opts.ctx.userId === 0) {
+    if (!opts.ctx.user) {
       throw utilFailedResponse("Invalid Token", 403);
     }
     return opts.next(opts);
@@ -62,7 +64,7 @@ export const trpcProcedureUser = trpcProcedure.use(
 // tRPC procedure with admin middleware
 export const trpcProcedureAdmin = trpcProcedure.use(
   trpc.middleware((opts) => {
-    if (opts.ctx.userId !== 1) {
+    if (opts.ctx.user?.roleId !== 1) {
       throw utilFailedResponse("Forbidden Access", 403);
     }
     return opts.next(opts);

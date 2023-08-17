@@ -4,6 +4,7 @@
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20230814.0",
     "@types/crypto-js": "^4.1.1",
+    "@types/uuid": "^9.0.2",
     "typescript": "^5.1.6",
     "vitest": "^0.34.1",
     "wrangler": "3.5.1"
@@ -20,6 +21,7 @@
     "@trpc/server": "^10.37.1",
     "cron-parser": "^4.9.0",
     "crypto-js": "^4.1.1",
+    "uuid": "^9.0.0",
     "valibot": "^0.12.0"
   }
 }

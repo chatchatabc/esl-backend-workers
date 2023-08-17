@@ -1,5 +1,7 @@
+import { Input } from "valibot";
 import { CommonPagination } from "./CommonModel";
 import type { User } from "./UserModel";
+import { BookingCancelInputAdmin } from "../schemas/BookingSchema";
 
 export type Booking = {
   id: number;
@@ -35,3 +37,5 @@ export type BookingPagination = {
   userId?: number;
   status?: number;
 } & CommonPagination;
+
+export type BookingCancelInputAdmin = Input<typeof BookingCancelInputAdmin>;

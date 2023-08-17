@@ -8,7 +8,6 @@ export type Teacher = {
   createdAt: number;
   updatedAt: number;
 
-  name?: string | null;
   alias?: string | null;
 
   user?: User;

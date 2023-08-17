@@ -34,6 +34,9 @@ const Schema = object({
     minValue(1, "Amount must be greater than 0"),
   ]),
   message: string("Message must be a string"),
+  bookingId: number("ID must be a number", [
+    minValue(1, "ID must be greater than 0"),
+  ]),
 });
 
 export const BookingCreateInput = transform(
@@ -52,3 +55,5 @@ export const BookingCreateInputAdmin = pick(Schema, [
   "end",
   "studentId",
 ]);
+
+export const BookingCancelInputAdmin = pick(Schema, ["bookingId", "studentId"]);

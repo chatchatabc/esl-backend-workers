@@ -4,6 +4,7 @@ import {
   trpcRouterCreate,
 } from "../../domain/infra/trpc";
 import {
+  BookingCancelInputAdmin,
   BookingCreateInput,
   BookingCreateInputAdmin,
 } from "../../domain/schemas/BookingSchema";
@@ -55,6 +56,13 @@ export default trpcRouterCreate({
     .mutation((opts) => {
       const { userId, env } = opts.ctx;
       opts.input.studentId = userId;
+      return bookingCancel(opts.input, env);
+    }),
+
+  cancelAdmin: trpcProcedureAdmin
+    .input(BookingCancelInputAdmin)
+    .mutation((opts) => {
+      const { env } = opts.ctx;
       return bookingCancel(opts.input, env);
     }),
 });

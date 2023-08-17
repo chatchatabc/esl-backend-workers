@@ -1,9 +1,17 @@
-import { trpcProcedureUser, trpcRouterCreate } from "../../domain/infra/trpc";
+import {
+  trpcProcedureAdmin,
+  trpcProcedureUser,
+  trpcRouterCreate,
+} from "../../domain/infra/trpc";
 import { Schedule } from "../../domain/models/ScheduleModel";
 import { CommonPaginationInput } from "../../domain/schemas/CommonSchema";
 import {
   ScheduleCreateManyInput,
+  ScheduleCreateManyInputAdmin,
+  ScheduleDeleteManyInput,
+  ScheduleDeleteManyInputAdmin,
   ScheduleUpdateManyInput,
+  ScheduleUpdateManyInputAdmin,
 } from "../../domain/schemas/ScheduleSchema";
 import {
   scheduleCreateMany,
@@ -39,6 +47,23 @@ export default trpcRouterCreate({
       return scheduleUpdateMany({ userId, schedules }, env);
     }),
 
+  updateManyAdmin: trpcProcedureAdmin
+    .input(ScheduleUpdateManyInputAdmin)
+    .mutation((opts) => {
+      const { env } = opts.ctx;
+      const { schedules } = opts.input;
+
+      if (
+        !schedules.every((schedule) => {
+          return schedule.startTime < schedule.endTime;
+        })
+      ) {
+        throw utilFailedResponse("Invalid time range");
+      }
+
+      return scheduleUpdateMany(opts.input, env);
+    }),
+
   createMany: trpcProcedureUser
     .input(ScheduleCreateManyInput)
     .mutation((opts) => {
@@ -48,12 +73,37 @@ export default trpcRouterCreate({
       return scheduleCreateMany({ userId, schedules }, env);
     }),
 
-  deleteMany: trpcProcedureUser
-    .input((value) => {
-      const data = value as Schedule[];
-      return data;
-    })
+  createManyAdmin: trpcProcedureAdmin
+    .input(ScheduleCreateManyInputAdmin)
     .mutation((opts) => {
-      return scheduleDeleteMany(opts.input, opts.ctx.env);
+      const { env } = opts.ctx;
+      const { schedules } = opts.input;
+
+      if (
+        !schedules.every((schedule) => {
+          return schedule.startTime < schedule.endTime;
+        })
+      ) {
+        throw utilFailedResponse("Invalid time range");
+      }
+
+      return scheduleCreateMany(opts.input, env);
+    }),
+
+  deleteMany: trpcProcedureUser
+    .input(ScheduleDeleteManyInput)
+    .mutation((opts) => {
+      const { userId, env } = opts.ctx;
+      const { scheduleIds } = opts.input;
+
+      return scheduleDeleteMany({ scheduleIds, userId }, env);
+    }),
+
+  deleteManyAdmin: trpcProcedureAdmin
+    .input(ScheduleDeleteManyInputAdmin)
+    .mutation((opts) => {
+      const { env } = opts.ctx;
+
+      return scheduleDeleteMany(opts.input, env);
     }),
 });

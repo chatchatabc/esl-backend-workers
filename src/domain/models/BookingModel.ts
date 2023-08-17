@@ -2,27 +2,34 @@ import { CommonPagination } from "./CommonModel";
 import type { User } from "./UserModel";
 
 export type Booking = {
-  createdAt: number;
-  updatedAt: number;
-
-  student?: User;
-  teacher?: User;
-} & BookingUpdate;
-
-export type BookingUpdate = {
   id: number;
-} & BookingCreate;
-
-export type BookingCreate = {
   teacherId: number;
   start: number;
   end: number;
   studentId: number;
   status: number;
   amount: number;
+  createdAt: number;
+  updatedAt: number;
 
-  message?: string;
+  message: string | null;
+
+  student?: User;
+  teacher?: User;
 };
+
+export type BookingUpdate = Omit<Booking, "student" | "teacher">;
+
+export type BookingCreate = Omit<
+  Booking,
+  "createdAt" | "updatedAt" | "id" | "teacher" | "student"
+>;
+
+export type BookingCreateInput = Omit<
+  BookingCreate,
+  "amount" | "status" | "message"
+> &
+  Partial<Pick<BookingCreate, "amount" | "status" | "message">>;
 
 export type BookingPagination = {
   userId?: number;

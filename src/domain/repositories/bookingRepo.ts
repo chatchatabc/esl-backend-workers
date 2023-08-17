@@ -94,9 +94,6 @@ export async function bookingDbCancel(
     const studentStmt = env.DB.prepare(
       "UPDATE users SET credit = ?, updatedAt = ? WHERE id = ?"
     ).bind(student.credit, date, student.id);
-    const teacherStmt = env.DB.prepare(
-      "UPDATE users SET credit = ?, updatedAt = ? WHERE id = ?"
-    ).bind(teacher.credit, date, teacher.id);
     const bookingStmt = env.DB.prepare(
       "UPDATE bookings SET status = 2, updatedAt = ? WHERE id = ?"
     ).bind(date, booking.id);
@@ -112,7 +109,7 @@ export async function bookingDbCancel(
       date
     );
 
-    await env.DB.batch([studentStmt, teacherStmt, bookingStmt, logsCreditStmt]);
+    await env.DB.batch([studentStmt, bookingStmt, logsCreditStmt]);
 
     return true;
   } catch (e) {

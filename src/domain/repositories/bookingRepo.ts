@@ -84,7 +84,6 @@ export async function bookingDbGet(params: { bookingId: number }, env: Env) {
 
 export async function bookingDbCancel(
   booking: Booking,
-  teacher: User,
   student: User,
   logsCredit: LogsCreditCreate,
   env: Env

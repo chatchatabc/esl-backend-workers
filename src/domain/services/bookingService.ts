@@ -152,20 +152,18 @@ export async function bookingCancel(
   }
 
   const student = await userGet({ userId: studentId ?? 0 }, env);
-  const teacher = await userGet({ userId: booking.teacherId ?? 0 }, env);
 
   student.credit += booking.amount ?? 0;
-  teacher.credit -= booking.amount ?? 0;
 
   const logs: LogsCreditCreate = {
     title: "Cancelled Class",
-    senderId: teacher.id,
-    receiverId: student.id,
+    senderId: 1,
+    receiverId: booking.studentId,
     amount: booking.amount ?? 0,
-    status: 1,
+    status: 2,
   };
 
-  const cancel = await bookingDbCancel(booking, teacher, student, logs, env);
+  const cancel = await bookingDbCancel(booking, student, logs, env);
 
   if (!cancel) {
     throw utilFailedResponse("Was not able to cancel booking", 500);

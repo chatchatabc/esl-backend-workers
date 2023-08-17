@@ -83,7 +83,7 @@ export async function bookingCreate(values: BookingCreateInput, env: Env) {
 
   const booking = {
     message: null,
-    status: 1,
+    status: 0,
     amount: price,
     ...values,
   };

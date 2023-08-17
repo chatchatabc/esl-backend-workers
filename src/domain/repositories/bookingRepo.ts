@@ -186,14 +186,21 @@ export async function bookingDbInsert(
  * @param params { start: number, end: number } - timestamp in milliseconds
  */
 export async function bookingDbGetAllByDateStart(
-  params: { start: number; end: number },
+  params: { start: number; end: number; status?: number },
   bindings: Env
 ) {
-  const { start, end } = params;
+  const { start, end, status } = params;
+
+  const queryParams = [];
+  let query = "SELECT * FROM bookings WHERE (start >= ? AND start <= ?)";
+  queryParams.push(start, end);
+  if (status) {
+    query += " AND status = ?";
+    queryParams.push(status);
+  }
+
   try {
-    const stmt = bindings.DB.prepare(
-      "SELECT * FROM bookings WHERE (start >= ? AND start <= ?) AND status = 1"
-    ).bind(start, end);
+    const stmt = bindings.DB.prepare(query).bind(...queryParams);
     const results = await stmt.all<Booking>();
     return results.results;
   } catch (e) {
@@ -270,6 +277,55 @@ export async function bookingDbUpdateMany(bookings: Booking[], bindings: Env) {
         return stmt.bind(start, end, teacherId, status, studentId, date, id);
       })
     );
+
+    return true;
+  } catch (e) {
+    console.log(e);
+    return false;
+  }
+}
+
+export async function bookingDbValidateMany(
+  params: {
+    bookings: Booking[];
+    logsCredits: LogsCreditCreate[];
+    teachers: User[];
+  },
+  env: Env
+) {
+  try {
+    const { bookings, logsCredits, teachers } = params;
+
+    const teacherStmt = env.DB.prepare(
+      "UPDATE users SET credit = ?, updatedAt = ? WHERE id = ?"
+    );
+    const bookingStmt = env.DB.prepare(
+      "UPDATE bookings SET status = 1, updatedAt = ? WHERE id = ?"
+    );
+    const logsCreditStmt = env.DB.prepare(
+      "INSERT INTO logsCredit (title, senderId, receiverId, amount, status, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?, ?)"
+    );
+
+    await env.DB.batch([
+      ...teachers.map((teacher) => {
+        return teacherStmt.bind(teacher.credit, Date.now(), teacher.id);
+      }),
+      ...bookings.map((booking) => {
+        return bookingStmt.bind(Date.now(), booking.id);
+      }),
+      ...logsCredits.map((logsCredit) => {
+        const date = Date.now();
+        return logsCreditStmt.bind(
+          logsCredit.title,
+          logsCredit.senderId,
+          logsCredit.receiverId,
+          logsCredit.amount,
+          logsCredit.status,
+          date,
+          date
+        );
+      }),
+    ]);
 
     return true;
   } catch (e) {

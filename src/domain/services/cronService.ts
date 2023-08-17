@@ -1,13 +1,14 @@
 import { Env } from "../..";
 import { smsSend } from "../infra/sms";
 import {
-  bookingDbGetAllByDateEnd,
   bookingDbGetAllByDateStart,
-  bookingDbUpdateMany,
+  bookingDbValidateMany,
 } from "../repositories/bookingRepo";
 import { messageGetAllByDate, messageGetAllWithCron } from "./messageService";
 import cron from "cron-parser";
 import { userGet } from "./userService";
+import { LogsCreditCreate } from "../models/LogsModel";
+import { User } from "../models/UserModel";
 
 export async function cronRemindClass(env: Env) {
   const start = Date.now();
@@ -121,21 +122,71 @@ export async function cronSendCronMessages(timestamp: number, env: Env) {
  */
 export async function cronValidateClass(bindings: Env) {
   const start = 0;
-  const end = Date.now() + 10 * 60 * 1000;
+  const end = Date.now() + 6 * 60 * 60 * 1000;
 
-  const bookings = await bookingDbGetAllByDateEnd({ start, end }, bindings);
+  // Get all bookings with pending status
+  const bookings = await bookingDbGetAllByDateStart(
+    { start, end, status: 0 },
+    bindings
+  );
   if (!bookings) {
     throw new Error("Failed to get bookings");
   }
 
-  const newBookings = bookings.map((booking) => {
-    return {
-      ...booking,
-      status: 2,
+  // Get the related users within this booking
+  const newBookingsPromise = bookings.map(async (booking) => {
+    const teacher = await userGet({ userId: booking.teacherId }, bindings);
+    if (teacher) {
+      booking.teacher = teacher;
+    } else {
+      throw new Error("Failed to get teacher");
+    }
+
+    const student = await userGet({ userId: booking.studentId ?? 0 }, bindings);
+    if (student) {
+      booking.student = student;
+    } else {
+      throw new Error("Failed to get student");
+    }
+
+    return booking;
+  });
+  const newBookings = await Promise.all(newBookingsPromise);
+
+  // Create logs credit for each booking
+  const logsCredits: LogsCreditCreate[] = [];
+  newBookings.forEach(async (booking) => {
+    const logsCredit: LogsCreditCreate = {
+      title:
+        "Class for " +
+        booking.student?.firstName +
+        " " +
+        booking.student?.lastName,
+      senderId: booking.studentId ?? 0,
+      receiverId: booking.teacherId ?? 0,
+      amount: booking.amount ?? 0,
+      status: 1,
     };
+    logsCredits.push(logsCredit);
   });
 
-  const update = bookingDbUpdateMany(newBookings, bindings);
+  // Update teacher credit
+  const teachers: User[] = [];
+  newBookings.forEach(async (booking) => {
+    const teacher = booking.teacher;
+    if (!teacher) {
+      throw new Error("Failed to get teacher");
+    }
+    teacher.credit += booking.amount ?? 0;
+
+    teachers.push(teacher);
+  });
+
+  // Update bookings, logs credits, and teachers
+  const update = bookingDbValidateMany(
+    { bookings: newBookings, logsCredits, teachers },
+    bindings
+  );
   if (!update) {
     throw new Error("Failed to update bookings");
   }

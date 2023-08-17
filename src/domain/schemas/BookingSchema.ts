@@ -45,3 +45,10 @@ export const BookingCreateInput = transform(
     };
   }
 );
+
+export const BookingCreateInputAdmin = pick(Schema, [
+  "teacherId",
+  "start",
+  "end",
+  "studentId",
+]);

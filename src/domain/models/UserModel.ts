@@ -1,5 +1,6 @@
 import { Input } from "valibot";
 import { UserCreateInput } from "../schemas/UserSchema";
+import { CommonPagination } from "./CommonModel";
 
 export type User = {
   id: number;
@@ -49,4 +50,8 @@ export type UserRole = {
   createdAt: string;
   updatedAt: string;
   id: number;
+};
+
+export type UserPagination = CommonPagination & {
+  roleId?: number;
 };

@@ -34,6 +34,14 @@ export const CommonPaginationInput = transform(
         Number
       )
     ),
+    roleId: optional(
+      coerce(
+        number("Invalid roleId value, should be a number", [
+          minValue(1, "roleId should be greater than 0"),
+        ]),
+        Number
+      )
+    ),
   }),
   (input) => {
     return {

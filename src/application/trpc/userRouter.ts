@@ -4,7 +4,6 @@ import {
   trpcProcedureUser,
   trpcRouterCreate,
 } from "../../domain/infra/trpc";
-import { CommonPaginationInput } from "../../domain/models/CommonModel";
 import {
   UserCreateInput,
   UserUpdateInput,
@@ -20,6 +19,7 @@ import {
 } from "../../domain/services/userService";
 import { utilFailedResponse } from "../../domain/services/utilService";
 import { userDbGet, userDbUpdate } from "../../domain/repositories/userRepo";
+import { CommonPaginationInput } from "../../domain/schemas/CommonSchema";
 
 export default trpcRouterCreate({
   get: trpcProcedureUser.input(object({ userId: number() })).query((opts) => {
@@ -32,29 +32,14 @@ export default trpcRouterCreate({
       return userGetByUsername(opts.input, opts.ctx.env);
     }),
 
-  getAll: trpcProcedureAdmin
-    .input((values: any = {}) => {
-      return {
-        page: values.page,
-        size: values.size,
-      } as CommonPaginationInput;
-    })
-    .query((opts) => {
-      const { page = 1, size = 10 } = opts.input;
-      return userGetAll({ page, size }, opts.ctx.env);
-    }),
+  getAll: trpcProcedureAdmin.input(CommonPaginationInput).query((opts) => {
+    return userGetAll(opts.input, opts.ctx.env);
+  }),
 
-  getAllRole: trpcProcedureAdmin
-    .input((values: any = {}) => {
-      return {
-        page: values.page,
-        size: values.size,
-      } as CommonPaginationInput;
-    })
-    .query((opts) => {
-      const { page = 1, size = 10 } = opts.input;
-      return userGetAllRole({ page, size }, opts.ctx.env);
-    }),
+  getAllRole: trpcProcedureAdmin.input(CommonPaginationInput).query((opts) => {
+    const { page = 1, size = 10 } = opts.input;
+    return userGetAllRole({ page, size }, opts.ctx.env);
+  }),
 
   create: trpcProcedureAdmin.input(UserCreateInput).mutation((opts) => {
     const { confirmPassword, password } = opts.input;

@@ -1,7 +1,13 @@
 import { Env } from "../..";
 import { CommonPagination } from "../models/CommonModel";
 import { LogsCreditCreate } from "../models/LogsModel";
-import { User, UserCreate, UserRole } from "../models/UserModel";
+import {
+  User,
+  UserCreate,
+  UserPagination,
+  UserRole,
+} from "../models/UserModel";
+import { utilQueryAddWhere } from "../services/utilService";
 
 export async function userDbGetByUsername(
   params: { username: string },
@@ -75,13 +81,22 @@ export async function userDbGet(params: { userId: number }, env: Env) {
   }
 }
 
-export async function userDbGetAll(params: CommonPagination, env: Env) {
-  const { page, size } = params;
-  try {
-    const users = await env.DB.prepare("SELECT * FROM users LIMIT ? OFFSET ?")
-      .bind(size, (page - 1) * size)
-      .all<User>();
+export async function userDbGetAll(params: UserPagination, env: Env) {
+  const { page, size, roleId } = params;
 
+  const queryParams = [];
+  let query = "SELECT * FROM users";
+
+  if (roleId) {
+    query = utilQueryAddWhere(query, "roleId = ?");
+    queryParams.push(roleId);
+  }
+  query += " LIMIT ?, ?";
+  queryParams.push((page - 1) * size, size);
+
+  try {
+    const stmt = await env.DB.prepare(query).bind(...queryParams);
+    const users = await stmt.all<User>();
     return users;
   } catch (e) {
     console.log(e);

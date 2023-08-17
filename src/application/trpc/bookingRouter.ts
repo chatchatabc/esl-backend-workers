@@ -1,5 +1,12 @@
-import { trpcProcedureUser, trpcRouterCreate } from "../../domain/infra/trpc";
-import { BookingCreateInput } from "../../domain/schemas/BookingSchema";
+import {
+  trpcProcedureAdmin,
+  trpcProcedureUser,
+  trpcRouterCreate,
+} from "../../domain/infra/trpc";
+import {
+  BookingCreateInput,
+  BookingCreateInputAdmin,
+} from "../../domain/schemas/BookingSchema";
 import { CommonPaginationInput } from "../../domain/schemas/CommonSchema";
 import {
   bookingCancel,
@@ -19,8 +26,14 @@ export default trpcRouterCreate({
   create: trpcProcedureUser.input(BookingCreateInput).mutation(async (opts) => {
     const { userId, env } = opts.ctx;
     const studentId = userId;
-    return bookingCreate({ ...opts.input, studentId, amount: 0 }, env);
+    return bookingCreate({ ...opts.input, studentId }, env);
   }),
+
+  createAdmin: trpcProcedureAdmin
+    .input(BookingCreateInputAdmin)
+    .mutation(async (opts) => {
+      return bookingCreate(opts.input, opts.ctx.env);
+    }),
 
   cancel: trpcProcedureUser
     .input((values: any = {}) => {

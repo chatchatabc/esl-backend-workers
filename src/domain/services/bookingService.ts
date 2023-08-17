@@ -1,7 +1,7 @@
 import { Env } from "../..";
 import {
   Booking,
-  BookingCreate,
+  BookingCreateInput,
   BookingPagination,
 } from "../models/BookingModel";
 import { LogsCreditCreate } from "../models/LogsModel";
@@ -23,7 +23,7 @@ import {
   utilTimeFormatter,
 } from "./utilService";
 
-export async function bookingCreate(values: BookingCreate, env: Env) {
+export async function bookingCreate(values: BookingCreateInput, env: Env) {
   if (values.start >= values.end) {
     throw utilFailedResponse("Start time must be before end time", 400);
   }
@@ -59,7 +59,6 @@ export async function bookingCreate(values: BookingCreate, env: Env) {
   if (price > student.credit) {
     throw utilFailedResponse("Not enough credit", 400);
   }
-  values.amount = price;
 
   const startDateFormat = utilDateFormatter("zh-CN", new Date(start));
   const startTimeFormat = utilTimeFormatter("zh-CN", new Date(start));
@@ -82,9 +81,16 @@ export async function bookingCreate(values: BookingCreate, env: Env) {
     sendAt: values.start - 10 * 60 * 1000,
   };
 
+  const booking = {
+    message: null,
+    status: 1,
+    amount: price,
+    ...values,
+  };
+
   const success = await bookingDbInsert(
     {
-      booking: values,
+      booking,
       student,
       logsCredit,
       message,

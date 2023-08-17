@@ -22,6 +22,8 @@ export async function bookingDbGetAll(params: BookingPagination, env: Env) {
   if (status) {
     query = utilQueryAddWhere(query, "status = ?");
     queryParams.push(status);
+  } else {
+    query = utilQueryAddWhere(query, "status = 0 OR status = 1");
   }
   query += " LIMIT ?, ?";
   queryParams.push((page - 1) * size, size);

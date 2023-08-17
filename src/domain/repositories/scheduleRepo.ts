@@ -108,7 +108,10 @@ export async function scheduleDbValidateBooking(
   }
 }
 
-export async function scheduleDbDeleteMany(schedules: Schedule[], env: Env) {
+export async function scheduleDbDeleteMany(
+  schedules: { id: number }[],
+  env: Env
+) {
   try {
     const stmt = env.DB.prepare("DELETE FROM schedules WHERE id = ?");
     await env.DB.batch(

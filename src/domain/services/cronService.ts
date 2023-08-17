@@ -93,8 +93,6 @@ export async function cronSendCronMessages(timestamp: number, env: Env) {
     throw new Error("Failed to get messages");
   }
 
-  console.log("Cron Messages: ", messages);
-
   for (const message of messages) {
     const parsedCron = cron.parseExpression(message.cron);
     const next = parsedCron.next().toDate().getTime();

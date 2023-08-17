@@ -23,6 +23,12 @@ export default trpcRouterCreate({
     return bookingGetAll(opts.input, env);
   }),
 
+  getAllAdmin: trpcProcedureAdmin.input(CommonPaginationInput).query((opts) => {
+    const { env } = opts.ctx;
+
+    return bookingGetAll(opts.input, env);
+  }),
+
   create: trpcProcedureUser.input(BookingCreateInput).mutation(async (opts) => {
     const { userId, env } = opts.ctx;
     const studentId = userId;

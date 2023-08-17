@@ -2,6 +2,7 @@ import { TRPCError } from "@trpc/server";
 import type { TRPC_ERROR_CODE_KEY } from "@trpc/server/dist/rpc";
 import { enc, HmacSHA256 } from "crypto-js";
 import { ScheduleCreate } from "../models/ScheduleModel";
+import { v4 } from "uuid";
 
 export function utilFailedResponse(message: string, status: number = 500) {
   let code: TRPC_ERROR_CODE_KEY = "INTERNAL_SERVER_ERROR";
@@ -157,4 +158,8 @@ export function utilQueryAddWhere(query: string, where: string) {
   }
 
   return query;
+}
+
+export function utilGenerateUuid() {
+  return v4();
 }

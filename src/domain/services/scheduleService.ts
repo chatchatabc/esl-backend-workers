@@ -1,3 +1,4 @@
+import { Input } from "valibot";
 import { Env } from "../..";
 import {
   Schedule,
@@ -18,6 +19,7 @@ import {
   utilFailedResponse,
   utilGetScheduleTimeAndDay,
 } from "./utilService";
+import { ScheduleDeleteManyInputAdmin } from "../schemas/ScheduleSchema";
 
 export async function scheduleUpdateMany(
   params: { userId: number; schedules: ScheduleUpdateInput[] },
@@ -84,7 +86,28 @@ export async function scheduleUpdateMany(
   return true;
 }
 
-export async function scheduleDeleteMany(schedules: Schedule[], env: Env) {
+export async function scheduleDeleteMany(
+  params: { scheduleIds: number[]; userId: number },
+  env: Env
+) {
+  const { userId, scheduleIds } = params;
+
+  const query = await scheduleDbGetAll({ userId, page: 1, size: 10000 }, env);
+  if (!query) {
+    throw utilFailedResponse("Cannot GET Schedules", 500);
+  }
+  const schedules = query.results;
+
+  // Check if all schedules are owned by user
+  if (
+    !scheduleIds.every((scheduleId) => {
+      const schedule = schedules.find((s) => s.id === scheduleId);
+      return schedule ? true : false;
+    })
+  ) {
+    throw utilFailedResponse("Unauthorized", 401);
+  }
+
   const success = await scheduleDbDeleteMany(schedules, env);
   if (!success) {
     throw utilFailedResponse("Failed to delete schedules", 500);

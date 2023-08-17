@@ -13,6 +13,7 @@ export type Booking = {
   amount: number;
   createdAt: number;
   updatedAt: number;
+  logsCreditUuid: string;
 
   message: string | null;
 
@@ -29,7 +30,7 @@ export type BookingCreate = Omit<
 
 export type BookingCreateInput = Omit<
   BookingCreate,
-  "amount" | "status" | "message"
+  "amount" | "status" | "message" | "logsCreditUuid"
 > &
   Partial<Pick<BookingCreate, "amount" | "status" | "message">>;
 

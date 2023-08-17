@@ -16,4 +16,5 @@ export type LogsCreditCreate = {
   status: number;
 
   title: string | null;
+  uuid: string;
 };

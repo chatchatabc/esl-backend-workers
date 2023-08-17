@@ -2,6 +2,7 @@ import { Env } from "../..";
 import {
   Booking,
   BookingCreate,
+  BookingCreateInput,
   BookingPagination,
 } from "../models/BookingModel";
 import { LogsCreditCreate } from "../models/LogsModel";
@@ -227,19 +228,19 @@ export async function bookingDbGetAllByDateEnd(
 }
 
 export async function bookingDbGetOverlap(
-  values: BookingCreate & { id?: number },
+  values: BookingCreateInput,
   env: Env
 ) {
-  const { start, end, teacherId, studentId, id } = values;
+  const { start, end, teacherId, studentId } = values;
   try {
     const stmt = env.DB.prepare(
-      "SELECT COUNT(*) AS total FROM bookings WHERE ((start <= ? AND end > ?) OR (start < ? AND end >= ?)) AND (teacherId = ? OR studentId = ?) AND id != ? AND status = 1"
-    ).bind(start, start, end, end, teacherId, studentId, id ?? 0);
+      "SELECT COUNT(*) AS total FROM bookings WHERE ((start <= ? AND end > ?) OR (start < ? AND end >= ?)) AND (teacherId = ? OR studentId = ?) AND status = 1"
+    ).bind(start, start, end, end, teacherId, studentId);
     const total = await stmt.first("total");
     return total as number;
   } catch (e) {
     console.log(e);
-    return 0;
+    return null;
   }
 }
 

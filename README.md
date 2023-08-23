@@ -30,3 +30,35 @@ Project for the ESL Website Backend. This project is built using Cloudflare Work
 
 1. Run `npm run build` to build the project
 2. Run `npm run deploy` to deploy the project to Cloudflare Workers
+
+## Database
+
+The database is hosted on Cloudflare D1, which is similar in using SQLite. The schema is as follows:
+
+### Users
+
+| Column Name     | Type                | Description                                  |
+| --------------- | ------------------- | -------------------------------------------- |
+| id              | INTEGER PRIMARY KEY | The ID of the user                           |
+| username        | TEXT NOT NULL       | The username of the user                     |
+| password        | TEXT NOT NULL       | The password of the user                     |
+| phone           | TEXT                | The phone of the user                        |
+| email           | TEXT                | The email of the user                        |
+| firstName       | TEXT                | The first name of user                       |
+| lastName        | TEXT                | The last name of user                        |
+| roleId          | INTEGER NOT NULL    | The role ID of the user                      |
+| status          | INTEGER NOT NULL    | The status of the user                       |
+| credit          | INTEGER NOT NULL    | The credit of the user                       |
+| phoneVerifiedAt | INTEGER             | The timestamp of when the phone was verified |
+| emailVerifiedAt | INTEGER             | The timestamp of when the email was verified |
+| createdAt       | INTEGER NOT NULL    | The timestamp of when the user was created   |
+| updatedAt       | INTEGER NOT NULL    | The timestamp of when the user was updated   |
+
+### Roles
+
+| Column Name | Type                | Description          |
+| ----------- | ------------------- | -------------------- |
+| id          | INTEGER PRIMARY KEY | The ID of the role   |
+| name        | TEXT NOT NULL       | The name of the role |
+| createdAt   | INTEGER NOT NULL    | The timestamp        |
+| updatedAt   | INTEGER NOT NULL    | The timestamp        |

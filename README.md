@@ -2,15 +2,24 @@
 
 Project for the ESL Website Backend. This project is built using Cloudflare Workers, and is written in TypeScript.
 
+## Technologies
+
+- [Cloudflare Workers](https://workers.cloudflare.com/)
+- [TypeScript](https://www.typescriptlang.org/)
+- [tRPC](https://trpc.io/)
+
 ## Pre-requisites
 
-1. Node Version Manager (NVM) || Node.js v19.8.1
+**Git** and **Node.js** are required to be installed on your machine. It is recommended to use [NVM](https://github.com/nvm-sh/nvm) to manage Node.js versions.
 
-## Installation
+> **Note:** This project uses Node.js v19.8.1. If you are using NVM, you can run `nvm install` in the project directory to install the correct version of Node.js.
 
-1. Clone the repository
-2. (If you installed NVM) Run `nvm use` to use the correct version of Node.js
-3. Run `npm install` to install all dependencies
+## Getting Started
+
+1. Clone the repository from GitHub by running `git clone https://github.com/chatchatabc/esl-workers.git` in your terminal or command prompt.
+2. Open the project directory by running `cd esl-workers` in your terminal or command prompt.
+3. If you are using **NVM**, run `nvm use` to use the correct version of Node.js.
+4. Run `npm install` to install the dependencies.
 
 ## Development
 

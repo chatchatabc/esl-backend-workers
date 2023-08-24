@@ -1,4 +1,3 @@
-import { Input } from "valibot";
 import { Env } from "../..";
 import {
   Schedule,
@@ -19,16 +18,18 @@ import {
   utilFailedResponse,
   utilGetScheduleTimeAndDay,
 } from "./utilService";
-import { ScheduleDeleteManyInputAdmin } from "../schemas/ScheduleSchema";
 
 export async function scheduleUpdateMany(
-  params: { userId: number; schedules: ScheduleUpdateInput[] },
+  params: { teacherId: number; schedules: ScheduleUpdateInput[] },
   env: Env
 ) {
-  let { userId, schedules } = params;
+  let { teacherId, schedules } = params;
 
   // Get old schedules
-  const query = await scheduleDbGetAll({ userId, page: 1, size: 10000 }, env);
+  const query = await scheduleDbGetAll(
+    { teacherId, page: 1, size: 10000 },
+    env
+  );
   if (!query) {
     throw utilFailedResponse("Cannot GET Schedules", 500);
   }
@@ -58,7 +59,7 @@ export async function scheduleUpdateMany(
 
     return {
       ...oldSchedule,
-      teacherId: userId,
+      teacherId,
       startTime,
       endTime,
       day,
@@ -87,12 +88,15 @@ export async function scheduleUpdateMany(
 }
 
 export async function scheduleDeleteMany(
-  params: { scheduleIds: number[]; userId: number },
+  params: { scheduleIds: number[]; teacherId: number },
   env: Env
 ) {
-  const { userId, scheduleIds } = params;
+  const { teacherId, scheduleIds } = params;
 
-  const query = await scheduleDbGetAll({ userId, page: 1, size: 10000 }, env);
+  const query = await scheduleDbGetAll(
+    { teacherId, page: 1, size: 10000 },
+    env
+  );
   if (!query) {
     throw utilFailedResponse("Cannot GET Schedules", 500);
   }
@@ -117,10 +121,10 @@ export async function scheduleDeleteMany(
 }
 
 export async function scheduleCreateMany(
-  data: { userId: number; schedules: ScheduleCreateInput[] },
+  data: { teacherId: number; schedules: ScheduleCreateInput[] },
   bindings: Env
 ) {
-  let { userId, schedules } = data;
+  let { teacherId, schedules } = data;
 
   // Fix day & time format
   const newSchedules = schedules.map((schedule) => {
@@ -130,7 +134,7 @@ export async function scheduleCreateMany(
     );
 
     return {
-      userId,
+      teacherId,
       startTime,
       endTime,
       day,

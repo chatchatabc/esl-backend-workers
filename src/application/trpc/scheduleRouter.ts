@@ -3,7 +3,6 @@ import {
   trpcProcedureUser,
   trpcRouterCreate,
 } from "../../domain/infra/trpc";
-import { Schedule } from "../../domain/models/ScheduleModel";
 import { CommonPaginationInput } from "../../domain/schemas/CommonSchema";
 import {
   ScheduleCreateManyInput,
@@ -19,6 +18,7 @@ import {
   scheduleGetAll,
   scheduleUpdateMany,
 } from "../../domain/services/scheduleService";
+import { teacherGetByUser } from "../../domain/services/teacherService";
 import { utilFailedResponse } from "../../domain/services/utilService";
 
 export default trpcRouterCreate({
@@ -32,7 +32,7 @@ export default trpcRouterCreate({
 
   updateMany: trpcProcedureUser
     .input(ScheduleUpdateManyInput)
-    .mutation((opts) => {
+    .mutation(async (opts) => {
       const { userId, env } = opts.ctx;
       const { schedules } = opts.input;
 
@@ -44,7 +44,8 @@ export default trpcRouterCreate({
         throw utilFailedResponse("Invalid time range");
       }
 
-      return scheduleUpdateMany({ userId, schedules }, env);
+      const teacher = await teacherGetByUser({ userId }, env);
+      return scheduleUpdateMany({ teacherId: teacher.id, schedules }, env);
     }),
 
   updateManyAdmin: trpcProcedureAdmin
@@ -66,11 +67,13 @@ export default trpcRouterCreate({
 
   createMany: trpcProcedureUser
     .input(ScheduleCreateManyInput)
-    .mutation((opts) => {
+    .mutation(async (opts) => {
       const { userId, env } = opts.ctx;
       const { schedules } = opts.input;
 
-      return scheduleCreateMany({ userId, schedules }, env);
+      const teacher = await teacherGetByUser({ userId }, env);
+
+      return scheduleCreateMany({ teacherId: teacher.id, schedules }, env);
     }),
 
   createManyAdmin: trpcProcedureAdmin
@@ -92,11 +95,13 @@ export default trpcRouterCreate({
 
   deleteMany: trpcProcedureUser
     .input(ScheduleDeleteManyInput)
-    .mutation((opts) => {
+    .mutation(async (opts) => {
       const { userId, env } = opts.ctx;
       const { scheduleIds } = opts.input;
 
-      return scheduleDeleteMany({ scheduleIds, userId }, env);
+      const teacher = await teacherGetByUser({ userId }, env);
+
+      return scheduleDeleteMany({ scheduleIds, teacherId: teacher.id }, env);
     }),
 
   deleteManyAdmin: trpcProcedureAdmin

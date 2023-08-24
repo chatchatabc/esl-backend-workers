@@ -12,14 +12,14 @@ import {
 import { CommonPaginationInput } from "../models/CommonModel";
 
 export async function scheduleDbGetAll(params: SchedulePagination, env: Env) {
-  const { userId, page, size } = params;
+  const { teacherId, page, size } = params;
 
   const queryParams = [];
   let query = "SELECT * FROM schedules";
 
-  if (userId) {
-    query = utilQueryAddWhere(query, "userId = ?");
-    queryParams.push(userId);
+  if (teacherId) {
+    query = utilQueryAddWhere(query, "teacherId = ?");
+    queryParams.push(teacherId);
   }
 
   query += " ORDER BY createdAt DESC";
@@ -41,14 +41,14 @@ export async function scheduleDbGetAllTotal(
   params: CommonPaginationInput,
   env: Env
 ) {
-  const { userId } = params;
+  const { teacherId } = params;
 
   const queryParams = [];
   let query = "SELECT COUNT(*) AS total FROM schedules";
 
-  if (userId) {
-    query = utilQueryAddWhere(query, "userId = ?");
-    queryParams.push(userId);
+  if (teacherId) {
+    query = utilQueryAddWhere(query, "teacherId = ?");
+    queryParams.push(teacherId);
   }
 
   try {
@@ -65,7 +65,7 @@ export async function scheduleDbGetAllTotal(
 export async function scheduleDbUpdateMany(schedules: Schedule[], env: Env) {
   try {
     const stmt = env.DB.prepare(
-      "UPDATE schedules SET startTime = ?, endTime = ?, updatedAt = ?, userId = ?, day = ? WHERE id = ?"
+      "UPDATE schedules SET startTime = ?, endTime = ?, updatedAt = ?, teacherId = ?, day = ? WHERE id = ?"
     );
     await env.DB.batch(
       schedules.map((schedule) => {
@@ -73,7 +73,7 @@ export async function scheduleDbUpdateMany(schedules: Schedule[], env: Env) {
           schedule.startTime,
           schedule.endTime,
           Date.now(),
-          schedule.userId,
+          schedule.teacherId,
           schedule.day,
           schedule.id
         );
@@ -134,9 +134,9 @@ export async function scheduleDbGetOverlapMany(
     const totals = await env.DB.batch<Record<string, any>>(
       schedules.map((schedule) => {
         return env.DB.prepare(
-          "SELECT COUNT(*) AS total FROM schedules WHERE (userId = ? AND ((startTime <= ? AND endTime > ?) OR (startTime < ? AND endTime >= ?)))"
+          "SELECT COUNT(*) AS total FROM schedules WHERE (teacherId = ? AND ((startTime <= ? AND endTime > ?) OR (startTime < ? AND endTime >= ?)))"
         ).bind(
-          schedule.userId,
+          schedule.teacherId,
           schedule.startTime,
           schedule.startTime,
           schedule.endTime,
@@ -165,13 +165,13 @@ export async function scheduleDbInsertMany(
 ) {
   try {
     const stmt = env.DB.prepare(
-      "INSERT INTO schedules (userId, startTime, endTime, day, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?)"
+      "INSERT INTO schedules (teacherId, startTime, endTime, day, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?)"
     );
     await env.DB.batch(
       schedules.map((schedule) => {
         const date = Date.now();
         return stmt.bind(
-          schedule.userId,
+          schedule.teacherId,
           schedule.startTime,
           schedule.endTime,
           schedule.day,

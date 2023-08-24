@@ -4,10 +4,10 @@ import { ScheduleUpdateInput } from "../schemas/ScheduleSchema";
 
 export type Schedule = {
   id: number;
-  userId: number;
-  day: number;
+  teacherId: number;
   startTime: number;
   endTime: number;
+  day: number;
   createdAt: number;
   updatedAt: number;
 };
@@ -18,5 +18,5 @@ export type ScheduleCreateInput = Pick<Schedule, "startTime" | "endTime">;
 export type ScheduleUpdateInput = Input<typeof ScheduleUpdateInput>;
 
 export type SchedulePagination = {
-  userId?: number;
+  teacherId?: number;
 } & CommonPagination;

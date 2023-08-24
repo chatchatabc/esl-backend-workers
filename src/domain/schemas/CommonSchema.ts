@@ -42,6 +42,14 @@ export const CommonPaginationInput = transform(
         Number
       )
     ),
+    teacherId: optional(
+      coerce(
+        number("Invalid teacherId value, should be a number", [
+          minValue(1, "teacherId should be greater than 0"),
+        ]),
+        Number
+      )
+    ),
   }),
   (input) => {
     return {

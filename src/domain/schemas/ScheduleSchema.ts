@@ -5,7 +5,7 @@ export const Schedule = object({
     number("Invalid schedule id", [minValue(1, "ID must be greater than 0")]),
     Number
   ),
-  userId: coerce(
+  teacherId: coerce(
     number("Invalid teacher id", [minValue(1, "ID must be greater than 0")]),
     Number
   ),
@@ -27,14 +27,14 @@ export const ScheduleCreateManyInputAdmin = merge([
   object({
     schedules: array(pick(Schedule, ["startTime", "endTime"])),
   }),
-  pick(Schedule, ["userId"]),
+  pick(Schedule, ["teacherId"]),
 ]);
 
 export const ScheduleUpdateInput = pick(Schedule, [
   "startTime",
   "endTime",
   "id",
-  "userId",
+  "teacherId",
 ]);
 
 export const ScheduleUpdateManyInput = object({
@@ -45,7 +45,7 @@ export const ScheduleUpdateManyInputAdmin = merge([
   object({
     schedules: array(Schedule),
   }),
-  pick(Schedule, ["userId"]),
+  pick(Schedule, ["teacherId"]),
 ]);
 
 export const ScheduleDeleteManyInput = object({ scheduleIds: array(number()) });
@@ -54,5 +54,5 @@ export const ScheduleDeleteManyInputAdmin = merge([
   object({
     scheduleIds: array(number()),
   }),
-  pick(Schedule, ["userId"]),
+  pick(Schedule, ["teacherId"]),
 ]);

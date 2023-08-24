@@ -40,19 +40,21 @@ The database is hosted on Cloudflare D1, which is similar in using SQLite. The s
 | Column Name     | Type                | Description                                  |
 | --------------- | ------------------- | -------------------------------------------- |
 | id              | INTEGER PRIMARY KEY | The ID of the user                           |
+| teacherId       | INTEGER             | The ID of the teacher                        |
+| roleId          | INTEGER NOT NULL    | The ID of the role                           |
 | username        | TEXT NOT NULL       | The username of the user                     |
 | password        | TEXT NOT NULL       | The password of the user                     |
 | phone           | TEXT                | The phone of the user                        |
 | email           | TEXT                | The email of the user                        |
 | firstName       | TEXT                | The first name of user                       |
 | lastName        | TEXT                | The last name of user                        |
-| roleId          | INTEGER NOT NULL    | The role ID of the user                      |
+| alias           | TEXT                | The alias of the user                        |
+| phoneVerifiedAt | TIMESTAMP           | The timestamp of when the phone was verified |
+| emailVerifiedAt | TIMESTAMP           | The timestamp of when the email was verified |
+| credits         | INTEGER NOT NULL    | The credit of the user                       |
 | status          | INTEGER NOT NULL    | The status of the user                       |
-| credit          | INTEGER NOT NULL    | The credit of the user                       |
-| phoneVerifiedAt | INTEGER             | The timestamp of when the phone was verified |
-| emailVerifiedAt | INTEGER             | The timestamp of when the email was verified |
-| createdAt       | INTEGER NOT NULL    | The timestamp of when the user was created   |
-| updatedAt       | INTEGER NOT NULL    | The timestamp of when the user was updated   |
+| createdAt       | TIMESTAMP NOT NULL  | The timestamp of when the user was created   |
+| updatedAt       | TIMESTAMP NOT NULL  | The timestamp of when the user was updated   |
 
 ### Roles
 
@@ -60,5 +62,51 @@ The database is hosted on Cloudflare D1, which is similar in using SQLite. The s
 | ----------- | ------------------- | -------------------- |
 | id          | INTEGER PRIMARY KEY | The ID of the role   |
 | name        | TEXT NOT NULL       | The name of the role |
-| createdAt   | INTEGER NOT NULL    | The timestamp        |
-| updatedAt   | INTEGER NOT NULL    | The timestamp        |
+| createdAt   | TIMESTAMP NOT NULL  | The timestamp        |
+| updatedAt   | TIMESTAMP NOT NULL  | The timestamp        |
+
+### Teachers
+
+| Column Name | Type                | Description              |
+| ----------- | ------------------- | ------------------------ |
+| id          | INTEGER PRIMARY KEY | The ID of the teacher    |
+| videoId     | INTEGER             | The video ID of the user |
+| alias       | TEXT NOT NULL       | The alias of the user    |
+| bio         | TEXT                | The bio of the user      |
+| createdAt   | TIMESTAMP NOT NULL  | The timestamp            |
+| updatedAt   | TIMESTAMP NOT NULL  | The timestamp            |
+
+### Courses
+
+| Column Name | Type                | Description             |
+| ----------- | ------------------- | ----------------------- |
+| id          | INTEGER PRIMARY KEY | The ID of the course    |
+| teacherId   | INTEGER NOT NULL    | The ID of the teacher   |
+| name        | TEXT NOT NULL       | The name of the course  |
+| price       | INTEGER NOT NULL    | The price of the course |
+| createdAt   | TIMESTAMP NOT NULL  | The timestamp           |
+| updatedAt   | TIMESTAMP NOT NULL  | The timestamp           |
+
+### Schedules
+
+| Column Name | Type                | Description            |
+| ----------- | ------------------- | ---------------------- |
+| id          | INTEGER PRIMARY KEY | The ID of the schedule |
+| teacherId   | INTEGER NOT NULL    | The ID of the teacher  |
+| title       | TEXT NOT NULL       | The name of the course |
+| day         | INTEGER NOT NULL    | The day of the week    |
+| startTime   | TIMESTAMP NOT NULL  | The start time         |
+| endTime     | TIMESTAMP NOT NULL  | The end time           |
+| createdAt   | TIMESTAMP NOT NULL  | The timestamp          |
+| updatedAt   | TIMESTAMP NOT NULL  | The timestamp          |
+
+### Bookings
+
+| Column Name | Type                | Description           |
+| ----------- | ------------------- | --------------------- |
+| id          | INTEGER PRIMARY KEY | The ID of the booking |
+| userId      | INTEGER NOT NULL    | The ID of the user    |
+| courseId    | INTEGER NOT NULL    | The ID of the course  |
+| teacherId   | INTEGER NOT NULL    | The ID of the teacher |
+| createdAt   | TIMESTAMP NOT NULL  | The timestamp         |
+| updatedAt   | TIMESTAMP NOT NULL  | The timestamp         |

@@ -3,7 +3,6 @@ DROP TABLE IF EXISTS users;
 CREATE TABLE
   IF NOT EXISTS users (
     id INTEGER PRIMARY KEY,
-    teacherId INTEGER UNIQUE,
     roleId INTEGER NOT NULL,
     username TEXT NOT NULL UNIQUE,
     password TEXT NOT NULL,
@@ -23,7 +22,6 @@ CREATE TABLE
 INSERT INTO
   users (
     roleId, -- 1: admin, 2: student, 3: teacher
-    teacherId,
     username,
     password,
     phone,
@@ -39,7 +37,6 @@ INSERT INTO
 VALUES
   (
     1,
-    NULL,
     'admin',
     'd7cd68b6014e62d355e294a622fe95894f047ba5dfd8cc06f98122cc2bb945d3',
     '+639338520220',
@@ -54,7 +51,6 @@ VALUES
   ),
   (
     2,
-    NULL,
     'student',
     'd7cd68b6014e62d355e294a622fe95894f047ba5dfd8cc06f98122cc2bb945d3',
     '+8618832258785',
@@ -69,7 +65,6 @@ VALUES
   ),
   (
     3,
-    1,
     'teacher',
     'd7cd68b6014e62d355e294a622fe95894f047ba5dfd8cc06f98122cc2bb945d3',
     '+8618832258785',
@@ -87,29 +82,19 @@ DROP TABLE IF EXISTS teachers;
 
 CREATE TABLE
   IF NOT EXISTS teachers (
-    userId INTEGER PRIMARY KEY,
-    id INTEGER UNIQUE NOT NULL,
+    id INTEGER PRIMARY KEY,
+    userId INTEGER NOT NULL UNIQUE,
     alias TEXT NOT NULL,
-    price INTEGER NOT NULL,
-    minutes INTEGER NOT NULL,
+    bio TEXT,
     status INTEGER NOT NULL,
     createdAt INTEGER NOT NULL,
     updatedAt INTEGER NOT NULL
   );
 
 INSERT INTO
-  teachers (
-    userId,
-    id,
-    price,
-    alias,
-    minutes,
-    createdAt,
-    updatedAt,
-    status
-  )
+  teachers (userId, alias, bio, status, createdAt, updatedAt)
 VALUES
-  (3, 202307311, 50, 'Teacher Michelle', 25, 0, 0, 1);
+  (3, 'Teacher Michelle', 'I am a teacher', 1, 0, 0);
 
 /**
  * id (integer)

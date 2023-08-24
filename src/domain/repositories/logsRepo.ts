@@ -1,6 +1,5 @@
 import { Env } from "../..";
-import type { LogsCredit, LogsCreditCreate } from "../models/LogsModel";
-import type { User } from "../models/UserModel";
+import type { LogsCredit } from "../models/LogsModel";
 
 export async function logsDbGetAllCredit(
   params: { userId: number; page: number; size: number },
@@ -38,25 +37,25 @@ export async function logsDbGetTotalCredit(
   }
 }
 
-export async function logsDbUpdateCredit(
-  logsCredit: LogsCredit,
-  bindings: Env
-) {
-  const { id, senderId, receiverId, status, amount, title = null } = logsCredit;
-  const date = Date.now();
-  try {
-    const results = await bindings.DB.prepare(
-      "UPDATE logsCredit SET updatedAt = ?, senderId = ?, receiverId = ?, status = ?, amount = ?, title = ? WHERE id = ?"
-    )
-      .bind(date, senderId, receiverId, status, amount, title, id)
-      .run();
+// export async function logsDbUpdateCredit(
+//   logsCredit: LogsCredit,
+//   bindings: Env
+// ) {
+//   const { id, senderId, receiverId, status, amount, title = null } = logsCredit;
+//   const date = Date.now();
+//   try {
+//     const results = await bindings.DB.prepare(
+//       "UPDATE logsCredit SET updatedAt = ?, senderId = ?, receiverId = ?, status = ?, amount = ?, title = ? WHERE id = ?"
+//     )
+//       .bind(date, senderId, receiverId, status, amount, title, id)
+//       .run();
 
-    return results;
-  } catch (e) {
-    console.log(e);
-    return null;
-  }
-}
+//     return results;
+//   } catch (e) {
+//     console.log(e);
+//     return null;
+//   }
+// }
 
 export async function logsDbGetCredit(
   params: { logId: number },
@@ -77,55 +76,55 @@ export async function logsDbGetCredit(
   }
 }
 
-export async function logsDbCreateCredit(
-  logsCredit: LogsCreditCreate,
-  bindings: Env
-) {
-  try {
-    const date = Date.now();
-    await bindings.DB.prepare(
-      "INSERT INTO logsCredit (title, senderId, receiverId, amount, status, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?, ?)"
-    )
-      .bind(
-        logsCredit.title,
-        logsCredit.senderId,
-        logsCredit.receiverId,
-        logsCredit.amount,
-        logsCredit.status,
-        date,
-        date
-      )
-      .run();
+// export async function logsDbCreateCredit(
+//   logsCredit: LogsCreditCreate,
+//   bindings: Env
+// ) {
+//   try {
+//     const date = Date.now();
+//     await bindings.DB.prepare(
+//       "INSERT INTO logsCredit (title, senderId, receiverId, amount, status, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?, ?)"
+//     )
+//       .bind(
+//         logsCredit.title,
+//         logsCredit.senderId,
+//         logsCredit.receiverId,
+//         logsCredit.amount,
+//         logsCredit.status,
+//         date,
+//         date
+//       )
+//       .run();
 
-    return true;
-  } catch (e) {
-    console.log(e);
-    return null;
-  }
-}
+//     return true;
+//   } catch (e) {
+//     console.log(e);
+//     return null;
+//   }
+// }
 
-export async function logsDbApproveCredit(
-  logsCredit: LogsCredit,
-  sender: User,
-  receiver: User,
-  bindings: Env
-) {
-  try {
-    const logsCreditStmt = bindings.DB.prepare(
-      "UPDATE logsCredit SET status = ? WHERE id = ?"
-    ).bind(logsCredit.status, logsCredit.id);
-    const senderStmt = bindings.DB.prepare(
-      "UPDATE users SET credit = ? WHERE id = ?"
-    ).bind(sender.credit, sender.id);
-    const receiverStmt = bindings.DB.prepare(
-      "UPDATE users SET credit = ? WHERE id = ?"
-    ).bind(receiver.credit, receiver.id);
+// export async function logsDbApproveCredit(
+//   logsCredit: LogsCredit,
+//   sender: User,
+//   receiver: User,
+//   bindings: Env
+// ) {
+//   try {
+//     const logsCreditStmt = bindings.DB.prepare(
+//       "UPDATE logsCredit SET status = ? WHERE id = ?"
+//     ).bind(logsCredit.status, logsCredit.id);
+//     const senderStmt = bindings.DB.prepare(
+//       "UPDATE users SET credit = ? WHERE id = ?"
+//     ).bind(sender.credit, sender.id);
+//     const receiverStmt = bindings.DB.prepare(
+//       "UPDATE users SET credit = ? WHERE id = ?"
+//     ).bind(receiver.credit, receiver.id);
 
-    await bindings.DB.batch([logsCreditStmt, senderStmt, receiverStmt]);
+//     await bindings.DB.batch([logsCreditStmt, senderStmt, receiverStmt]);
 
-    return true;
-  } catch (e) {
-    console.log(e);
-    return null;
-  }
-}
+//     return true;
+//   } catch (e) {
+//     console.log(e);
+//     return null;
+//   }
+// }

@@ -222,53 +222,21 @@ CREATE TABLE
     updatedAt TIMESTAMP NOT NULL
   );
 
-INSERT INTO
-  messages (
-    title,
-    senderId,
-    receiverId,
-    message,
-    cron,
-    sendAt,
-    status,
-    createdAt,
-    updatedAt
-  )
-VALUES
-  (
-    'Phone Verification',
-    1,
-    2,
-    '您的手机验证码是#code#，有效期仅5分钟。',
-    '10 * * * *',
-    1691735400000,
-    1,
-    0,
-    0
-  );
-
-/**
- * id (integer)
- * smsId (integer) [From SMS api]
- * signature (text)
- * title (text)
- * message (text)
- * status (integer) [1: pending, 2: accepted, 3: rejected, -1: deleted]
- * createdAt (timestamp)
- * updatedAt (timestamp)
+/*
+ * Message Template Entity
+ * Independent entity for storing message templates
  */
 DROP TABLE IF EXISTS messageTemplates;
 
 CREATE TABLE
   IF NOT EXISTS messageTemplates (
     id INTEGER PRIMARY KEY,
-    smsId INTEGER UNIQUE NOT NULL,
     signature TEXT NOT NULL,
     title TEXT NOT NULL,
     message TEXT NOT NULL,
-    status INTEGER NOT NULL,
-    createdAt INTEGER NOT NULL,
-    updatedAt INTEGER NOT NULL
+    status INTEGER NOT NULL, -- 1: active, -1: deleted
+    createdAt TIMESTAMP NOT NULL,
+    updatedAt TIMESTAMP NOT NULL
   );
 
 INSERT INTO
@@ -277,26 +245,23 @@ INSERT INTO
     message,
     status,
     signature,
-    smsId,
     createdAt,
     updatedAt
   )
 VALUES
   (
     'Phone Verification',
-    '您的手机验证码是#code#，有效期仅5分钟。',
-    2,
+    '您的手机验证码是123456，有效期仅5分钟。',
+    1,
     '恰恰英语',
-    5332,
     0,
     0
   ),
   (
     'Class Reminder',
-    '你好！您的课程安排在#date#，时间是#time#。我们将专注于口语练习。请准时到达，以充分利用本次课程。到时见！',
-    2,
+    '您好！您的课程于2023/08/23 14:00开始，请提前*分钟登陆您的账号，感谢您的支持',
+    1,
     '恰恰英语',
-    5359,
     0,
     0
   );

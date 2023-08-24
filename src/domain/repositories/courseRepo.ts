@@ -1,5 +1,6 @@
 import { Env } from "../..";
-import { Course } from "../models/CourseModel";
+import { Course, CoursePagination } from "../models/CourseModel";
+import { utilQueryAddWhere } from "../services/utilService";
 
 export async function courseDbGet(params: { courseId: number }, env: Env) {
   try {
@@ -13,4 +14,56 @@ export async function courseDbGet(params: { courseId: number }, env: Env) {
   }
 }
 
-export async function courseDbGetAll() {}
+export async function courseDbGetAll(params: CoursePagination, env: Env) {
+  const { page, size, teacherId } = params;
+
+  const queryParams = [];
+  let query = "SELECT * FROM courses";
+
+  if (teacherId) {
+    query = utilQueryAddWhere(
+      query,
+      "id IN (SELECT courseId FROM teachersCourses WHERE teacherId = ?)"
+    );
+    queryParams.push(teacherId);
+  }
+  query += " LIMIT ?, ?";
+  queryParams.push((page - 1) * size, size);
+
+  try {
+    const stmt = env.DB.prepare(query).bind(...queryParams);
+    const courses = await stmt.all<Course>();
+    return courses;
+  } catch (e) {
+    console.log(e);
+    return null;
+  }
+}
+
+export async function courseDbGetAllTotal(
+  params: { teacherId?: number },
+  env: Env
+) {
+  const { teacherId } = params;
+
+  const queryParams = [];
+  let query = "SELECT COUNT(*) AS total FROM courses";
+
+  if (teacherId) {
+    query = utilQueryAddWhere(
+      query,
+      "id IN (SELECT courseId FROM teachersCourses WHERE teacherId = ?)"
+    );
+    queryParams.push(teacherId);
+  }
+
+  try {
+    const stmt = env.DB.prepare(query).bind(...queryParams);
+    const total = await stmt.first<number>("total");
+
+    return total;
+  } catch (e) {
+    console.log(e);
+    return null;
+  }
+}

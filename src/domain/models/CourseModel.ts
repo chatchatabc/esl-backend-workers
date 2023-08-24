@@ -9,8 +9,8 @@ export type Course = {
 
   name: string;
   description: string | null;
-
-  teacher: Teacher | null;
 };
 
-export type CoursePagination = CommonPagination & {};
+export type CoursePagination = CommonPagination & {
+  teacherId?: number;
+};

@@ -8,11 +8,13 @@ import teacherRouter from "./teacherRouter";
 import messageRouter from "./messageRouter";
 import messageTemplateRouter from "./messageTemplateRouter";
 import roleRouter from "./roleRouter";
+import courseRouter from "./courseRouter";
 
 // tRPC Main Router
 const trpcRouter = trpcRouterCreate({
   auth: authRouter,
   booking: bookingRouter,
+  course: courseRouter,
   logs: logsRouter,
   schedule: scheduleRouter,
   user: userRouter,

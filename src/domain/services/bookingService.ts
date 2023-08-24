@@ -15,12 +15,11 @@ import {
 } from "../repositories/bookingRepo";
 import { scheduleDbValidateBooking } from "../repositories/scheduleRepo";
 import { courseGet } from "./courseService";
-import { teacherGet } from "./teacherService";
+import { teacherGet, teacherValidateCourse } from "./teacherService";
 import { userGet } from "./userService";
 import {
   utilDateFormatter,
   utilFailedResponse,
-  utilGenerateUuid,
   utilTimeFormatter,
 } from "./utilService";
 
@@ -44,7 +43,11 @@ export async function bookingCreate(
   teacher.user = await userGet({ userId: params.teacherId }, env);
 
   // Check if the course belongs to the teacher
-  if (course.teacherId !== teacher.id) {
+  const courseValid = await teacherValidateCourse(
+    { teacherId: teacher.id, courseId: course.id },
+    env
+  );
+  if (!courseValid) {
     throw utilFailedResponse("Course does not belong to teacher", 400);
   }
 

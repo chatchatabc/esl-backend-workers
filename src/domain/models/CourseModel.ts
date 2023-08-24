@@ -3,7 +3,6 @@ import { Teacher } from "./TeacherModel";
 
 export type Course = {
   id: number;
-  teacherId: number;
   price: number;
   createdAt: number;
   updatedAt: number;

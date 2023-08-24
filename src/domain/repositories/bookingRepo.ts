@@ -92,7 +92,7 @@ export async function bookingDbCancel(
 
   try {
     const studentStmt = env.DB.prepare(
-      "UPDATE users SET credit = ?, updatedAt = ? WHERE id = ?"
+      "UPDATE users SET credits = ?, updatedAt = ? WHERE id = ?"
     ).bind(user.credits, date, user.id);
     const bookingStmt = env.DB.prepare(
       "UPDATE bookings SET status = 4, updatedAt = ? WHERE id = ?"
@@ -132,7 +132,7 @@ export async function bookingDbCreate(
 
   try {
     const userStmt = bindings.DB.prepare(
-      "UPDATE users SET credit = ?, updatedAt = ? WHERE id = ?"
+      "UPDATE users SET credits = ?, updatedAt = ? WHERE id = ?"
     ).bind(user.credits, date, user.id);
     const bookingStmt = bindings.DB.prepare(
       "INSERT INTO bookings (courseId, teacherId, userId, amount, start, end, status, message, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
@@ -220,7 +220,7 @@ export async function bookingDbGetOverlap(values: BookingCreate, env: Env) {
   const { start, end, teacherId, userId } = values;
   try {
     const stmt = env.DB.prepare(
-      "SELECT COUNT(*) AS total FROM bookings WHERE ((start <= ? AND end > ?) OR (start < ? AND end >= ?)) AND (teacherId = ? OR studentId = ?) AND status = 1"
+      "SELECT COUNT(*) AS total FROM bookings WHERE ((start <= ? AND end > ?) OR (start < ? AND end >= ?)) AND (teacherId = ? OR userId = ?) AND status = 1"
     ).bind(start, start, end, end, teacherId, userId);
     const total = await stmt.first("total");
     return total as number;
@@ -301,7 +301,7 @@ export async function bookingDbConfirmMany(
     const { bookings, logsCredits, teachers } = params;
 
     const teacherStmt = env.DB.prepare(
-      "UPDATE users SET credit = ?, updatedAt = ? WHERE id = ?"
+      "UPDATE users SET credits = ?, updatedAt = ? WHERE id = ?"
     );
     const bookingStmt = env.DB.prepare(
       "UPDATE bookings SET status = 2, updatedAt = ? WHERE id = ?"

@@ -29,8 +29,8 @@ const Schema = object({
   courseId: number("Course ID must be a number", [
     minValue(1, "Course ID must be greater than 0"),
   ]),
-  userId: number("Student ID must be a number", [
-    minValue(1, "Student ID must be greater than 0"),
+  userId: number("User ID must be a number", [
+    minValue(1, "User ID must be greater than 0"),
   ]),
   status: optional(
     number("Status must be a number", [

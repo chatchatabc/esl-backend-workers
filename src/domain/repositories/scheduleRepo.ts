@@ -95,7 +95,7 @@ export async function scheduleDbValidateBooking(
 
   try {
     const stmt = env.DB.prepare(
-      "SELECT COUNT(*) AS total FROM schedules WHERE userId = ? AND startTime <= ? AND endTime >= ?"
+      "SELECT COUNT(*) AS total FROM schedules WHERE teacherId = ? AND startTime <= ? AND endTime >= ?"
     ).bind(teacherId, startTime, endTime);
     const total = await stmt.first("total");
     if (total === 0) {

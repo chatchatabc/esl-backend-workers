@@ -46,7 +46,7 @@ export default trpcRouterCreate({
     .mutation(async (opts) => {
       const { start, end } = opts.input;
       if (start >= end) {
-        throw utilFailedResponse("Invalid time", 400);
+        throw utilFailedResponse("Start time must be before end time", 400);
       }
 
       return bookingCreate(opts.input, opts.ctx.env);

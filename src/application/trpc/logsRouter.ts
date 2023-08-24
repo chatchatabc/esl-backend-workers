@@ -30,9 +30,14 @@ export default trpcRouterCreate({
     }),
 
   getCreditAllByUser: trpcProcedureAdmin
-    .input(merge([CommonPaginationInput, object({ userId: number() })]))
+    .input(CommonPaginationInput)
     .query((opts) => {
-      return logsGetAllCredit(opts.input, opts.ctx.env);
+      const { userId } = opts.input;
+      if (!userId) {
+        throw utilFailedResponse("Missing fields", 400);
+      }
+
+      return logsGetAllCredit({ ...opts.input, userId }, opts.ctx.env);
     }),
 
   approveCredit: trpcProcedureAdmin

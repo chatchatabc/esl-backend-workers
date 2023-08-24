@@ -9,9 +9,9 @@ export async function logsDbGetAllCredit(
   const { userId, page, size } = params;
   try {
     const results = await env.DB.prepare(
-      "SELECT * FROM logsCredit WHERE senderId = ? OR receiverId = ? ORDER BY createdAt DESC LIMIT ? OFFSET ?"
+      "SELECT * FROM logsCredit WHERE userId = ? ORDER BY createdAt DESC LIMIT ? OFFSET ?"
     )
-      .bind(userId, userId, size, (page - 1) * size)
+      .bind(userId, size, (page - 1) * size)
       .all<LogsCredit>();
 
     return results;
@@ -28,8 +28,8 @@ export async function logsDbGetTotalCredit(
   const { userId } = params;
   try {
     const stmt = bindings.DB.prepare(
-      "SELECT COUNT(*) as total FROM logsCredit WHERE senderId = ? OR receiverId = ?"
-    ).bind(userId, userId);
+      "SELECT COUNT(*) as total FROM logsCredit WHERE userId = ?"
+    ).bind(userId);
     const total = await stmt.first("total");
     return total as number;
   } catch (e) {

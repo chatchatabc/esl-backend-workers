@@ -11,9 +11,11 @@ import {
 } from "../../domain/services/teacherService";
 
 export default trpcRouterCreate({
-  get: trpcProcedureUser.input(object({ userId: number() })).query((opts) => {
-    return teacherGet(opts.input, opts.ctx.env);
-  }),
+  get: trpcProcedureUser
+    .input(object({ teacherId: number() }))
+    .query((opts) => {
+      return teacherGet(opts.input, opts.ctx.env);
+    }),
 
   getAll: trpcProcedureAdmin.input(CommonPaginationInput).query((opts) => {
     return teacherGetAll(opts.input, opts.ctx.env);

@@ -1,3 +1,8 @@
+/*
+ * User Entity
+ * One-to-one relationship with teachers table
+ * Many-to-one relationship with roles table
+ */
 DROP TABLE IF EXISTS users;
 
 CREATE TABLE
@@ -78,6 +83,11 @@ VALUES
     0
   );
 
+/*
+ * Teacher Entity
+ * One-to-one relationship with users table
+ * One-to-many relationship with schedules table
+ */
 DROP TABLE IF EXISTS teachers;
 
 CREATE TABLE
@@ -96,11 +106,9 @@ INSERT INTO
 VALUES
   (3, 'Teacher Michelle', 'I am a teacher', 1, 0, 0);
 
-/**
- * id (integer)
- * name (text)
- * createdAt (timestamp)
- * updatedAt (timestamp)
+/*
+ * Role Entity
+ * One-to-many relationship with users table
  */
 DROP TABLE IF EXISTS roles;
 
@@ -119,21 +127,16 @@ VALUES
   ('student', 0, 0),
   ('teacher', 0, 0);
 
-/**
- * id (integer)
- * userId (integer)
- * startTime (timestampTimeOnly)
- * endTime (timestampTimeOnly)
- * day (integer)
- * createdAt (timestamp)
- * updatedAt (timestamp)
+/*
+ * Schedule Entity
+ * Many-to-one relationship with teachers table
  */
 DROP TABLE IF EXISTS schedules;
 
 CREATE TABLE
   IF NOT EXISTS schedules (
     id INTEGER PRIMARY KEY,
-    userId INTEGER NOT NULL,
+    teacherId INTEGER NOT NULL,
     startTime INTEGER NOT NULL,
     endTime INTEGER NOT NULL,
     day INTEGER NOT NULL,

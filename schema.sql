@@ -89,6 +89,7 @@ VALUES
  * One-to-one relationship with users table
  * One-to-many relationship with schedules table
  * One-to-many relationship with bookings table
+ * One-to-many relationship with courses table
  */
 DROP TABLE IF EXISTS teachers;
 
@@ -99,8 +100,8 @@ CREATE TABLE
     alias TEXT NOT NULL,
     bio TEXT,
     status INTEGER NOT NULL,
-    createdAt INTEGER NOT NULL,
-    updatedAt INTEGER NOT NULL
+    createdAt TIMESTAMP NOT NULL,
+    updatedAt TIMESTAMP NOT NULL
   );
 
 INSERT INTO
@@ -118,8 +119,8 @@ CREATE TABLE
   IF NOT EXISTS roles (
     id INTEGER PRIMARY KEY,
     name TEXT,
-    createdAt INTEGER NOT NULL,
-    updatedAt INTEGER NOT NULL
+    createdAt TIMESTAMP NOT NULL,
+    updatedAt TIMESTAMP NOT NULL
   );
 
 INSERT INTO
@@ -142,8 +143,8 @@ CREATE TABLE
     startTime INTEGER NOT NULL,
     endTime INTEGER NOT NULL,
     day INTEGER NOT NULL,
-    createdAt INTEGER NOT NULL,
-    updatedAt INTEGER NOT NULL
+    createdAt TIMESTAMP NOT NULL,
+    updatedAt TIMESTAMP NOT NULL
   );
 
 /*
@@ -166,6 +167,23 @@ CREATE TABLE
     message TEXT,
     createdAt INTEGER NOT NULL,
     updatedAt INTEGER NOT NULL
+  );
+
+/*
+ * Course Entity
+ * Many-to-one relationship with teachers table
+ */
+DROP TABLE IF EXISTS courses;
+
+CREATE TABLE
+  IF NOT EXISTS courses (
+    id INTEGER PRIMARY KEY,
+    teacherId INTEGER NOT NULL,
+    price INTEGER NOT NULL,
+    name TEXT NOT NULL,
+    description TEXT,
+    createdAt TIMESTAMP NOT NULL,
+    updatedAt TIMESTAMP NOT NULL
   );
 
 /**

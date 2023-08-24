@@ -152,7 +152,7 @@ export async function bookingCancel(
       "zh-CN",
       new Date(booking.start)
     )} ${utilTimeFormatter("zh-CN", new Date(booking.start))}`,
-    userId: 1,
+    userId: user.id,
     amount: booking.amount,
   };
 

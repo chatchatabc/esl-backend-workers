@@ -89,7 +89,7 @@ VALUES
  * One-to-one relationship with users table
  * One-to-many relationship with schedules table
  * One-to-many relationship with bookings table
- * One-to-many relationship with courses table
+ * Many-to-many relationship with courses table
  */
 DROP TABLE IF EXISTS teachers;
 
@@ -108,6 +108,47 @@ INSERT INTO
   teachers (userId, alias, bio, status, createdAt, updatedAt)
 VALUES
   (3, 'Teacher Michelle', 'I am a teacher', 1, 0, 0);
+
+/*
+ * Course Entity
+ * Many-to-many relationship with teachers table
+ */
+DROP TABLE IF EXISTS courses;
+
+CREATE TABLE
+  IF NOT EXISTS courses (
+    id INTEGER PRIMARY KEY,
+    price INTEGER NOT NULL,
+    name TEXT NOT NULL,
+    description TEXT,
+    createdAt TIMESTAMP NOT NULL,
+    updatedAt TIMESTAMP NOT NULL
+  );
+
+INSERT INTO
+  courses (price, name, description, createdAt, updatedAt)
+VALUES
+  (3, 50, 'Normal Class', 'Normal Class', 0, 0);
+
+/*
+ * Teacher Course Entity
+ * Join table for teachers and courses
+ */
+DROP TABLE IF EXISTS teachersCourses;
+
+CREATE TABLE
+  IF NOT EXISTS teachersCourses (
+    id INTEGER PRIMARY KEY,
+    teacherId INTEGER NOT NULL,
+    courseId INTEGER NOT NULL,
+    createdAt TIMESTAMP NOT NULL,
+    updatedAt TIMESTAMP NOT NULL
+  );
+
+INSERT INTO
+  teachersCourses (teacherId, courseId, createdAt, updatedAt)
+VALUES
+  (1, 1, 0, 0);
 
 /*
  * Role Entity
@@ -165,23 +206,6 @@ CREATE TABLE
     end TIMESTAMP NOT NULL,
     status INTEGER NOT NULL,
     message TEXT,
-    createdAt TIMESTAMP NOT NULL,
-    updatedAt TIMESTAMP NOT NULL
-  );
-
-/*
- * Course Entity
- * Many-to-one relationship with teachers table
- */
-DROP TABLE IF EXISTS courses;
-
-CREATE TABLE
-  IF NOT EXISTS courses (
-    id INTEGER PRIMARY KEY,
-    teacherId INTEGER NOT NULL,
-    price INTEGER NOT NULL,
-    name TEXT NOT NULL,
-    description TEXT,
     createdAt TIMESTAMP NOT NULL,
     updatedAt TIMESTAMP NOT NULL
   );

@@ -2,7 +2,7 @@ import { Env } from "../..";
 import { smsSend } from "../infra/sms";
 import {
   bookingDbGetAllByDateStart,
-  bookingDbValidateMany,
+  bookingDbConfirmMany,
 } from "../repositories/bookingRepo";
 import { messageGetAllByDate, messageGetAllWithCron } from "./messageService";
 import cron from "cron-parser";
@@ -120,13 +120,13 @@ export async function cronSendCronMessages(timestamp: number, env: Env) {
  * @param bindings { Env }
  * @returns { boolean }
  */
-export async function cronValidateBooking(bindings: Env) {
+export async function cronConfirmBooking(bindings: Env) {
   const start = 0;
   const end = Date.now() + 6 * 60 * 60 * 1000;
 
   // Get all bookings with pending status
   const bookings = await bookingDbGetAllByDateStart(
-    { start, end, status: 0 },
+    { start, end, status: 1 },
     bindings
   );
   if (!bookings) {
@@ -177,7 +177,7 @@ export async function cronValidateBooking(bindings: Env) {
   });
 
   // Update bookings, logs credits, and teachers
-  const update = bookingDbValidateMany(
+  const update = bookingDbConfirmMany(
     { bookings: newBookings, logsCredits, teachers },
     bindings
   );

@@ -96,7 +96,7 @@ export async function bookingDbCancel(
       "UPDATE users SET credit = ?, updatedAt = ? WHERE id = ?"
     ).bind(user.credits, date, user.id);
     const bookingStmt = env.DB.prepare(
-      "UPDATE bookings SET status = 2, updatedAt = ? WHERE id = ?"
+      "UPDATE bookings SET status = 4, updatedAt = ? WHERE id = ?"
     ).bind(date, booking.id);
     const logsCreditStmt = env.DB.prepare(
       "INSERT INTO logsCredit (title, userId, amount, details, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?)"
@@ -290,7 +290,7 @@ export async function bookingDbUpdateMany(bookings: Booking[], bindings: Env) {
   }
 }
 
-export async function bookingDbValidateMany(
+export async function bookingDbConfirmMany(
   params: {
     bookings: Booking[];
     logsCredits: LogsCreditCreate[];
@@ -305,7 +305,7 @@ export async function bookingDbValidateMany(
       "UPDATE users SET credit = ?, updatedAt = ? WHERE id = ?"
     );
     const bookingStmt = env.DB.prepare(
-      "UPDATE bookings SET status = 1, updatedAt = ? WHERE id = ?"
+      "UPDATE bookings SET status = 2, updatedAt = ? WHERE id = ?"
     );
     const logsCreditStmt = env.DB.prepare(
       "INSERT INTO logsCredit (title, userId, amount, details, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?)"

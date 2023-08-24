@@ -78,7 +78,7 @@ export async function bookingCreate(
   const startTimeFormat = utilTimeFormatter("zh-CN", new Date(start));
   const logsCredit: LogsCreditCreate = {
     userId: user.id,
-    amount,
+    amount: -amount,
     title: `Class ${startDateFormat} ${startTimeFormat}`,
     details: `Class ${startDateFormat} ${startTimeFormat}`,
   };
@@ -121,47 +121,43 @@ export async function bookingGetAll(params: BookingPagination, env: Env) {
 export async function bookingCancel(
   values: {
     bookingId: number;
-    studentId?: number;
+    userId: number;
   },
   env: Env
 ) {
-  const { bookingId, studentId } = values;
-  const booking = await bookingDbGet({ bookingId }, env);
-  if (!booking) {
-    throw utilFailedResponse("Can't get booking", 400);
-  }
+  const { bookingId, userId } = values;
+  const booking = await bookingGet({ bookingId }, env);
 
+  // Check if booking is cancellable
   if (booking.status !== 1) {
-    throw utilFailedResponse("Can't cancel booking", 400);
+    throw utilFailedResponse("Booking is not cancellable anymore.", 400);
   }
 
-  if (booking.studentId !== studentId) {
-    throw utilFailedResponse("Can't get booking", 403);
+  // Check if user is the owner
+  if (booking.userId !== userId) {
+    throw utilFailedResponse("Unauthorized", 403);
   }
 
-  if (booking.start < Date.now() + 60 * 60 * 6 * 1000) {
-    throw utilFailedResponse(
-      "Can't cancel booking before 6 hours of the starting class.",
-      400
-    );
-  }
+  // Update user credit
+  const user = await userGet({ userId }, env);
+  user.credit += booking.amount;
 
-  const student = await userGet({ userId: studentId ?? 0 }, env);
-
-  student.credit += booking.amount ?? 0;
-
-  const logs: LogsCreditCreate = {
+  // Create LogsCredit
+  const logsCredit: LogsCreditCreate = {
     title: "Cancelled Class",
-    senderId: 1,
-    receiverId: booking.studentId,
-    amount: booking.amount ?? 0,
-    status: 2,
-    uuid: utilGenerateUuid(),
+    details: `Cancelled Class ${utilDateFormatter(
+      "zh-CN",
+      new Date(booking.start)
+    )} ${utilTimeFormatter("zh-CN", new Date(booking.start))}`,
+    userId: 1,
+    amount: booking.amount,
   };
 
-  const cancel = await bookingDbCancel(booking, student, logs, env);
-
-  if (!cancel) {
+  // Perform transaction query
+  const query = await bookingDbCancel({ booking, user, logsCredit }, env);
+  if (!query) {
     throw utilFailedResponse("Was not able to cancel booking", 500);
   }
 
+  return true;
+}

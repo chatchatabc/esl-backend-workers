@@ -85,28 +85,26 @@ export async function bookingDbGet(params: { bookingId: number }, env: Env) {
 }
 
 export async function bookingDbCancel(
-  booking: Booking,
-  student: User,
-  logsCredit: LogsCreditCreate,
+  params: { booking: Booking; user: User; logsCredit: LogsCreditCreate },
   env: Env
 ) {
+  const { booking, user, logsCredit } = params;
   const date = Date.now();
 
   try {
     const studentStmt = env.DB.prepare(
       "UPDATE users SET credit = ?, updatedAt = ? WHERE id = ?"
-    ).bind(student.credit, date, student.id);
+    ).bind(user.credit, date, user.id);
     const bookingStmt = env.DB.prepare(
       "UPDATE bookings SET status = 2, updatedAt = ? WHERE id = ?"
     ).bind(date, booking.id);
     const logsCreditStmt = env.DB.prepare(
-      "INSERT INTO logsCredit (title, senderId, receiverId, amount, status, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?, ?)"
+      "INSERT INTO logsCredit (title, userId, amount, details, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?)"
     ).bind(
       logsCredit.title,
-      logsCredit.senderId,
-      logsCredit.receiverId,
+      logsCredit.userId,
       logsCredit.amount,
-      logsCredit.status,
+      logsCredit.details,
       date,
       date
     );
@@ -135,8 +133,8 @@ export async function bookingDbCreate(
 
   try {
     const userStmt = bindings.DB.prepare(
-      "UPDATE users SET credit = ? WHERE id = ?"
-    ).bind(user.credit, user.id);
+      "UPDATE users SET credit = ?, updatedAt = ? WHERE id = ?"
+    ).bind(user.credit, date, user.id);
     const bookingStmt = bindings.DB.prepare(
       "INSERT INTO bookings (courseId, teacherId, userId, amount, start, end, status, message, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
     ).bind(

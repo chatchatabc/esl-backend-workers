@@ -1,104 +1,88 @@
-/**
- * id (integer)
- * username (text)
- * password (text)
- * phone (text?)
- * email (text?)
- * firstName (text?)
- * lastName (text?)
- * roleId (integer) [1: admin, 2: student, 3: teacher]
- * status (integer) [1: active, 2: inactive, -1: deleted]
- * credit (integer)
- * phoneVerifiedAt (timestamp?)
- * emailVerifiedAt (timestamp?)
- * createdAt (timestamp)
- * updatedAt (timestamp)
- */
 DROP TABLE IF EXISTS users;
 
 CREATE TABLE
   IF NOT EXISTS users (
     id INTEGER PRIMARY KEY,
-    username TEXT NOT NULL,
+    teacherId INTEGER UNIQUE,
+    roleId INTEGER NOT NULL,
+    username TEXT NOT NULL UNIQUE,
     password TEXT NOT NULL,
     phone TEXT,
     email TEXT,
     firstName TEXT,
     lastName TEXT,
+    alias TEXT,
+    phoneVerifiedAt TIMESTAMP,
+    emailVerifiedAt TIMESTAMP,
+    credits INTEGER NOT NULL,
     status INTEGER NOT NULL,
-    createdAt INTEGER NOT NULL,
-    updatedAt INTEGER NOT NULL,
-    roleId INTEGER NOT NULL,
-    credit INTEGER NOT NULL,
-    phoneVerifiedAt INTEGER,
-    emailVerifiedAt INTEGER
+    createdAt TIMESTAMP NOT NULL,
+    updatedAt TIMESTAMP NOT NULL
   );
 
 INSERT INTO
   users (
+    roleId, -- 1: admin, 2: student, 3: teacher
+    teacherId,
     username,
     password,
-    roleId,
-    credit,
-    createdAt,
-    updatedAt,
+    phone,
     firstName,
     lastName,
-    phone,
+    alias,
     phoneVerifiedAt,
-    status
+    credits,
+    status, -- 1: active, 2: inactive, -1: deleted
+    createdAt,
+    updatedAt
   )
 VALUES
   (
+    1,
+    NULL,
     'admin',
     'd7cd68b6014e62d355e294a622fe95894f047ba5dfd8cc06f98122cc2bb945d3',
-    1,
-    1000,
-    0,
-    0,
+    '+639338520220',
     'Bon Jovi',
     'Montes',
-    '+639338520220',
+    'SuperAdmin',
+    0,
+    1000,
     1,
-    1
+    0,
+    0
   ),
   (
+    2,
+    NULL,
     'student',
     'd7cd68b6014e62d355e294a622fe95894f047ba5dfd8cc06f98122cc2bb945d3',
-    2,
-    1000,
-    0,
-    0,
+    '+8618832258785',
     'Joy',
     'Liu',
-    '+8618832258785',
+    'JoyGwapo',
+    0,
+    1000,
     1,
-    1
+    0,
+    0
   ),
   (
+    3,
+    1,
     'teacher',
     'd7cd68b6014e62d355e294a622fe95894f047ba5dfd8cc06f98122cc2bb945d3',
-    3,
-    0,
-    0,
-    0,
-    'Michelle',
+    '+8618832258785',
+    'Michele',
     'Surname',
-    '+891234567890',
+    'Teacher Michelle',
+    0,
+    1000,
     1,
-    1
+    0,
+    0
   );
 
-/**
- * id (integer)
- * userId (integer)
- * alias (text)
- * price (integer)
- * minutes (integer)
- * status (integer) [1: active, 2: inactive, -1: deleted]
- * createdAt (timestamp)
- * updatedAt (timestamp)
- */
 DROP TABLE IF EXISTS teachers;
 
 CREATE TABLE

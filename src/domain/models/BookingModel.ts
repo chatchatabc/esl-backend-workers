@@ -1,38 +1,38 @@
 import { Input } from "valibot";
 import { CommonPagination } from "./CommonModel";
 import type { User } from "./UserModel";
-import { BookingCancelInputAdmin } from "../schemas/BookingSchema";
+import {
+  BookingCancelInputAdmin,
+  BookingCreateInput,
+} from "../schemas/BookingSchema";
+import { Course } from "./CourseModel";
 
 export type Booking = {
   id: number;
   teacherId: number;
+  courseId: number;
+  userId: number;
   start: number;
   end: number;
-  studentId: number;
   status: number;
-  amount: number;
   createdAt: number;
   updatedAt: number;
-  logsCreditUuid: string;
 
   message: string | null;
 
-  student?: User;
+  user?: User;
   teacher?: User;
+  course?: Course;
 };
 
 export type BookingUpdate = Omit<Booking, "student" | "teacher">;
 
-export type BookingCreate = Omit<
+export type BookingCreate = Pick<
   Booking,
-  "createdAt" | "updatedAt" | "id" | "teacher" | "student"
+  "teacherId" | "courseId" | "userId" | "start" | "end" | "status" | "message"
 >;
 
-export type BookingCreateInput = Omit<
-  BookingCreate,
-  "amount" | "status" | "message" | "logsCreditUuid"
-> &
-  Partial<Pick<BookingCreate, "amount" | "status" | "message">>;
+export type BookingCreateInput = Input<typeof BookingCreateInput>;
 
 export type BookingPagination = {
   userId?: number;

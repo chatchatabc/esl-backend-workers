@@ -8,6 +8,7 @@ import { CommonPaginationInput } from "../../domain/schemas/CommonSchema";
 import {
   teacherGet,
   teacherGetAll,
+  teacherGetByUser,
 } from "../../domain/services/teacherService";
 
 export default trpcRouterCreate({
@@ -15,6 +16,12 @@ export default trpcRouterCreate({
     .input(object({ teacherId: number() }))
     .query((opts) => {
       return teacherGet(opts.input, opts.ctx.env);
+    }),
+
+  getByUser: trpcProcedureUser
+    .input(object({ userId: number() }))
+    .query((opts) => {
+      return teacherGetByUser(opts.input, opts.ctx.env);
     }),
 
   getAll: trpcProcedureAdmin.input(CommonPaginationInput).query((opts) => {

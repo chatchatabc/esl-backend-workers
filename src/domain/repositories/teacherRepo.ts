@@ -6,10 +6,25 @@ export async function teacherDbGet(params: { teacherId: number }, env: Env) {
   const { teacherId } = params;
 
   try {
+    const teacher = await env.DB.prepare("SELECT * FROM teachers WHERE id = ?")
+      .bind(teacherId)
+      .first<Teacher>();
+
+    return teacher;
+  } catch (e) {
+    console.log(e);
+    return null;
+  }
+}
+
+export async function teacherDbGetByUser(params: { userId: number }, env: Env) {
+  const { userId } = params;
+
+  try {
     const teacher = await env.DB.prepare(
       "SELECT * FROM teachers WHERE userId = ?"
     )
-      .bind(teacherId)
+      .bind(userId)
       .first<Teacher>();
 
     return teacher;

@@ -2,7 +2,6 @@ import { Env } from "../..";
 import {
   Booking,
   BookingCreate,
-  BookingCreateInput,
   BookingPagination,
 } from "../models/BookingModel";
 import { LogsCreditCreate } from "../models/LogsModel";
@@ -16,7 +15,7 @@ export async function bookingDbGetAll(params: BookingPagination, env: Env) {
   const queryParams = [];
   let query = "SELECT * FROM bookings";
   if (userId) {
-    query = utilQueryAddWhere(query, "teacherId = ? OR studentId = ?");
+    query = utilQueryAddWhere(query, "teacherId = ? OR userId = ?");
     queryParams.push(userId, userId);
   }
   if (status) {
@@ -50,7 +49,7 @@ export async function bookingDbGetAllTotal(
   let query = "SELECT COUNT(*) AS total FROM bookings";
 
   if (userId) {
-    query = utilQueryAddWhere(query, "teacherId = ? OR studentId = ?");
+    query = utilQueryAddWhere(query, "teacherId = ? OR userId = ?");
     queryParams.push(userId, userId);
   }
   if (status) {

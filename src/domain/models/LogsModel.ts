@@ -2,19 +2,17 @@ import type { User } from "./UserModel";
 
 export type LogsCredit = {
   id: number;
+  userId: number;
+  title: string;
+  details: string;
+  amount: number;
   createdAt: number;
   updatedAt: number;
 
-  sender?: User;
-  receiver?: User;
-} & LogsCreditCreate;
-
-export type LogsCreditCreate = {
-  senderId: number;
-  receiverId: number;
-  amount: number;
-  status: number;
-
-  title: string | null;
-  uuid: string;
+  user?: User;
 };
+
+export type LogsCreditCreate = Pick<
+  LogsCredit,
+  "title" | "details" | "amount" | "userId"
+>;

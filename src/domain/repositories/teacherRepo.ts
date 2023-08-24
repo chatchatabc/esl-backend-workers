@@ -2,15 +2,17 @@ import { Env } from "../..";
 import { CommonPagination } from "../models/CommonModel";
 import { Teacher } from "../models/TeacherModel";
 
-export async function teacherDbGet(params: { userId: number }, env: Env) {
-  const { userId } = params;
+export async function teacherDbGet(params: { teacherId: number }, env: Env) {
+  const { teacherId } = params;
 
   try {
-    const user = await env.DB.prepare("SELECT * FROM teachers WHERE userId = ?")
-      .bind(userId)
+    const teacher = await env.DB.prepare(
+      "SELECT * FROM teachers WHERE userId = ?"
+    )
+      .bind(teacherId)
       .first<Teacher>();
 
-    return user;
+    return teacher;
   } catch (e) {
     console.log(e);
     return null;

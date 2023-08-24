@@ -39,7 +39,7 @@ export async function bookingCreate(
 ) {
   // Get all the data needed to create a booking
   const user = await userGet({ userId: params.userId }, env);
-  const teacher = await teacherGet({ userId: params.teacherId }, env);
+  const teacher = await teacherGet({ teacherId: params.teacherId }, env);
   const course = await courseGet({ courseId: params.courseId }, env);
   teacher.user = await userGet({ userId: params.teacherId }, env);
 
@@ -52,10 +52,10 @@ export async function bookingCreate(
   const start = new Date(params.start).getTime();
   const end = new Date(params.end).getTime();
   const amount = course.price * ((end - start) / 1800000);
-  if (amount > user.credit) {
+  if (amount > user.credits) {
     throw utilFailedResponse("Not enough credit", 400);
   } else {
-    user.credit -= amount;
+    user.credits -= amount;
   }
 
   // Create booking
@@ -140,7 +140,7 @@ export async function bookingCancel(
 
   // Update user credit
   const user = await userGet({ userId }, env);
-  user.credit += booking.amount;
+  user.credits += booking.amount;
 
   // Create LogsCredit
   const logsCredit: LogsCreditCreate = {

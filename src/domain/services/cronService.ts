@@ -9,6 +9,8 @@ import cron from "cron-parser";
 import { userGet } from "./userService";
 import { LogsCreditCreate } from "../models/LogsModel";
 import { User } from "../models/UserModel";
+import { teacherGet } from "./teacherService";
+import { utilDateFormatter, utilTimeFormatter } from "./utilService";
 
 export async function cronRemindClass(env: Env) {
   const start = Date.now();
@@ -30,7 +32,7 @@ export async function cronRemindClass(env: Env) {
   const userIds: number[] = [];
 
   for (const booking of bookings) {
-    const userId = booking.studentId ?? 0;
+    const userId = booking.userId ?? 0;
     const student = await userGet({ userId }, env);
     const teacher = await userGet({ userId: booking.teacherId }, env);
 
@@ -118,7 +120,7 @@ export async function cronSendCronMessages(timestamp: number, env: Env) {
  * @param bindings { Env }
  * @returns { boolean }
  */
-export async function cronValidateClass(bindings: Env) {
+export async function cronValidateBooking(bindings: Env) {
   const start = 0;
   const end = Date.now() + 6 * 60 * 60 * 1000;
 
@@ -133,51 +135,45 @@ export async function cronValidateClass(bindings: Env) {
 
   // Get the related users within this booking
   const newBookingsPromise = bookings.map(async (booking) => {
-    const teacher = await userGet({ userId: booking.teacherId }, bindings);
-    if (teacher) {
-      booking.teacher = teacher;
-    } else {
-      throw new Error("Failed to get teacher");
-    }
+    const teacher = await teacherGet(
+      { teacherId: booking.teacherId },
+      bindings
+    );
+    const user = await userGet({ userId: teacher.userId }, bindings);
+    teacher.user = user;
 
-    const student = await userGet({ userId: booking.studentId ?? 0 }, bindings);
-    if (student) {
-      booking.student = student;
-    } else {
-      throw new Error("Failed to get student");
-    }
+    booking.teacher = teacher;
+    booking.user = await userGet({ userId: booking.userId }, bindings);
 
     return booking;
   });
   const newBookings = await Promise.all(newBookingsPromise);
 
-  // Create logs credit for each booking
+  // Create logs credit for the teachers
   const logsCredits: LogsCreditCreate[] = [];
   newBookings.forEach(async (booking) => {
     const logsCredit: LogsCreditCreate = {
-      title:
-        "Class for " +
-        booking.student?.firstName +
-        " " +
-        booking.student?.lastName,
-      senderId: booking.studentId ?? 0,
-      receiverId: booking.teacherId ?? 0,
-      amount: booking.amount ?? 0,
-      status: 1,
+      userId: booking.teacher!.userId,
+      amount: booking.amount,
+      title: `Booked class from student ${booking.user?.alias}`,
+      details: `Booked class at ${utilDateFormatter(
+        "en-US",
+        new Date(booking.start)
+      )} ${utilTimeFormatter("en-US", new Date(booking.start))}`,
     };
     logsCredits.push(logsCredit);
   });
 
-  // Update teacher credit
+  // Update teacher's credits
   const teachers: User[] = [];
   newBookings.forEach(async (booking) => {
-    const teacher = booking.teacher;
-    if (!teacher) {
+    const user = booking.teacher!.user;
+    if (!user) {
       throw new Error("Failed to get teacher");
     }
-    teacher.credit += booking.amount ?? 0;
+    user.credits += booking.amount ?? 0;
 
-    teachers.push(teacher);
+    teachers.push(user);
   });
 
   // Update bookings, logs credits, and teachers

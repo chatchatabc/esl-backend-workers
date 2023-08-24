@@ -4,11 +4,11 @@ import { CommonPagination } from "./CommonModel";
 
 export type User = {
   id: number;
+  roleId: number;
   createdAt: number;
   updatedAt: number;
-  credit: number;
+  credits: number;
   status: number;
-  roleId: number;
   username: string;
   password?: string;
 
@@ -18,6 +18,7 @@ export type User = {
   lastName: string | null;
   phone: string | null;
   email: string | null;
+  alias: string | null;
 
   role?: UserRole;
 };

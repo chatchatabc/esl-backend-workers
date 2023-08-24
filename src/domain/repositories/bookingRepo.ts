@@ -94,7 +94,7 @@ export async function bookingDbCancel(
   try {
     const studentStmt = env.DB.prepare(
       "UPDATE users SET credit = ?, updatedAt = ? WHERE id = ?"
-    ).bind(user.credit, date, user.id);
+    ).bind(user.credits, date, user.id);
     const bookingStmt = env.DB.prepare(
       "UPDATE bookings SET status = 2, updatedAt = ? WHERE id = ?"
     ).bind(date, booking.id);
@@ -134,7 +134,7 @@ export async function bookingDbCreate(
   try {
     const userStmt = bindings.DB.prepare(
       "UPDATE users SET credit = ?, updatedAt = ? WHERE id = ?"
-    ).bind(user.credit, date, user.id);
+    ).bind(user.credits, date, user.id);
     const bookingStmt = bindings.DB.prepare(
       "INSERT INTO bookings (courseId, teacherId, userId, amount, start, end, status, message, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
     ).bind(
@@ -308,12 +308,12 @@ export async function bookingDbValidateMany(
       "UPDATE bookings SET status = 1, updatedAt = ? WHERE id = ?"
     );
     const logsCreditStmt = env.DB.prepare(
-      "INSERT INTO logsCredit (title, senderId, receiverId, amount, status, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?, ?)"
+      "INSERT INTO logsCredit (title, userId, amount, details, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?)"
     );
 
     await env.DB.batch([
       ...teachers.map((teacher) => {
-        return teacherStmt.bind(teacher.credit, Date.now(), teacher.id);
+        return teacherStmt.bind(teacher.credits, Date.now(), teacher.id);
       }),
       ...bookings.map((booking) => {
         return bookingStmt.bind(Date.now(), booking.id);
@@ -322,10 +322,9 @@ export async function bookingDbValidateMany(
         const date = Date.now();
         return logsCreditStmt.bind(
           logsCredit.title,
-          logsCredit.senderId,
-          logsCredit.receiverId,
+          logsCredit.userId,
           logsCredit.amount,
-          logsCredit.status,
+          logsCredit.details,
           date,
           date
         );

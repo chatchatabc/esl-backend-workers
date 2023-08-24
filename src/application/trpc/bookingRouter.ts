@@ -4,6 +4,7 @@ import {
   trpcRouterCreate,
 } from "../../domain/infra/trpc";
 import {
+  BookingCancelInput,
   BookingCancelInputAdmin,
   BookingCreateInput,
   BookingCreateInputAdmin,
@@ -51,22 +52,10 @@ export default trpcRouterCreate({
       return bookingCreate(opts.input, opts.ctx.env);
     }),
 
-  cancel: trpcProcedureUser
-    .input((values: any = {}) => {
-      if (!values.bookingId) {
-        throw utilFailedResponse("Missing fields", 400);
-      }
-
-      return { bookingId: values.bookingId } as {
-        bookingId: number;
-        studentId?: number;
-      };
-    })
-    .mutation((opts) => {
-      const { userId, env } = opts.ctx;
-      opts.input.studentId = userId;
-      return bookingCancel(opts.input, env);
-    }),
+  cancel: trpcProcedureUser.input(BookingCancelInput).mutation((opts) => {
+    const { userId, env } = opts.ctx;
+    return bookingCancel({ ...opts.input, userId }, env);
+  }),
 
   cancelAdmin: trpcProcedureAdmin
     .input(BookingCancelInputAdmin)

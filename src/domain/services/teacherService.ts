@@ -6,6 +6,7 @@ import {
   teacherDbGetAll,
   teacherDbGetAllTotal,
   teacherDbGetByUser,
+  teacherDbValidateCourse,
 } from "../repositories/teacherRepo";
 import { utilFailedResponse } from "./utilService";
 
@@ -43,4 +44,17 @@ export async function teacherGetAll(params: CommonPagination, env: Env) {
     totalElements,
     ...params,
   };
+}
+
+export async function teacherValidateCourse(
+  params: { teacherId: number; courseId: number },
+  env: Env
+) {
+  const { teacherId, courseId } = params;
+  const isValid = await teacherDbValidateCourse({ teacherId, courseId }, env);
+  if (isValid === null) {
+    throw utilFailedResponse("Cannot validate course", 500);
+  }
+
+  return isValid;
 }

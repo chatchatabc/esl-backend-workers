@@ -52,8 +52,26 @@ export async function teacherDbGetAll(params: CommonPagination, env: Env) {
 export async function teacherDbGetAllTotal(env: Env) {
   try {
     const stmt = env.DB.prepare("SELECT COUNT(*) as total FROM teachers");
-    const total = await stmt.first<{ total: number }>("total");
+    const total = await stmt.first<number>("total");
     return total;
+  } catch (e) {
+    console.log(e);
+    return null;
+  }
+}
+
+export async function teacherDbValidateCourse(
+  params: { teacherId: number; courseId: number },
+  env: Env
+) {
+  try {
+    const { teacherId, courseId } = params;
+    const stmt = env.DB.prepare(
+      "SELECT COUNT(*) as total FROM teachersCourses WHERE teacherId = ? AND courseId = ?"
+    );
+    const total = await stmt.bind(teacherId, courseId).first<number>("total");
+
+    return total !== null && total > 0;
   } catch (e) {
     console.log(e);
     return null;

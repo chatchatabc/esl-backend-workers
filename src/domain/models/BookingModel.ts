@@ -4,6 +4,7 @@ import type { User } from "./UserModel";
 import {
   BookingCancelInputAdmin,
   BookingCreateInput,
+  BookingCreateInputAdmin,
 } from "../schemas/BookingSchema";
 import { Course } from "./CourseModel";
 import { Teacher } from "./TeacherModel";
@@ -42,6 +43,8 @@ export type BookingCreate = Pick<
 >;
 
 export type BookingCreateInput = Input<typeof BookingCreateInput>;
+
+export type BookingCreateInputAdmin = Input<typeof BookingCreateInputAdmin>;
 
 export type BookingPagination = {
   userId?: number;

@@ -161,12 +161,12 @@ CREATE TABLE
     courseId INTEGER NOT NULL,
     teacherId INTEGER NOT NULL,
     userId INTEGER NOT NULL,
-    start INTEGER NOT NULL,
-    end INTEGER NOT NULL,
+    start TIMESTAMP NOT NULL,
+    end TIMESTAMP NOT NULL,
     status INTEGER NOT NULL,
     message TEXT,
-    createdAt INTEGER NOT NULL,
-    updatedAt INTEGER NOT NULL
+    createdAt TIMESTAMP NOT NULL,
+    updatedAt TIMESTAMP NOT NULL
   );
 
 /*
@@ -199,36 +199,27 @@ CREATE TABLE
     title TEXT NOT NULL,
     details TEXT NOT NULL,
     amount INTEGER NOT NULL,
-    createdAt INTEGER NOT NULL,
-    updatedAt INTEGER NOT NULL
+    createdAt TIMESTAMP NOT NULL,
+    updatedAt TIMESTAMP NOT NULL
   );
 
-/**
- * id (integer)
- * title (text)
- * senderId (integer)
- * receiverId (integer)
- * message (text)
- * cron (text)
- * sendAt (timestamp?)
- * status (integer) [1: active, 2: finished, 3: failed, 4: cancelled, -1: deleted]
- * createdAt (timestamp)
- * updatedAt (timestamp)
+/*
+ * Message Entity
+ * Many-to-one relationship with users table
  */
 DROP TABLE IF EXISTS messages;
 
 CREATE TABLE
   IF NOT EXISTS messages (
     id INTEGER PRIMARY KEY,
-    title TEXT NOT NULL,
-    senderId INTEGER NOT NULL,
-    receiverId INTEGER NOT NULL,
+    userId INTEGER NOT NULL,
+    subject TEXT NOT NULL,
     message TEXT NOT NULL,
     cron TEXT NOT NULL,
-    sendAt INTEGER,
-    status INTEGER NOT NULL,
-    createdAt INTEGER NOT NULL,
-    updatedAt INTEGER NOT NULL
+    sendAt TIMESTAMP,
+    status INTEGER NOT NULL, -- 0: inactive, 1: active, 2: successful, 3: failed, -1: deleted
+    createdAt TIMESTAMP NOT NULL,
+    updatedAt TIMESTAMP NOT NULL
   );
 
 INSERT INTO

@@ -1,8 +1,10 @@
 import {
   custom,
   minValue,
+  nullish,
   number,
   object,
+  optional,
   pick,
   string,
   transform,
@@ -24,36 +26,51 @@ const Schema = object({
       return value % 1800 === 0;
     }, "End date must be a multiple of 30 minutes"),
   ]),
-  studentId: number("Student ID must be a number", [
+  courseId: number("Course ID must be a number", [
+    minValue(1, "Course ID must be greater than 0"),
+  ]),
+  userId: number("Student ID must be a number", [
     minValue(1, "Student ID must be greater than 0"),
   ]),
-  status: number("Status must be a number", [
-    minValue(1, "Status must be greater than 0"),
-  ]),
+  status: optional(
+    number("Status must be a number", [
+      minValue(1, "Status must be greater than 0"),
+    ])
+  ),
   amount: number("Amount must be a number", [
     minValue(1, "Amount must be greater than 0"),
   ]),
-  message: string("Message must be a string"),
   bookingId: number("ID must be a number", [
     minValue(1, "ID must be greater than 0"),
   ]),
+  message: nullish(string("Message must be a string")),
 });
 
 export const BookingCreateInput = transform(
-  pick(Schema, ["teacherId", "start", "end"]),
+  pick(Schema, ["teacherId", "start", "end", "courseId"]),
   (input) => {
     return {
       ...input,
       status: 1,
+      message: null,
     };
   }
 );
 
-export const BookingCreateInputAdmin = pick(Schema, [
-  "teacherId",
-  "start",
-  "end",
-  "studentId",
-]);
+export const BookingCreateInputAdmin = transform(
+  pick(Schema, [
+    "teacherId",
+    "start",
+    "end",
+    "userId",
+    "courseId",
+    "message",
+    "status",
+  ]),
+  (input) => {
+    const { message = null, status = 1 } = input;
+    return { ...input, status, message };
+  }
+);
 
-export const BookingCancelInputAdmin = pick(Schema, ["bookingId", "studentId"]);
+export const BookingCancelInputAdmin = pick(Schema, ["bookingId", "userId"]);

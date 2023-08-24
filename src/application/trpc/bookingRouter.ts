@@ -31,14 +31,23 @@ export default trpcRouterCreate({
   }),
 
   create: trpcProcedureUser.input(BookingCreateInput).mutation(async (opts) => {
+    const { start, end } = opts.input;
+    if (start >= end) {
+      throw utilFailedResponse("Invalid time", 400);
+    }
+
     const { userId, env } = opts.ctx;
-    const studentId = userId;
-    return bookingCreate({ ...opts.input, studentId }, env);
+    return bookingCreate({ ...opts.input, userId }, env);
   }),
 
   createAdmin: trpcProcedureAdmin
     .input(BookingCreateInputAdmin)
     .mutation(async (opts) => {
+      const { start, end } = opts.input;
+      if (start >= end) {
+        throw utilFailedResponse("Invalid time", 400);
+      }
+
       return bookingCreate(opts.input, opts.ctx.env);
     }),
 

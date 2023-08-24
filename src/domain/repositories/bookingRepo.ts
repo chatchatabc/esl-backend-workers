@@ -251,14 +251,35 @@ export async function bookingDbGetTotalByUser(
 export async function bookingDbUpdateMany(bookings: Booking[], bindings: Env) {
   try {
     const stmt = bindings.DB.prepare(
-      "UPDATE bookings SET start = ?, end = ?, teacherId = ?, status = ?, studentId = ?, updatedAt = ? WHERE id = ?"
+      "UPDATE bookings SET courseId = ?, teacherId = ?, userId = ?, amount = ?, start = ?, end = ?, status = ?, message = ?, updatedAt = ? WHERE id = ?"
     );
 
     await bindings.DB.batch(
       bookings.map((b) => {
-        const { start, end, teacherId, studentId, status, id } = b;
+        const {
+          id,
+          courseId,
+          teacherId,
+          userId,
+          amount,
+          start,
+          end,
+          status,
+          message,
+        } = b;
         const date = Date.now();
-        return stmt.bind(start, end, teacherId, status, studentId, date, id);
+        return stmt.bind(
+          courseId,
+          teacherId,
+          userId,
+          amount,
+          start,
+          end,
+          status,
+          message,
+          date,
+          id
+        );
       })
     );
 

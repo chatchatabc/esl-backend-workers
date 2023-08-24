@@ -186,26 +186,19 @@ CREATE TABLE
     updatedAt TIMESTAMP NOT NULL
   );
 
-/**
- * id (integer)
- * senderId (integer)
- * receiverId (integer)
- * amount (integer)
- * status (integer) [1: pending, 2: finished, 3: cancelled, -1: deleted]
- * createdAt (timestamp)
- * updatedAt (timestamp)
+/*
+ * Credit Entity
+ * Many-to-one relationship with users table
  */
 DROP TABLE IF EXISTS logsCredit;
 
 CREATE TABLE
   IF NOT EXISTS logsCredit (
     id INTEGER PRIMARY KEY,
-    uuid TEXT UNIQUE NOT NULL,
-    title TEXT,
-    senderId INTEGER NOT NULL,
-    receiverId INTEGER NOT NULL,
+    userId INTEGER NOT NULL,
+    title TEXT NOT NULL,
+    details TEXT NOT NULL,
     amount INTEGER NOT NULL,
-    status INTEGER NOT NULL,
     createdAt INTEGER NOT NULL,
     updatedAt INTEGER NOT NULL
   );

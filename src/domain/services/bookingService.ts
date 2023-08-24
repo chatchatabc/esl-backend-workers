@@ -1,7 +1,7 @@
 import { Env } from "../..";
 import {
   Booking,
-  BookingCreateInput,
+  BookingCreate,
   BookingPagination,
 } from "../models/BookingModel";
 import { LogsCreditCreate } from "../models/LogsModel";
@@ -15,85 +15,66 @@ import {
   bookingDbInsert,
 } from "../repositories/bookingRepo";
 import { scheduleDbValidateBooking } from "../repositories/scheduleRepo";
+import { courseGet } from "./courseService";
 import { teacherGet } from "./teacherService";
 import { userGet } from "./userService";
 import {
   utilDateFormatter,
   utilFailedResponse,
+  utilGenerateUuid,
   utilTimeFormatter,
 } from "./utilService";
 
-export async function bookingCreate(values: BookingCreateInput, env: Env) {
-  if (values.start >= values.end) {
-    throw utilFailedResponse("Start time must be before end time", 400);
+export async function bookingCreate(booking: BookingCreate, env: Env) {
+  // Get all the data needed to create a booking
+  const user = await userGet({ userId: booking.userId }, env);
+  const teacher = await teacherGet({ userId: booking.teacherId }, env);
+  const course = await courseGet({ courseId: booking.courseId }, env);
+  teacher.user = await userGet({ userId: booking.teacherId }, env);
+
+  // Check if the course belongs to the teacher
+  if (course.teacherId !== teacher.id) {
+    throw utilFailedResponse("Course does not belong to teacher", 400);
   }
 
-  const student = await userGet({ userId: values.studentId }, env);
-  if (!student) {
-    throw utilFailedResponse("Student does not exist", 400);
-  }
-
-  const teacher = await teacherGet({ userId: values.teacherId }, env);
-  if (!teacher) {
-    throw utilFailedResponse("Teacher does not exist", 400);
-  }
-
-  teacher.user = await userGet({ userId: values.teacherId }, env);
-  if (!teacher.user) {
-    throw utilFailedResponse("Teacher does not exist", 400);
-  }
-
-  const validSchedule = await scheduleDbValidateBooking(values, env);
+  // Check if the booked schedule exists
+  const validSchedule = await scheduleDbValidateBooking(booking, env);
   if (!validSchedule) {
     throw utilFailedResponse("Schedule does not exist", 400);
   }
 
-  const overlap = await bookingDbGetOverlap(values, env);
+  // Check if the booking overlaps with another booking
+  const overlap = await bookingDbGetOverlap(booking, env);
   if (overlap) {
     throw utilFailedResponse("Booking overlaps", 400);
   }
 
-  const start = new Date(values.start).getTime();
-  const end = new Date(values.end).getTime();
-  const price = teacher.price * ((end - start) / 1800000);
-  if (price > student.credit) {
+  // Check if the user has enough credit
+  const start = new Date(booking.start).getTime();
+  const end = new Date(booking.end).getTime();
+  const amount = course.price * ((end - start) / 1800000);
+  if (amount > user.credit) {
     throw utilFailedResponse("Not enough credit", 400);
+  } else {
+    user.credit -= amount;
   }
 
+  // Create LogsCredit
   const startDateFormat = utilDateFormatter("zh-CN", new Date(start));
   const startTimeFormat = utilTimeFormatter("zh-CN", new Date(start));
-  const logsCredit = {
-    senderId: student.id,
-    receiverId: teacher.user.id,
-    amount: price,
+  const logsCredit: LogsCreditCreate = {
+    userId: user.id,
+    amount,
     title: `Class ${startDateFormat} ${startTimeFormat}`,
-    status: 2,
-  };
-  student.credit -= price;
-
-  const message: MessageCreate = {
-    senderId: 1,
-    receiverId: student.id,
-    title: "Class Reminder",
-    message: `【恰恰英语】你好！您的课程安排在${startDateFormat}，时间是${startTimeFormat}。我们将专注于口语练习。请准时到达，以充分利用本次课程。到时见！`,
-    status: 1,
-    cron: "0 0 1 1 1",
-    sendAt: values.start - 10 * 60 * 1000,
+    details: `Class ${startDateFormat} ${startTimeFormat}`,
   };
 
-  const booking = {
-    message: null,
-    status: 0,
-    amount: price,
-    ...values,
-  };
-
+  // Perform transaction query
   const success = await bookingDbInsert(
     {
       booking,
-      student,
+      user,
       logsCredit,
-      message,
     },
     env
   );
@@ -161,6 +142,7 @@ export async function bookingCancel(
     receiverId: booking.studentId,
     amount: booking.amount ?? 0,
     status: 2,
+    uuid: utilGenerateUuid(),
   };
 
   const cancel = await bookingDbCancel(booking, student, logs, env);

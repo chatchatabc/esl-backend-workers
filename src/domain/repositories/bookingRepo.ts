@@ -123,21 +123,20 @@ export async function bookingDbCancel(
 export async function bookingDbInsert(
   params: {
     booking: BookingCreate;
-    student: User;
+    user: User;
     logsCredit: LogsCreditCreate;
-    message: MessageCreate;
   },
   bindings: Env
 ) {
-  const { booking, student, logsCredit, message } = params;
+  const { booking, user, logsCredit } = params;
 
-  const { start, end, teacherId, studentId, status } = booking;
+  const { start, end, teacherId, userId, status } = booking;
   const date = Date.now();
 
   try {
     const userStmt = bindings.DB.prepare(
       "UPDATE users SET credit = ? WHERE id = ?"
-    ).bind(student.credit, student.id);
+    ).bind(user.credit, user.id);
     const bookingStmt = bindings.DB.prepare(
       "INSERT INTO bookings (start, end, teacherId, status, studentId, amount, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
     ).bind(
@@ -145,37 +144,23 @@ export async function bookingDbInsert(
       end,
       teacherId,
       status,
-      studentId,
+      userId,
       logsCredit.amount,
       date,
       date
     );
     const logsStmt = bindings.DB.prepare(
-      "INSERT INTO logsCredit (title, senderId, receiverId, amount, status, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?, ?)"
+      "INSERT INTO logsCredit (title, userId, amount, details, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?)"
     ).bind(
       logsCredit.title,
-      studentId,
-      teacherId,
+      userId,
       logsCredit.amount,
-      logsCredit.status,
-      date,
-      date
-    );
-    const messageStmt = bindings.DB.prepare(
-      "INSERT INTO messages (senderId, receiverId, title, message, status, cron, sendAt, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)"
-    ).bind(
-      message.senderId,
-      message.receiverId,
-      message.title,
-      message.message,
-      message.status,
-      message.cron,
-      message.sendAt,
+      logsCredit.details,
       date,
       date
     );
 
-    await bindings.DB.batch([bookingStmt, userStmt, logsStmt, messageStmt]);
+    await bindings.DB.batch([bookingStmt, userStmt, logsStmt]);
     return true;
   } catch (e) {
     console.log(e);
@@ -232,15 +217,12 @@ export async function bookingDbGetAllByDateEnd(
   }
 }
 
-export async function bookingDbGetOverlap(
-  values: BookingCreateInput,
-  env: Env
-) {
-  const { start, end, teacherId, studentId } = values;
+export async function bookingDbGetOverlap(values: BookingCreate, env: Env) {
+  const { start, end, teacherId, userId } = values;
   try {
     const stmt = env.DB.prepare(
       "SELECT COUNT(*) AS total FROM bookings WHERE ((start <= ? AND end > ?) OR (start < ? AND end >= ?)) AND (teacherId = ? OR studentId = ?) AND status = 1"
-    ).bind(start, start, end, end, teacherId, studentId);
+    ).bind(start, start, end, end, teacherId, userId);
     const total = await stmt.first("total");
     return total as number;
   } catch (e) {

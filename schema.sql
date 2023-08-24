@@ -1,6 +1,7 @@
 /*
  * User Entity
  * One-to-one relationship with teachers table
+ * One-to-many relationship with bookings table
  * Many-to-one relationship with roles table
  */
 DROP TABLE IF EXISTS users;
@@ -87,6 +88,7 @@ VALUES
  * Teacher Entity
  * One-to-one relationship with users table
  * One-to-many relationship with schedules table
+ * One-to-many relationship with bookings table
  */
 DROP TABLE IF EXISTS teachers;
 
@@ -144,26 +146,20 @@ CREATE TABLE
     updatedAt INTEGER NOT NULL
   );
 
-/**
- * id (integer)
- * historyCredit (uuid)
- * teacherId (integer)
- * studentId (integer)
- * start (timestamp)
- * end (timestamp)
- * status (integer) [0:pending, 1: active, 2: finished, 3: cancelled, 4: absent, -1: deleted]
- * message (text)
- * createdAt (timestamp)
- * updatedAt (timestamp)
+/*
+ * Booking Entity
+ * Many-to-one relationship with users table
+ * Many-to-one relationship with teachers table
+ * Many-to-one relationship with courses table
  */
 DROP TABLE IF EXISTS bookings;
 
 CREATE TABLE
   IF NOT EXISTS bookings (
     id INTEGER PRIMARY KEY,
-    historyCreditUuid TEXT UNIQUE NOT NULL,
+    courseId INTEGER NOT NULL,
     teacherId INTEGER NOT NULL,
-    studentId INTEGER,
+    userId INTEGER NOT NULL,
     start INTEGER NOT NULL,
     end INTEGER NOT NULL,
     status INTEGER NOT NULL,

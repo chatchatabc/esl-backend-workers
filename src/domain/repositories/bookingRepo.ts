@@ -120,7 +120,7 @@ export async function bookingDbCancel(
   }
 }
 
-export async function bookingDbInsert(
+export async function bookingDbCreate(
   params: {
     booking: BookingCreate;
     user: User;
@@ -129,8 +129,8 @@ export async function bookingDbInsert(
   bindings: Env
 ) {
   const { booking, user, logsCredit } = params;
-
-  const { start, end, teacherId, userId, status } = booking;
+  const { start, end, teacherId, userId, status, courseId, message, amount } =
+    booking;
   const date = Date.now();
 
   try {
@@ -138,14 +138,16 @@ export async function bookingDbInsert(
       "UPDATE users SET credit = ? WHERE id = ?"
     ).bind(user.credit, user.id);
     const bookingStmt = bindings.DB.prepare(
-      "INSERT INTO bookings (start, end, teacherId, status, studentId, amount, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
+      "INSERT INTO bookings (courseId, teacherId, userId, amount, start, end, status, message, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
     ).bind(
+      courseId,
+      teacherId,
+      userId,
+      amount,
       start,
       end,
-      teacherId,
       status,
-      userId,
-      logsCredit.amount,
+      message,
       date,
       date
     );

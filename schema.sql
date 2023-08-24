@@ -128,7 +128,7 @@ CREATE TABLE
 INSERT INTO
   courses (price, name, description, createdAt, updatedAt)
 VALUES
-  (3, 50, 'Normal Class', 'Normal Class', 0, 0);
+  (50, 'Normal Class', 'Normal Class', 0, 0);
 
 /*
  * Teacher Course Entity
@@ -202,6 +202,7 @@ CREATE TABLE
     courseId INTEGER NOT NULL,
     teacherId INTEGER NOT NULL,
     userId INTEGER NOT NULL,
+    amount INTEGER NOT NULL,
     start TIMESTAMP NOT NULL,
     end TIMESTAMP NOT NULL,
     status INTEGER NOT NULL,

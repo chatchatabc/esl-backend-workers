@@ -3,7 +3,7 @@ import type {
   ScheduleCreate,
   SchedulePagination,
 } from "../models/ScheduleModel";
-import type { BookingCreateInput } from "../models/BookingModel";
+import type { BookingCreate } from "../models/BookingModel";
 import { Env } from "../..";
 import {
   utilGetScheduleTimeAndDay,
@@ -87,7 +87,7 @@ export async function scheduleDbUpdateMany(schedules: Schedule[], env: Env) {
 }
 
 export async function scheduleDbValidateBooking(
-  booking: BookingCreateInput,
+  booking: BookingCreate,
   env: Env
 ) {
   const { start, end, teacherId } = booking;

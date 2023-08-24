@@ -5,14 +5,13 @@ import {
   BookingPagination,
 } from "../models/BookingModel";
 import { LogsCreditCreate } from "../models/LogsModel";
-import { MessageCreate } from "../models/MessageModel";
 import {
   bookingDbCancel,
+  bookingDbCreate,
   bookingDbGet,
   bookingDbGetAll,
   bookingDbGetAllTotal,
   bookingDbGetOverlap,
-  bookingDbInsert,
 } from "../repositories/bookingRepo";
 import { scheduleDbValidateBooking } from "../repositories/scheduleRepo";
 import { courseGet } from "./courseService";
@@ -25,17 +24,42 @@ import {
   utilTimeFormatter,
 } from "./utilService";
 
-export async function bookingCreate(booking: BookingCreate, env: Env) {
+export async function bookingGet(params: { bookingId: number }, env: Env) {
+  const booking = await bookingDbGet(params, env);
+  if (!booking) {
+    throw utilFailedResponse("Cannot GET", 500);
+  }
+
+  return booking;
+}
+
+export async function bookingCreate(
+  params: Omit<BookingCreate, "amount"> & { amount: number | null },
+  env: Env
+) {
   // Get all the data needed to create a booking
-  const user = await userGet({ userId: booking.userId }, env);
-  const teacher = await teacherGet({ userId: booking.teacherId }, env);
-  const course = await courseGet({ courseId: booking.courseId }, env);
-  teacher.user = await userGet({ userId: booking.teacherId }, env);
+  const user = await userGet({ userId: params.userId }, env);
+  const teacher = await teacherGet({ userId: params.teacherId }, env);
+  const course = await courseGet({ courseId: params.courseId }, env);
+  teacher.user = await userGet({ userId: params.teacherId }, env);
 
   // Check if the course belongs to the teacher
   if (course.teacherId !== teacher.id) {
     throw utilFailedResponse("Course does not belong to teacher", 400);
   }
+
+  // Check if the user has enough credit
+  const start = new Date(params.start).getTime();
+  const end = new Date(params.end).getTime();
+  const amount = course.price * ((end - start) / 1800000);
+  if (amount > user.credit) {
+    throw utilFailedResponse("Not enough credit", 400);
+  } else {
+    user.credit -= amount;
+  }
+
+  // Create booking
+  const booking = { ...params, amount: params.amount ?? amount };
 
   // Check if the booked schedule exists
   const validSchedule = await scheduleDbValidateBooking(booking, env);
@@ -49,16 +73,6 @@ export async function bookingCreate(booking: BookingCreate, env: Env) {
     throw utilFailedResponse("Booking overlaps", 400);
   }
 
-  // Check if the user has enough credit
-  const start = new Date(booking.start).getTime();
-  const end = new Date(booking.end).getTime();
-  const amount = course.price * ((end - start) / 1800000);
-  if (amount > user.credit) {
-    throw utilFailedResponse("Not enough credit", 400);
-  } else {
-    user.credit -= amount;
-  }
-
   // Create LogsCredit
   const startDateFormat = utilDateFormatter("zh-CN", new Date(start));
   const startTimeFormat = utilTimeFormatter("zh-CN", new Date(start));
@@ -70,7 +84,7 @@ export async function bookingCreate(booking: BookingCreate, env: Env) {
   };
 
   // Perform transaction query
-  const success = await bookingDbInsert(
+  const success = await bookingDbCreate(
     {
       booking,
       user,
@@ -151,5 +165,3 @@ export async function bookingCancel(
     throw utilFailedResponse("Was not able to cancel booking", 500);
   }
 
-  return true;
-}

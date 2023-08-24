@@ -37,9 +37,11 @@ const Schema = object({
       minValue(1, "Status must be greater than 0"),
     ])
   ),
-  amount: number("Amount must be a number", [
-    minValue(1, "Amount must be greater than 0"),
-  ]),
+  amount: optional(
+    number("Amount must be a number", [
+      minValue(1, "Amount must be greater than 0"),
+    ])
+  ),
   bookingId: number("ID must be a number", [
     minValue(1, "ID must be greater than 0"),
   ]),
@@ -52,6 +54,7 @@ export const BookingCreateInput = transform(
     return {
       ...input,
       status: 1,
+      amount: null,
       message: null,
     };
   }
@@ -66,10 +69,11 @@ export const BookingCreateInputAdmin = transform(
     "courseId",
     "message",
     "status",
+    "amount",
   ]),
   (input) => {
-    const { message = null, status = 1 } = input;
-    return { ...input, status, message };
+    const { message = null, status = 1, amount = null } = input;
+    return { ...input, status, message, amount };
   }
 );
 

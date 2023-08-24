@@ -14,6 +14,7 @@ export type Booking = {
   userId: number;
   start: number;
   end: number;
+  amount: number;
   status: number;
   createdAt: number;
   updatedAt: number;
@@ -29,7 +30,14 @@ export type BookingUpdate = Omit<Booking, "student" | "teacher">;
 
 export type BookingCreate = Pick<
   Booking,
-  "teacherId" | "courseId" | "userId" | "start" | "end" | "status" | "message"
+  | "teacherId"
+  | "courseId"
+  | "userId"
+  | "start"
+  | "end"
+  | "status"
+  | "message"
+  | "amount"
 >;
 
 export type BookingCreateInput = Input<typeof BookingCreateInput>;

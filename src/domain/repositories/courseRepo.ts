@@ -1,5 +1,10 @@
 import { Env } from "../..";
-import { Course, CourseCreate, CoursePagination } from "../models/CourseModel";
+import {
+  Course,
+  CourseCreate,
+  CoursePagination,
+  CourseUpdate,
+} from "../models/CourseModel";
 import { utilQueryAddWhere } from "../services/utilService";
 
 export async function courseDbGet(params: { courseId: number }, env: Env) {
@@ -64,9 +69,38 @@ export async function courseDbGetAllTotal(
 
 export async function courseDbCreate(params: CourseCreate, env: Env) {
   try {
+    const date = Date.now();
     const stmt = env.DB.prepare(
-      "INSERT INTO courses (name, price, teacherId, description) VALUES (?, ?, ?, ?)"
-    ).bind(params.name, params.price, params.teacherId, params.description);
+      "INSERT INTO courses (name, price, teacherId, description, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?)"
+    ).bind(
+      params.name,
+      params.price,
+      params.teacherId,
+      params.description,
+      date,
+      date
+    );
+    await stmt.run();
+
+    return true;
+  } catch (e) {
+    console.log(e);
+    return null;
+  }
+}
+
+export async function courseDbUpdate(params: CourseUpdate, env: Env) {
+  try {
+    const stmt = env.DB.prepare(
+      "UPDATE courses SET name = ?, price = ?, teacherId = ?, description = ?, updatedAt WHERE id = ?"
+    ).bind(
+      params.name,
+      params.price,
+      params.teacherId,
+      params.description,
+      Date.now(),
+      params.id
+    );
     await stmt.run();
 
     return true;

@@ -4,10 +4,14 @@ import {
   trpcRouterCreate,
 } from "../../domain/infra/trpc";
 import { CommonPaginationInput } from "../../domain/schemas/CommonSchema";
-import { CourseCreateInput } from "../../domain/schemas/CourseSchema";
+import {
+  CourseCreateInput,
+  CourseUpdateInput,
+} from "../../domain/schemas/CourseSchema";
 import {
   courseCreate,
   courseGetAll,
+  courseUpdate,
 } from "../../domain/services/courseService";
 
 export default trpcRouterCreate({
@@ -17,5 +21,9 @@ export default trpcRouterCreate({
 
   create: trpcProcedureAdmin.input(CourseCreateInput).mutation((opts) => {
     return courseCreate(opts.input, opts.ctx.env);
+  }),
+
+  update: trpcProcedureAdmin.input(CourseUpdateInput).mutation((opts) => {
+    return courseUpdate(opts.input, opts.ctx.env);
   }),
 });

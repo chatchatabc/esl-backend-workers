@@ -50,13 +50,13 @@ export async function messageTemplateDbGetAllTotal(env: Env) {
 }
 
 export async function messageTemplateDbGet(
-  params: { templateId: number },
+  params: { messageTemplateId: number },
   env: Env
 ) {
   try {
     const stmt = env.DB.prepare(
       "SELECT * FROM messageTemplates WHERE id = ?"
-    ).bind(params.templateId);
+    ).bind(params.messageTemplateId);
     return await stmt.first<MessageTemplate>();
   } catch (e) {
     console.log(e);

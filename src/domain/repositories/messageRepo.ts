@@ -4,27 +4,27 @@ import { Message, MessageCreate } from "../models/MessageModel";
 export async function messageDbCreate(params: MessageCreate, env: Env) {
   try {
     const {
-      message,
-      title,
-      sendAt = null,
-      receiverId,
-      senderId,
+      sendAt,
+      userId,
       status,
       cron,
+      messageTemplateId,
+      phone,
+      templateValues,
     } = params;
     const date = Date.now();
     const stmt = await env.DB.prepare(
-      "INSERT INTO messages (message, title, sendAt, receiverId, senderId, createdAt, updatedAt, cron, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)"
+      "INSERT INTO messages (sendAt, userId, status, cron, messageTemplateId, phone, templateValues, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)"
     ).bind(
-      message,
-      title,
       sendAt,
-      receiverId,
-      senderId,
-      date,
-      date,
+      userId,
+      status,
       cron,
-      status
+      messageTemplateId,
+      phone,
+      templateValues,
+      date,
+      date
     );
     await stmt.run();
     return true;

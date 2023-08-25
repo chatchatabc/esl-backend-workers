@@ -11,6 +11,7 @@ import { LogsCreditCreate } from "../models/LogsModel";
 import { User } from "../models/UserModel";
 import { teacherGet } from "./teacherService";
 import { utilDateFormatter, utilTimeFormatter } from "./utilService";
+import { MessageCreate } from "../models/MessageModel";
 
 export async function cronRemindClass(env: Env) {
   const start = Date.now();
@@ -69,15 +70,15 @@ export async function cronSendScheduledMessages(timestamp: number, env: Env) {
   }
 
   for (const message of messages) {
-    const receiver = await userGet({ userId: message.receiverId }, env);
-    if (receiver && receiver.phone) {
-      // await smsSend({
-      //   content: message.message,
-      //   mobile: receiver.phone!,
-      // });
-      await env.KV.put("scheduledMessage", message.message);
-      console.log("Scheduled message sent: ", message.message);
-    }
+    // const receiver = await userGet({ userId: message.receiverId }, env);
+    // if (receiver && receiver.phone) {
+    //   // await smsSend({
+    //   //   content: message.message,
+    //   //   mobile: receiver.phone!,
+    //   // });
+    //   await env.KV.put("scheduledMessage", message.message);
+    //   console.log("Scheduled message sent: ", message.message);
+    // }
   }
 
   return true;
@@ -100,15 +101,15 @@ export async function cronSendCronMessages(timestamp: number, env: Env) {
     const next = parsedCron.next().toDate().getTime();
 
     if (next === timestamp) {
-      const receiver = await userGet({ userId: message.receiverId }, env);
-      if (receiver && receiver.phone) {
-        // await smsSend({
-        //   content: message.message,
-        //   mobile: receiver.phone!,
-        // });
-        await env.KV.put("cronMessage", message.message);
-        console.log("Cron message sent: ", message.message);
-      }
+      // const receiver = await userGet({ userId: message.receiverId }, env);
+      // if (receiver && receiver.phone) {
+      //   // await smsSend({
+      //   //   content: message.message,
+      //   //   mobile: receiver.phone!,
+      //   // });
+      //   await env.KV.put("cronMessage", message.message);
+      //   console.log("Cron message sent: ", message.message);
+      // }
     }
   }
 
@@ -176,9 +177,25 @@ export async function cronConfirmBooking(bindings: Env) {
     teachers.push(user);
   });
 
+  const messages: MessageCreate[] = [];
+  newBookings.forEach(async (booking) => {
+    const startDate = utilDateFormatter("zh-CN", new Date(booking.start));
+    const startTime = utilTimeFormatter("zh-CN", new Date(booking.start));
+    const message: MessageCreate = {
+      userId: booking.userId,
+      subject: "Class confirmed",
+      message: `【恰恰英语】您好！您的课程于${startDate} ${startTime}开始，请提前分钟登陆您的账号，感谢您的支持`,
+      phone: booking.user!.phone!,
+      cron: "0 0 0 * *",
+      status: 1,
+      sendAt: booking.start - 10 * 60 * 1000,
+    };
+    messages.push(message);
+  });
+
   // Update bookings, logs credits, and teachers
-  const update = bookingDbConfirmMany(
-    { bookings: newBookings, logsCredits, teachers },
+  const update = await bookingDbConfirmMany(
+    { bookings: newBookings, logsCredits, teachers, messages },
     bindings
   );
   if (!update) {

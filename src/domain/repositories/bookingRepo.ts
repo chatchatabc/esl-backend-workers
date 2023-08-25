@@ -296,6 +296,7 @@ export async function bookingDbConfirmMany(
     bookings: Booking[];
     logsCredits: LogsCreditCreate[];
     teachers: User[];
+    messages: MessageCreate[];
   },
   env: Env
 ) {
@@ -310,6 +311,9 @@ export async function bookingDbConfirmMany(
     );
     const logsCreditStmt = env.DB.prepare(
       "INSERT INTO logsCredit (title, userId, amount, details, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?)"
+    );
+    const messageStmt = env.DB.prepare(
+      "INSERT INTO messages (userId, subject, message, status, phone, cron, sendAt, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)"
     );
 
     await env.DB.batch([
@@ -326,6 +330,20 @@ export async function bookingDbConfirmMany(
           logsCredit.userId,
           logsCredit.amount,
           logsCredit.details,
+          date,
+          date
+        );
+      }),
+      ...params.messages.map((message) => {
+        const date = Date.now();
+        return messageStmt.bind(
+          message.userId,
+          message.subject,
+          message.message,
+          message.status,
+          message.phone,
+          message.cron,
+          message.sendAt,
           date,
           date
         );

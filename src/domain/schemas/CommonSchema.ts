@@ -1,4 +1,13 @@
-import { coerce, minValue, number, object, optional, transform } from "valibot";
+import {
+  coerce,
+  minValue,
+  number,
+  object,
+  optional,
+  string,
+  transform,
+  union,
+} from "valibot";
 
 export const CommonPaginationInput = transform(
   object({
@@ -19,12 +28,10 @@ export const CommonPaginationInput = transform(
       )
     ),
     status: optional(
-      coerce(
-        number("Invalid status value, should be a number", [
-          minValue(1, "Status should be greater than 0"),
-        ]),
-        Number
-      )
+      union([
+        number("Invalid status value, should be a number"),
+        string("Invalid status value, should be a string"),
+      ])
     ),
     userId: optional(
       coerce(

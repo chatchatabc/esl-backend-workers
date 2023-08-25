@@ -18,12 +18,13 @@ export async function bookingDbGetAll(params: BookingPagination, env: Env) {
     query = utilQueryAddWhere(query, "teacherId = ? OR userId = ?");
     queryParams.push(userId, userId);
   }
-  if (status) {
+  if (status === undefined) {
+    query = utilQueryAddWhere(query, "status = 1 OR status = 2 OR status = 3");
+  } else if (typeof status === "number") {
     query = utilQueryAddWhere(query, "status = ?");
     queryParams.push(status);
-  } else {
-    query = utilQueryAddWhere(query, "status = 0 OR status = 1");
   }
+  query += " ORDER BY createdAt DESC";
   query += " LIMIT ?, ?";
   queryParams.push((page - 1) * size, size);
 
@@ -178,12 +179,13 @@ export async function bookingDbGetAllByDateStart(
   const { start, end, status } = params;
 
   const queryParams = [];
-  let query = "SELECT * FROM bookings WHERE (start >= ? AND start <= ?)";
-  queryParams.push(start, end);
+  let query = "SELECT * FROM bookings";
   if (status) {
-    query += " AND status = ?";
+    query = utilQueryAddWhere(query, "status = ?");
     queryParams.push(status);
   }
+  query = utilQueryAddWhere(query, "start >= ? AND start <= ?");
+  queryParams.push(start, end);
 
   try {
     const stmt = bindings.DB.prepare(query).bind(...queryParams);

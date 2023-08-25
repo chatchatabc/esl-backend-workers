@@ -48,7 +48,7 @@ export type BookingCreateInputAdmin = Input<typeof BookingCreateInputAdmin>;
 
 export type BookingPagination = {
   userId?: number;
-  status?: number;
+  status?: number | string;
 } & CommonPagination;
 
 export type BookingCancelInputAdmin = Input<typeof BookingCancelInputAdmin>;

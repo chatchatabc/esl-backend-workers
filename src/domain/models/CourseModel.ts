@@ -1,5 +1,7 @@
+import { Input } from "valibot";
 import { CommonPagination } from "./CommonModel";
 import { Teacher } from "./TeacherModel";
+import { CourseCreateInput } from "../schemas/CourseSchema";
 
 export type Course = {
   id: number;
@@ -22,3 +24,5 @@ export type CourseCreate = Pick<
   Course,
   "name" | "price" | "teacherId" | "description"
 >;
+
+export type CourseCreateInput = Input<typeof CourseCreateInput>;

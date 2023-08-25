@@ -92,7 +92,7 @@ export async function courseDbCreate(params: CourseCreate, env: Env) {
 export async function courseDbUpdate(params: CourseUpdate, env: Env) {
   try {
     const stmt = env.DB.prepare(
-      "UPDATE courses SET name = ?, price = ?, teacherId = ?, description = ?, updatedAt WHERE id = ?"
+      "UPDATE courses SET name = ?, price = ?, teacherId = ?, description = ?, updatedAt = ? WHERE id = ?"
     ).bind(
       params.name,
       params.price,

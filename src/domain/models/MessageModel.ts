@@ -1,39 +1,46 @@
+import { Input } from "valibot";
 import { User } from "./UserModel";
+import { MessageCreateInput, MessageSendInput } from "../schemas/MessageSchema";
 
 export type Message = {
   id: number;
+  messageTemplateId: number;
+  userId: number | null;
   createdAt: number;
   updatedAt: number;
-  userId: number;
   status: number;
-  sendAt?: number;
+  sendAt: number | null;
 
   phone: string;
-  subject: string;
-  message: string;
   cron: string;
+  templateValues: string | null; // stringified JSON
 
   user?: User;
+  messageTemplate?: MessageTemplate;
 };
 
 export type MessageCreate = Omit<Message, "id" | "createdAt" | "updatedAt">;
 
-export type MessageCreateInput = Omit<MessageCreate, "status" | "senderId">;
+export type MessageCreateInput = Input<typeof MessageCreateInput>;
 
-export type MessageSend = Pick<Message, "userId" | "subject" | "message">;
+export type MessageSend = Pick<
+  Message,
+  "userId" | "messageTemplateId" | "templateValues" | "phone"
+>;
 
-export type MessageSendInput = Omit<MessageSend, "senderId">;
+export type MessageSendInput = Input<typeof MessageSendInput>;
 
 export type MessageTemplate = {
   id: number;
+  smsId: string;
   createdAt: number;
   updatedAt: number;
+  status: number;
 
-  smsId: number;
   title: string;
   signature: string;
   message: string;
-  status: number;
+  variables: string; // Separated by comma
 };
 
 export type MessageTemplateCreate = Omit<

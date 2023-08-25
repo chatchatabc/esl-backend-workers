@@ -1,10 +1,12 @@
 import { Env } from "../..";
-import { Course, CoursePagination } from "../models/CourseModel";
+import { Course, CourseCreate, CoursePagination } from "../models/CourseModel";
 import {
+  courseDbCreate,
   courseDbGet,
   courseDbGetAll,
   courseDbGetAllTotal,
 } from "../repositories/courseRepo";
+import { teacherGet } from "./teacherService";
 import { utilFailedResponse } from "./utilService";
 
 export async function courseGet(params: { courseId: number }, env: Env) {
@@ -32,4 +34,16 @@ export async function courseGetAll(params: CoursePagination, env: Env) {
     totalElements: totalElements as number,
     ...params,
   };
+}
+
+export async function courseCreate(params: CourseCreate, env: Env) {
+  // Check if teacher exists
+  await teacherGet({ teacherId: params.teacherId }, env);
+
+  const query = await courseDbCreate(params, env);
+  if (!query) {
+    throw utilFailedResponse("Cannot create course", 500);
+  }
+
+  return query;
 }

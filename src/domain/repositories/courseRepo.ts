@@ -1,5 +1,5 @@
 import { Env } from "../..";
-import { Course, CoursePagination } from "../models/CourseModel";
+import { Course, CourseCreate, CoursePagination } from "../models/CourseModel";
 import { utilQueryAddWhere } from "../services/utilService";
 
 export async function courseDbGet(params: { courseId: number }, env: Env) {
@@ -21,10 +21,7 @@ export async function courseDbGetAll(params: CoursePagination, env: Env) {
   let query = "SELECT * FROM courses";
 
   if (teacherId) {
-    query = utilQueryAddWhere(
-      query,
-      "id IN (SELECT courseId FROM teachersCourses WHERE teacherId = ?)"
-    );
+    query = utilQueryAddWhere(query, "teacherId = ?");
     queryParams.push(teacherId);
   }
   query += " LIMIT ?, ?";
@@ -50,10 +47,7 @@ export async function courseDbGetAllTotal(
   let query = "SELECT COUNT(*) AS total FROM courses";
 
   if (teacherId) {
-    query = utilQueryAddWhere(
-      query,
-      "id IN (SELECT courseId FROM teachersCourses WHERE teacherId = ?)"
-    );
+    query = utilQueryAddWhere(query, "teacherId = ?");
     queryParams.push(teacherId);
   }
 
@@ -62,6 +56,20 @@ export async function courseDbGetAllTotal(
     const total = await stmt.first<number>("total");
 
     return total;
+  } catch (e) {
+    console.log(e);
+    return null;
+  }
+}
+
+export async function courseDbCreate(params: CourseCreate, env: Env) {
+  try {
+    const stmt = env.DB.prepare(
+      "INSERT INTO courses (name, price, teacherId, description) VALUES (?, ?, ?, ?)"
+    ).bind(params.name, params.price, params.teacherId, params.description);
+    await stmt.run();
+
+    return true;
   } catch (e) {
     console.log(e);
     return null;

@@ -4,27 +4,23 @@ export type Message = {
   id: number;
   createdAt: number;
   updatedAt: number;
-  receiverId: number;
-  senderId: number;
+  userId: number;
   status: number;
   sendAt?: number;
 
-  title: string;
+  phone: string;
+  subject: string;
   message: string;
   cron: string;
 
-  receiver?: User;
-  sender?: User;
+  user?: User;
 };
 
 export type MessageCreate = Omit<Message, "id" | "createdAt" | "updatedAt">;
 
 export type MessageCreateInput = Omit<MessageCreate, "status" | "senderId">;
 
-export type MessageSend = Pick<
-  Message,
-  "senderId" | "receiverId" | "title" | "message"
->;
+export type MessageSend = Pick<Message, "userId" | "subject" | "message">;
 
 export type MessageSendInput = Omit<MessageSend, "senderId">;
 

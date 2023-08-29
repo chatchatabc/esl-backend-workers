@@ -1,54 +1,81 @@
-import { SmsCreateResponse, SmsSendResponse } from "../models/SmsModel";
+import { SmsSend } from "../models/SmsModel";
+import CryptoJS from "crypto-js";
 
-const baseUrl = "https://smsv2.market.alicloudapi.com/sms";
-const appCode = "b567b7be3fe7490c853ef2b222623294";
+const accessKeyId = "LTAI5tGiV15PDjkXDRhV9yRE";
+const accessKeySecret = "E9GPX1SGW6SPMWp52mer71E6oMxZ45";
+const smsVersion = "2017-05-25";
 
-/**
- * Send a message to the given mobile number
- * @param params {content: string, mobile: string}
- * @returns {Promise<null|Response>}
- * @seeMore https://market.aliyun.com/products/57000002/cmapi00046952.html
+/*
+ * Reference: https://help.aliyun.com/zh/iot/developer-reference/request-signatures
+ * They have different rules for their url encoding.
  */
-export async function smsSend(params: { content: string; mobile: string }) {
-  const request = {
-    method: "GET",
-    headers: {
-      Authorization: `APPCODE ${appCode}`,
-    },
-  };
-
-  // Remove the country code
-  params.mobile = params.mobile.replace("+86", "");
-
-  const url = new URL(baseUrl + "/sendv2");
-  url.search = new URLSearchParams(params).toString();
-
-  try {
-    const response = await fetch(url, request);
-    const data = await response.json();
-    return data as SmsSendResponse;
-  } catch (e) {
-    console.log(e);
-    return null;
-  }
+function smsUrlEncoder(text: string) {
+  // replace "%2B" to "%20", and "%7E" to "~"
+  return encodeURIComponent(text).replace(/%2B/g, "%20").replace(/%7E/g, "~");
 }
 
-export async function smsCreateTemplate(params: {
-  content: string;
-  signature: string;
+/*
+ * Getting the string to sign according to the rules.
+ * Reference: https://help.aliyun.com/zh/iot/developer-reference/request-signatures
+ */
+function smsStringToSign(params: {
+  method: "GET" | "POST";
+  queryString: string;
 }) {
-  const request = {
-    method: "POST",
-    headers: {
-      Authorization: `APPCODE ${appCode}`,
-    },
-    body: JSON.stringify(params),
-  };
+  const { method, queryString } = params;
+  const encodedQueryString = smsUrlEncoder(queryString);
+  return `${method}&%2F&${encodedQueryString}`;
+}
+
+/*
+ * Getting the signature according to the rules.
+ * Reference: https://help.aliyun.com/zh/iot/developer-reference/request-signatures
+ */
+function smsSignature(params: {
+  accessKeySecret: string;
+  stringToSign: string;
+}) {
+  const { accessKeySecret, stringToSign } = params;
+  let hmac = CryptoJS.algo.HMAC.create(
+    CryptoJS.algo.SHA1,
+    `${accessKeySecret}&`
+  );
+  hmac.update(stringToSign);
+  return hmac.finalize().toString(CryptoJS.enc.Base64);
+}
+
+/*
+ * Authorization Reference: https://next.api.aliyun.com/document/Dysmsapi/2017-05-25/ram
+ * General Reference: https://next.api.aliyun.com/document/Dysmsapi/2017-05-25/SendSms
+ */
+export async function smsSend(params: SmsSend) {
+  const { phoneNumbers, signName, templateCode, templateParam } = params;
+  const timestamp = new Date().toISOString();
+
+  const query = `AccessKeyId=${accessKeyId}&Action=SendSms&Format=JSON&PhoneNumbers=${smsUrlEncoder(
+    phoneNumbers
+  )}&SignName=${smsUrlEncoder(
+    signName
+  )}&SignatureMethod=HMAC-SHA1&SignatureNonce=${smsUrlEncoder(
+    timestamp
+  )}&SignatureVersion=1.0&TemplateCode=${templateCode}${
+    templateParam ? `&TemplateParam=${smsUrlEncoder(templateParam)}` : ""
+  }&Timestamp=${smsUrlEncoder(timestamp)}&Version=${smsVersion}`;
+  const stringToSign = smsStringToSign({ method: "GET", queryString: query });
+  const signature = smsSignature({ accessKeySecret, stringToSign });
+  const url = `https://dysmsapi.aliyuncs.com/?${query}&Signature=${smsUrlEncoder(
+    signature
+  )}`;
 
   try {
-    const response = await fetch(baseUrl + "/edittemplete", request);
-    const data = await response.json();
-    return data as SmsCreateResponse;
+    const res = await fetch(url, { method: "GET" });
+    const data = await res.json();
+    return data as {
+      Message: string;
+      RequestId: string;
+      BizId: string;
+      Code: string;
+    };
   } catch (e) {
     console.log(e);
     return null;

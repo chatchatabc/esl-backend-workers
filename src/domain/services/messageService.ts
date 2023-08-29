@@ -8,7 +8,7 @@ import {
   messageDbGetAllTotal,
   messageDbGetAllWithCron,
 } from "../repositories/messageRepo";
-import { userGet } from "./userService";
+import { messageTemplateGet } from "./messageTemplate";
 import { utilFailedResponse } from "./utilService";
 
 export async function messageCreate(params: MessageCreate, env: Env) {
@@ -63,17 +63,18 @@ export async function messageGetAllWithCron(env: Env) {
 }
 
 export async function messageSend(params: MessageSend, env: Env) {
-  const receiver = await userGet({ userId: params.receiverId }, env);
-  if (!receiver) {
-    throw utilFailedResponse("Unable to get the receiver information", 500);
-  }
+  const messageTemplate = await messageTemplateGet(params, env);
 
   const sms = await smsSend({
-    mobile: receiver.phone ?? "",
-    content: params.message,
+    phoneNumbers: params.phone,
+    signName: messageTemplate.signature,
+    templateCode: messageTemplate.smsId,
+    templateParam: params.templateValues,
   });
-  if (!sms) {
-    throw utilFailedResponse("Unable to send the message", 500);
+
+  console.log(sms);
+  if (!sms || sms.Code !== "OK") {
+    throw utilFailedResponse("Failed to send message", 500);
   }
 
   const message: MessageCreate = {
@@ -82,7 +83,7 @@ export async function messageSend(params: MessageSend, env: Env) {
     status: 2,
     cron: "0 0 1 1 1",
   };
-  const query = messageDbCreate(message, env);
+  const query = await messageDbCreate(message, env);
   if (!query) {
     throw utilFailedResponse("Unable save the message", 500);
   }

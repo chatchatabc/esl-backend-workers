@@ -9,3 +9,10 @@ export type SmsSendResponse = {
   result: string;
   error_code: number;
 };
+
+export type SmsSend = {
+  phoneNumbers: string;
+  signName: string;
+  templateCode: string;
+  templateParam: string | null;
+};

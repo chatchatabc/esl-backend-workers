@@ -1,5 +1,4 @@
 import { Env } from "../..";
-import { smsSend } from "../infra/sms";
 import {
   bookingDbGetAllByDateStart,
   bookingDbConfirmMany,
@@ -183,12 +182,14 @@ export async function cronConfirmBooking(bindings: Env) {
     const startTime = utilTimeFormatter("zh-CN", new Date(booking.start));
     const message: MessageCreate = {
       userId: booking.userId,
-      subject: "Class confirmed",
-      message: `【恰恰英语】您好！您的课程于${startDate} ${startTime}开始，请提前分钟登陆您的账号，感谢您的支持`,
+      messageTemplateId: 1,
       phone: booking.user!.phone!,
       cron: "0 0 0 * *",
       status: 1,
       sendAt: booking.start - 10 * 60 * 1000,
+      templateValues: JSON.stringify({
+        datetime: `${startDate} ${startTime}`,
+      }),
     };
     messages.push(message);
   });

@@ -58,7 +58,7 @@ export async function messageDbGetAllByDate(
   const { start, end } = params;
   try {
     const stmt = env.DB.prepare(
-      "SELECT * FROM messages WHERE sendAt >= ? AND sendAt <= ?"
+      "SELECT * FROM messages WHERE sendAt >= ? AND sendAt <= ? AND status = 1"
     ).bind(start, end);
     const results = await stmt.all<Message>();
     return results;
@@ -70,7 +70,9 @@ export async function messageDbGetAllByDate(
 
 export async function messageDbGetAllWithCron(env: Env) {
   try {
-    const stmt = env.DB.prepare("SELECT * FROM messages WHERE sendAt is NULL");
+    const stmt = env.DB.prepare(
+      "SELECT * FROM messages WHERE sendAt is NULL AND status = 1"
+    );
     const results = await stmt.all<Message>();
     return results;
   } catch (e) {
@@ -87,5 +89,33 @@ export async function messageDbGetAllTotal(env: Env) {
   } catch (e) {
     console.log(e);
     return undefined;
+  }
+}
+
+export async function messageDbUpdateMany(
+  params: {
+    messages: Message[];
+  },
+  env: Env
+) {
+  try {
+    const stmt = env.DB.prepare(
+      "UPDATE messages SET status = ?, sendAt = ?, updatedAt = ? WHERE id = ?"
+    );
+    await env.DB.batch([
+      ...params.messages.map((message) => {
+        return stmt.bind(
+          message.status,
+          message.sendAt,
+          Date.now(),
+          message.id
+        );
+      }),
+    ]);
+
+    return true;
+  } catch (e) {
+    console.log(e);
+    return null;
   }
 }

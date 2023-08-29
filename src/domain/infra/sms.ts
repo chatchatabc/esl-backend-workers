@@ -45,6 +45,7 @@ function smsSignature(params: {
 }
 
 /*
+ * OpenAPI Reference: https://help.aliyun.com/zh/sdk/product-overview/rpc-mechanism
  * Authorization Reference: https://next.api.aliyun.com/document/Dysmsapi/2017-05-25/ram
  * General Reference: https://next.api.aliyun.com/document/Dysmsapi/2017-05-25/SendSms
  */

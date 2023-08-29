@@ -10,7 +10,11 @@ import { LogsCreditCreate } from "../models/LogsModel";
 import { User } from "../models/UserModel";
 import { teacherGet } from "./teacherService";
 import { utilDateFormatter, utilTimeFormatter } from "./utilService";
-import { MessageCreate } from "../models/MessageModel";
+import { MessageCreate, MessageSend } from "../models/MessageModel";
+import { smsSend } from "../infra/sms";
+import { SmsSend } from "../models/SmsModel";
+import { messageTemplateGet } from "./messageTemplate";
+import { messageDbUpdateMany } from "../repositories/messageRepo";
 
 export async function cronRemindClass(env: Env) {
   const start = Date.now();
@@ -61,23 +65,41 @@ export async function cronRemindClass(env: Env) {
  * @returns { boolean }
  */
 export async function cronSendScheduledMessages(timestamp: number, env: Env) {
-  const start = timestamp - 1 * 60 * 1000;
+  const start = 0;
   const end = timestamp + 1 * 60 * 1000;
   const messages = await messageGetAllByDate({ start, end }, env);
   if (!messages) {
     throw new Error("Failed to get messages");
   }
 
+  const newMesssages = [];
   for (const message of messages) {
-    // const receiver = await userGet({ userId: message.receiverId }, env);
-    // if (receiver && receiver.phone) {
-    //   // await smsSend({
-    //   //   content: message.message,
-    //   //   mobile: receiver.phone!,
-    //   // });
-    //   await env.KV.put("scheduledMessage", message.message);
-    //   console.log("Scheduled message sent: ", message.message);
-    // }
+    const messageTemplate = await messageTemplateGet(
+      { messageTemplateId: message.messageTemplateId },
+      env
+    );
+    const sms: SmsSend = {
+      phoneNumbers: message.phone,
+      signName: messageTemplate.signature,
+      templateCode: messageTemplate.smsId,
+      templateParam: message.templateValues,
+    };
+
+    const resSms = await smsSend(sms);
+    if (!resSms || resSms.Code !== "OK") {
+      message.status = 3;
+    } else {
+      message.status = 2;
+      await env.KV.put("scheduledMessage", messageTemplate.message);
+      console.log("Scheduled message sent: ", messageTemplate.message);
+    }
+
+    newMesssages.push(message);
+  }
+
+  const update = await messageDbUpdateMany({ messages: newMesssages }, env);
+  if (!update) {
+    throw new Error("Failed to update messages");
   }
 
   return true;

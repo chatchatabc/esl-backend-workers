@@ -1,6 +1,10 @@
 import { Input } from "valibot";
 import { User } from "./UserModel";
 import { MessageCreateInput, MessageSendInput } from "../schemas/MessageSchema";
+import {
+  MessageTemplateCreateInput,
+  MessageTemplateUpdateInput,
+} from "../schemas/MessageTemplateSchema";
 
 export type Message = {
   id: number;
@@ -40,7 +44,7 @@ export type MessageTemplate = {
   title: string;
   signature: string;
   message: string;
-  variables: string; // Separated by comma
+  variables: string | null; // Separated by comma
 };
 
 export type MessageTemplateCreate = Omit<
@@ -48,7 +52,15 @@ export type MessageTemplateCreate = Omit<
   "id" | "createdAt" | "updatedAt"
 >;
 
-export type MessageTemplateCreateInput = Omit<
-  MessageTemplateCreate,
-  "status" | "smsId"
+export type MessageTemplateCreateInput = Input<
+  typeof MessageTemplateCreateInput
+>;
+
+export type MessageTemplateUpdate = Omit<
+  MessageTemplate,
+  "createdAt" | "updatedAt"
+>;
+
+export type MessageTemplateUpdateInput = Input<
+  typeof MessageTemplateUpdateInput
 >;

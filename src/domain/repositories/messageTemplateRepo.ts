@@ -1,17 +1,23 @@
 import { Env } from "../..";
 import { CommonPagination } from "../models/CommonModel";
-import { MessageTemplate, MessageTemplateCreate } from "../models/MessageModel";
+import {
+  MessageTemplate,
+  MessageTemplateCreate,
+  MessageTemplateUpdate,
+} from "../models/MessageModel";
 
 export async function messageTemplateDbCreate(
   params: MessageTemplateCreate,
   env: Env
 ) {
   try {
-    const { title, message, status, signature, smsId } = params;
+    const { title, message, status, signature, smsId, variables } = params;
     const date = Date.now();
+
     const stmt = env.DB.prepare(
-      "INSERT INTO messageTemplates (title, message, signature, smsId, status, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?, ?)"
-    ).bind(title, message, signature, smsId, status, date, date);
+      "INSERT INTO messageTemplates (title, message, signature, status, smsId, variables, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
+    ).bind(title, message, signature, status, smsId, variables, date, date);
+
     await stmt.run();
     return true;
   } catch (e) {
@@ -65,16 +71,18 @@ export async function messageTemplateDbGet(
 }
 
 export async function messageTemplateDbUpdate(
-  params: MessageTemplate,
+  params: MessageTemplateUpdate,
   env: Env
 ) {
   try {
-    const { id, title, message, signature, status } = params;
+    const { id, title, message, signature, status, smsId, variables } = params;
     const date = Date.now();
+
     const stmt = env.DB.prepare(
-      "UPDATE messageTemplates SET title = ?, message = ?, signature = ?, status = ?, updatedAt = ? WHERE id = ?"
-    ).bind(title, message, signature, status, date, id);
+      "UPDATE messageTemplates SET title = ?, message = ?, signature = ?, status = ?, smsId = ?, variables = ?, updatedAt = ? WHERE id = ?"
+    ).bind(title, message, signature, status, smsId, variables, date, id);
     await stmt.run();
+
     return true;
   } catch (e) {
     console.log(e);

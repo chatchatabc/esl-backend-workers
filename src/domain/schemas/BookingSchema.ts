@@ -1,4 +1,5 @@
 import {
+  boolean,
   custom,
   minValue,
   nullish,
@@ -46,6 +47,11 @@ const Schema = object({
     minValue(1, "ID must be greater than 0"),
   ]),
   message: nullish(string("Message must be a string")),
+  advanceBooking: optional(
+    number("Advance booking must be a number", [
+      minValue(1, "Advance booking must be greater than 0"),
+    ])
+  ),
 });
 
 export const BookingCreateInput = transform(
@@ -70,6 +76,7 @@ export const BookingCreateInputAdmin = transform(
     "message",
     "status",
     "amount",
+    "advanceBooking",
   ]),
   (input) => {
     const { message = null, status = 1, amount = null } = input;

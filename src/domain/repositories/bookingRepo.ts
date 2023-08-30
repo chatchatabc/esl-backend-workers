@@ -356,3 +356,58 @@ export async function bookingDbConfirmMany(
     return false;
   }
 }
+
+export async function bookingDbCreateMany(
+  params: {
+    bookings: BookingCreate[];
+    user: User;
+    logsCredit: LogsCreditCreate;
+  },
+  env: Env
+) {
+  const { bookings, user, logsCredit } = params;
+  const date = Date.now();
+  try {
+    const bookingStmt = env.DB.prepare(
+      "INSERT INTO bookings (courseId, teacherId, userId, amount, start, end, status, message, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+    );
+    const logsCreditStmt = env.DB.prepare(
+      "INSERT INTO logsCredit (title, userId, amount, details, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?)"
+    );
+    const userStmt = env.DB.prepare(
+      "UPDATE users SET credits = ?, updatedAt = ? WHERE id = ?"
+    );
+
+    await env.DB.batch([
+      ...bookings.map((booking) => {
+        const dateBooking = Date.now();
+        return bookingStmt.bind(
+          booking.courseId,
+          booking.teacherId,
+          booking.userId,
+          booking.amount,
+          booking.start,
+          booking.end,
+          booking.status,
+          booking.message,
+          dateBooking,
+          dateBooking
+        );
+      }),
+      logsCreditStmt.bind(
+        logsCredit.title,
+        logsCredit.userId,
+        logsCredit.amount,
+        logsCredit.details,
+        date,
+        date
+      ),
+      userStmt.bind(user.credits, Date.now(), user.id),
+    ]);
+
+    return true;
+  } catch (e) {
+    console.log(e);
+    return null;
+  }
+}

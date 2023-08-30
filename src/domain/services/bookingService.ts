@@ -8,6 +8,7 @@ import { LogsCreditCreate } from "../models/LogsModel";
 import {
   bookingDbCancel,
   bookingDbCreate,
+  bookingDbCreateMany,
   bookingDbGet,
   bookingDbGetAll,
   bookingDbGetAllTotal,
@@ -33,7 +34,9 @@ export async function bookingGet(params: { bookingId: number }, env: Env) {
 }
 
 export async function bookingCreate(
-  params: Omit<BookingCreate, "amount"> & { amount: number | null },
+  params: Omit<BookingCreate, "amount"> & {
+    amount: number | null;
+  },
   env: Env
 ) {
   // Get all the data needed to create a booking
@@ -96,6 +99,95 @@ export async function bookingCreate(
     env
   );
   if (!success) {
+    throw utilFailedResponse("Failed to create Booking", 500);
+  }
+
+  return true;
+}
+
+export async function bookingCreateMany(
+  params: Omit<BookingCreate, "amount"> & {
+    amount: number | null;
+    advanceBooking: number;
+  },
+  env: Env
+) {
+  // Get all the data needed to create a booking
+  const user = await userGet({ userId: params.userId }, env);
+  const teacher = await teacherGet({ teacherId: params.teacherId }, env);
+  const course = await courseGet({ courseId: params.courseId }, env);
+  teacher.user = await userGet({ userId: params.teacherId }, env);
+
+  // Check if the course belongs to the teacher
+  const courseValid = await teacherValidateCourse(
+    { teacherId: teacher.id, courseId: course.id },
+    env
+  );
+  if (!courseValid) {
+    throw utilFailedResponse("Course does not belong to teacher", 400);
+  }
+
+  // Calculate base amount
+  let start = new Date(params.start).getTime();
+  let end = new Date(params.end).getTime();
+  const amount = params.amount ?? course.price * ((end - start) / 1800000);
+  const totalAmount = amount * params.advanceBooking;
+
+  // Check if the user has enough credit
+  if (totalAmount > user.credits) {
+    throw utilFailedResponse("Not enough credit", 400);
+  } else {
+    user.credits -= totalAmount;
+  }
+
+  // Check if schedule exists
+  const validSchedule = await scheduleDbValidateBooking(
+    { ...params, amount },
+    env
+  );
+  if (!validSchedule) {
+    throw utilFailedResponse("Schedule does not exist", 400);
+  }
+
+  // Create bookings
+  const bookings: BookingCreate[] = [];
+  while (bookings.length < params.advanceBooking) {
+    const booking = { ...params, amount, start, end };
+
+    // Check if the booking overlaps with another booking
+    const overlap = await bookingDbGetOverlap(booking, env);
+    if (!overlap) {
+      // Add booking to array
+      bookings.push(booking);
+    }
+
+    // Increment start and end time by 7 days
+    start += 604800000;
+    end += 604800000;
+  }
+
+  // Create LogsCredit
+  const startDateFormat = utilDateFormatter("zh-CN", new Date(params.start));
+  const endDateFormat = utilDateFormatter("zh-CN", new Date(end));
+  const startTimeFormat = utilTimeFormatter("zh-CN", new Date(params.start));
+  const endTimeFormat = utilTimeFormatter("zh-CN", new Date(params.end));
+  const logsCredit: LogsCreditCreate = {
+    userId: user.id,
+    amount: -totalAmount,
+    title: `Recurring Class from ${startDateFormat} to ${endDateFormat} @ ${startTimeFormat} - ${endTimeFormat}`,
+    details: `Recurring Class from ${startDateFormat} to ${endDateFormat} @ ${startTimeFormat} - ${endTimeFormat}`,
+  };
+
+  // Perform transaction query
+  const query = await bookingDbCreateMany(
+    {
+      bookings,
+      user,
+      logsCredit,
+    },
+    env
+  );
+  if (!query) {
     throw utilFailedResponse("Failed to create Booking", 500);
   }
 

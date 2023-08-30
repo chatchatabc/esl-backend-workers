@@ -13,6 +13,7 @@ import { CommonPaginationInput } from "../../domain/schemas/CommonSchema";
 import {
   bookingCancel,
   bookingCreate,
+  bookingCreateMany,
   bookingGetAll,
 } from "../../domain/services/bookingService";
 import { utilFailedResponse } from "../../domain/services/utilService";
@@ -44,9 +45,16 @@ export default trpcRouterCreate({
   createAdmin: trpcProcedureAdmin
     .input(BookingCreateInputAdmin)
     .mutation(async (opts) => {
-      const { start, end } = opts.input;
+      const { start, end, advanceBooking } = opts.input;
       if (start >= end) {
         throw utilFailedResponse("Start time must be before end time", 400);
+      }
+
+      if (advanceBooking) {
+        return bookingCreateMany(
+          { ...opts.input, advanceBooking },
+          opts.ctx.env
+        );
       }
 
       return bookingCreate(opts.input, opts.ctx.env);

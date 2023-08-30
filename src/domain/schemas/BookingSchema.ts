@@ -85,3 +85,5 @@ export const BookingCreateInputAdmin = transform(
 export const BookingCancelInput = pick(Schema, ["id"]);
 
 export const BookingCancelInputAdmin = pick(Schema, ["id", "userId"]);
+
+export const BookingCompleteInputAdmin = pick(Schema, ["id", "userId"]);

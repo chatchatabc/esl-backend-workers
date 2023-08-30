@@ -3,6 +3,7 @@ import { CommonPagination } from "./CommonModel";
 import type { User } from "./UserModel";
 import {
   BookingCancelInputAdmin,
+  BookingCompleteInputAdmin,
   BookingCreateInput,
   BookingCreateInputAdmin,
 } from "../schemas/BookingSchema";
@@ -52,3 +53,5 @@ export type BookingPagination = {
 } & CommonPagination;
 
 export type BookingCancelInputAdmin = Input<typeof BookingCancelInputAdmin>;
+
+export type BookingCompleteInputAdmin = Input<typeof BookingCompleteInputAdmin>;

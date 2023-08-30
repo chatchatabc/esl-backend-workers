@@ -118,6 +118,40 @@ export async function bookingDbCancel(
   }
 }
 
+export async function bookingDbComplete(
+  params: { booking: Booking; user: User; logsCredit: LogsCreditCreate },
+  env: Env
+) {
+  const { booking, user, logsCredit } = params;
+  const date = Date.now();
+
+  try {
+    const studentStmt = env.DB.prepare(
+      "UPDATE users SET credits = ?, updatedAt = ? WHERE id = ?"
+    ).bind(user.credits, date, user.id);
+    const bookingStmt = env.DB.prepare(
+      "UPDATE bookings SET status = 3, updatedAt = ? WHERE id = ?"
+    ).bind(date, booking.id);
+    const logsCreditStmt = env.DB.prepare(
+      "INSERT INTO logsCredit (title, userId, amount, details, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?)"
+    ).bind(
+      logsCredit.title,
+      logsCredit.userId,
+      logsCredit.amount,
+      logsCredit.details,
+      date,
+      date
+    );
+
+    await env.DB.batch([studentStmt, bookingStmt, logsCreditStmt]);
+
+    return true;
+  } catch (e) {
+    console.log(e);
+    return null;
+  }
+}
+
 export async function bookingDbCreate(
   params: {
     booking: BookingCreate;

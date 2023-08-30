@@ -7,6 +7,7 @@ import {
 import { LogsCreditCreate } from "../models/LogsModel";
 import {
   bookingDbCancel,
+  bookingDbComplete,
   bookingDbCreate,
   bookingDbCreateMany,
   bookingDbGet,
@@ -252,6 +253,48 @@ export async function bookingCancel(
   const query = await bookingDbCancel({ booking, user, logsCredit }, env);
   if (!query) {
     throw utilFailedResponse("Was not able to cancel booking", 500);
+  }
+
+  return true;
+}
+
+export async function bookingComplete(
+  params: { bookingId: number; userId: number },
+  env: Env
+) {
+  const { bookingId, userId } = params;
+  const booking = await bookingGet({ bookingId }, env);
+
+  // Check if user is the owner
+  if (booking.userId !== userId) {
+    throw utilFailedResponse("Unauthorized", 403);
+  }
+
+  // Update teacher credit
+  const teacher = await teacherGet({ teacherId: booking.teacherId }, env);
+  teacher.user = await userGet({ userId: teacher.userId }, env);
+  teacher.user.credits += booking.amount;
+
+  // Create LogsCredit
+  const logsCredit: LogsCreditCreate = {
+    title: "Class Completed",
+    details: `Class ${utilDateFormatter(
+      "zh-CN",
+      new Date(booking.start)
+    )} ${utilTimeFormatter("zh-CN", new Date(booking.start))} Completed`,
+    userId: teacher.user.id,
+    amount: booking.amount,
+  };
+
+  console.log(logsCredit);
+
+  // Perform transaction query
+  const query = await bookingDbComplete(
+    { booking, user: teacher.user, logsCredit },
+    env
+  );
+  if (!query) {
+    throw utilFailedResponse("Was not able to complete booking", 500);
   }
 
   return true;

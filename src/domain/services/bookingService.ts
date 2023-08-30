@@ -57,7 +57,7 @@ export async function bookingCreate(
   // Check if the user has enough credit
   const start = new Date(params.start).getTime();
   const end = new Date(params.end).getTime();
-  const amount = course.price * ((end - start) / 1800000);
+  const amount = (params.amount ?? course.price) * ((end - start) / 1800000);
   if (amount > user.credits) {
     throw utilFailedResponse("Not enough credit", 400);
   } else {
@@ -65,7 +65,7 @@ export async function bookingCreate(
   }
 
   // Create booking
-  const booking = { ...params, amount: params.amount ?? amount };
+  const booking = { ...params, amount };
 
   // Check if the booked schedule exists
   const validSchedule = await scheduleDbValidateBooking(booking, env);
@@ -130,7 +130,7 @@ export async function bookingCreateMany(
   // Calculate base amount
   let start = new Date(params.start).getTime();
   let end = new Date(params.end).getTime();
-  const amount = params.amount ?? course.price * ((end - start) / 1800000);
+  const amount = (params.amount ?? course.price) * ((end - start) / 1800000);
   const totalAmount = amount * params.advanceBooking;
 
   // Check if the user has enough credit

@@ -43,7 +43,8 @@ export async function bookingGet(params: { bookingId: number }, env: Env) {
 export async function bookingUpdate(params: BookingUpdate, env: Env) {
   const booking = await bookingGet({ bookingId: params.id }, env);
   const teacher = await teacherGet({ teacherId: booking.teacherId }, env);
-  const user = await userGet({ userId: teacher.userId }, env);
+  teacher.user = await userGet({ userId: teacher.userId }, env);
+  const user = await userGet({ userId: booking.userId }, env);
 
   if (booking.status === params.status) {
     throw utilFailedResponse("Cannot update to same status", 400);
@@ -53,30 +54,56 @@ export async function bookingUpdate(params: BookingUpdate, env: Env) {
     throw utilFailedResponse("Cannot update a cancelled booking", 400);
   }
 
+  // Create LogsCredit and update teacher's credits
+  const logsCredits: LogsCreditCreate[] = [];
   if (booking.status !== 3 && params.status === 3) {
-    user.credits += booking.amount;
+    teacher.user.credits += booking.amount;
+    logsCredits.push({
+      title: "Class Completed",
+      details: `Class ${utilDateFormatter(
+        "zh-CN",
+        new Date(booking.start)
+      )} ${utilTimeFormatter("zh-CN", new Date(booking.start))} Completed`,
+      userId: teacher.user.id,
+      amount: booking.amount,
+    });
   } else if (booking.status === 3 && params.status !== 3) {
-    user.credits -= booking.amount;
+    teacher.user.credits -= booking.amount;
+    logsCredits.push({
+      title: "Cancelled Class",
+      details: `Cancelled Class ${utilDateFormatter(
+        "zh-CN",
+        new Date(booking.start)
+      )} ${utilTimeFormatter("zh-CN", new Date(booking.start))}`,
+      userId: teacher.user.id,
+      amount: -booking.amount,
+    });
   }
-  booking.status = params.status;
 
-  // Create LogsCredit
-  const logsCredit: LogsCreditCreate = {
-    title: "Class Completed",
-    details: `Class ${utilDateFormatter(
-      "zh-CN",
-      new Date(booking.start)
-    )} ${utilTimeFormatter("zh-CN", new Date(booking.start))} Completed`,
-    userId: user.id,
-    amount: booking.amount * (params.status === 3 ? 1 : -1),
-  };
+  // Update user's credits if booking is cancelled
+  if (params.status === 4) {
+    user.credits += booking.amount;
+    logsCredits.push({
+      title: "Cancelled Class",
+      details: `Cancelled Class ${utilDateFormatter(
+        "zh-CN",
+        new Date(booking.start)
+      )} ${utilTimeFormatter("zh-CN", new Date(booking.start))}`,
+      userId: user.id,
+      amount: booking.amount,
+    });
+  }
+
+  // Update booking status
+  booking.status = params.status;
 
   // Perform transaction query
   const query = await bookingDbUpdate(
     {
       booking,
       user,
-      logsCredit,
+      teacher: teacher.user,
+      logsCredits,
     },
     env
   );

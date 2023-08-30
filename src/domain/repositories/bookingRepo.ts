@@ -463,13 +463,14 @@ export async function bookingDbCreateMany(
 
 export async function bookingDbUpdate(
   params: {
+    teacher: User;
     user: User;
     booking: Booking;
-    logsCredit: LogsCreditCreate;
+    logsCredits: LogsCreditCreate[];
   },
   env: Env
 ) {
-  const { user, booking, logsCredit } = params;
+  const { user, booking, logsCredits, teacher } = params;
   const date = Date.now();
 
   try {
@@ -484,6 +485,7 @@ export async function bookingDbUpdate(
     );
 
     await env.DB.batch([
+      userStmt.bind(teacher.credits, date, teacher.id),
       userStmt.bind(user.credits, date, user.id),
       bookingStmt.bind(
         booking.courseId,
@@ -497,14 +499,16 @@ export async function bookingDbUpdate(
         date,
         booking.id
       ),
-      logsCreditStmt.bind(
-        logsCredit.title,
-        logsCredit.userId,
-        logsCredit.amount,
-        logsCredit.details,
-        date,
-        date
-      ),
+      ...logsCredits.map((logsCredit) => {
+        return logsCreditStmt.bind(
+          logsCredit.title,
+          logsCredit.userId,
+          logsCredit.amount,
+          logsCredit.details,
+          date,
+          date
+        );
+      }),
     ]);
 
     return true;

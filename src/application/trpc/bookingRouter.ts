@@ -62,13 +62,15 @@ export default trpcRouterCreate({
 
   cancel: trpcProcedureUser.input(BookingCancelInput).mutation((opts) => {
     const { userId, env } = opts.ctx;
-    return bookingCancel({ ...opts.input, userId }, env);
+    const bookingId = opts.input.id;
+    return bookingCancel({ ...opts.input, bookingId, userId }, env);
   }),
 
   cancelAdmin: trpcProcedureAdmin
     .input(BookingCancelInputAdmin)
     .mutation((opts) => {
       const { env } = opts.ctx;
-      return bookingCancel(opts.input, env);
+      const bookingId = opts.input.id;
+      return bookingCancel({ ...opts.input, bookingId }, env);
     }),
 });

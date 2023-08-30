@@ -3,8 +3,10 @@ import {
   Booking,
   BookingCreate,
   BookingPagination,
+  BookingUpdate,
 } from "../models/BookingModel";
 import { LogsCreditCreate } from "../models/LogsModel";
+import { User } from "../models/UserModel";
 import {
   bookingDbCancel,
   bookingDbComplete,
@@ -14,6 +16,7 @@ import {
   bookingDbGetAll,
   bookingDbGetAllTotal,
   bookingDbGetOverlap,
+  bookingDbUpdate,
 } from "../repositories/bookingRepo";
 import { scheduleDbValidateBooking } from "../repositories/scheduleRepo";
 import { courseGet } from "./courseService";
@@ -32,6 +35,56 @@ export async function bookingGet(params: { bookingId: number }, env: Env) {
   }
 
   return booking;
+}
+
+/*
+ * Can only update booking status for now.
+ */
+export async function bookingUpdate(params: BookingUpdate, env: Env) {
+  const booking = await bookingGet({ bookingId: params.id }, env);
+  const teacher = await teacherGet({ teacherId: booking.teacherId }, env);
+  const user = await userGet({ userId: teacher.userId }, env);
+
+  if (booking.status === params.status) {
+    throw utilFailedResponse("Cannot update to same status", 400);
+  }
+
+  if (booking.status === 4) {
+    throw utilFailedResponse("Cannot update a cancelled booking", 400);
+  }
+
+  if (booking.status !== 3 && params.status === 3) {
+    user.credits += booking.amount;
+  } else if (booking.status === 3 && params.status !== 3) {
+    user.credits -= booking.amount;
+  }
+  booking.status = params.status;
+
+  // Create LogsCredit
+  const logsCredit: LogsCreditCreate = {
+    title: "Class Completed",
+    details: `Class ${utilDateFormatter(
+      "zh-CN",
+      new Date(booking.start)
+    )} ${utilTimeFormatter("zh-CN", new Date(booking.start))} Completed`,
+    userId: user.id,
+    amount: booking.amount * (params.status === 3 ? 1 : -1),
+  };
+
+  // Perform transaction query
+  const query = await bookingDbUpdate(
+    {
+      booking,
+      user,
+      logsCredit,
+    },
+    env
+  );
+  if (!query) {
+    throw utilFailedResponse("Failed to update Booking", 500);
+  }
+
+  return true;
 }
 
 export async function bookingCreate(
@@ -223,11 +276,7 @@ export async function bookingCancel(
 ) {
   const { bookingId, userId } = values;
   const booking = await bookingGet({ bookingId }, env);
-
-  // Check if booking is cancellable
-  if (booking.status !== 1) {
-    throw utilFailedResponse("Booking is not cancellable anymore.", 400);
-  }
+  const teacher = await teacherGet({ teacherId: booking.teacherId }, env);
 
   // Check if user is the owner
   if (booking.userId !== userId) {
@@ -237,6 +286,13 @@ export async function bookingCancel(
   // Update user credit
   const user = await userGet({ userId }, env);
   user.credits += booking.amount;
+
+  // Check if booking is already completed
+  if (booking.status === 3) {
+    // Update teacher credit
+    teacher.user = await userGet({ userId: teacher.userId }, env);
+    teacher.user.credits -= booking.amount;
+  }
 
   // Create LogsCredit
   const logsCredit: LogsCreditCreate = {
@@ -250,7 +306,10 @@ export async function bookingCancel(
   };
 
   // Perform transaction query
-  const query = await bookingDbCancel({ booking, user, logsCredit }, env);
+  const query = await bookingDbCancel(
+    { booking, user, logsCredit, teacher: teacher.user },
+    env
+  );
   if (!query) {
     throw utilFailedResponse("Was not able to cancel booking", 500);
   }

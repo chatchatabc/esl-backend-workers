@@ -85,16 +85,21 @@ export async function bookingDbGet(params: { bookingId: number }, env: Env) {
 }
 
 export async function bookingDbCancel(
-  params: { booking: Booking; user: User; logsCredit: LogsCreditCreate },
+  params: {
+    booking: Booking;
+    user: User;
+    logsCredit: LogsCreditCreate;
+    teacher?: User;
+  },
   env: Env
 ) {
   const { booking, user, logsCredit } = params;
   const date = Date.now();
 
   try {
-    const studentStmt = env.DB.prepare(
+    const userStmt = env.DB.prepare(
       "UPDATE users SET credits = ?, updatedAt = ? WHERE id = ?"
-    ).bind(user.credits, date, user.id);
+    );
     const bookingStmt = env.DB.prepare(
       "UPDATE bookings SET status = 4, updatedAt = ? WHERE id = ?"
     ).bind(date, booking.id);
@@ -108,8 +113,18 @@ export async function bookingDbCancel(
       date,
       date
     );
+    const stmts = [
+      userStmt.bind(user.credits, date, user.id),
+      bookingStmt,
+      logsCreditStmt,
+    ];
 
-    await env.DB.batch([studentStmt, bookingStmt, logsCreditStmt]);
+    if (params.teacher) {
+      stmts.push(
+        userStmt.bind(params.teacher.credits, date, params.teacher.id)
+      );
+    }
+    await env.DB.batch(stmts);
 
     return true;
   } catch (e) {
@@ -437,6 +452,59 @@ export async function bookingDbCreateMany(
         date
       ),
       userStmt.bind(user.credits, Date.now(), user.id),
+    ]);
+
+    return true;
+  } catch (e) {
+    console.log(e);
+    return null;
+  }
+}
+
+export async function bookingDbUpdate(
+  params: {
+    user: User;
+    booking: Booking;
+    logsCredit: LogsCreditCreate;
+  },
+  env: Env
+) {
+  const { user, booking, logsCredit } = params;
+  const date = Date.now();
+
+  try {
+    const userStmt = env.DB.prepare(
+      "UPDATE users SET credits = ?, updatedAt = ? WHERE id = ?"
+    );
+    const bookingStmt = env.DB.prepare(
+      "UPDATE bookings SET courseId = ?, teacherId = ?, userId = ?, amount = ?, start = ?, end = ?, status = ?, message = ?, updatedAt = ? WHERE id = ?"
+    );
+    const logsCreditStmt = env.DB.prepare(
+      "INSERT INTO logsCredit (title, userId, amount, details, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?)"
+    );
+
+    await env.DB.batch([
+      userStmt.bind(user.credits, date, user.id),
+      bookingStmt.bind(
+        booking.courseId,
+        booking.teacherId,
+        booking.userId,
+        booking.amount,
+        booking.start,
+        booking.end,
+        booking.status,
+        booking.message,
+        date,
+        booking.id
+      ),
+      logsCreditStmt.bind(
+        logsCredit.title,
+        logsCredit.userId,
+        logsCredit.amount,
+        logsCredit.details,
+        date,
+        date
+      ),
     ]);
 
     return true;

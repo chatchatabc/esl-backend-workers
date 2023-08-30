@@ -6,6 +6,7 @@ import {
   BookingCompleteInputAdmin,
   BookingCreateInput,
   BookingCreateInputAdmin,
+  BookingUpdateInput,
 } from "../schemas/BookingSchema";
 import { Course } from "./CourseModel";
 import { Teacher } from "./TeacherModel";
@@ -29,7 +30,7 @@ export type Booking = {
   course?: Course;
 };
 
-export type BookingUpdate = Omit<Booking, "student" | "teacher">;
+export type BookingUpdate = Pick<Booking, "id" | "status">;
 
 export type BookingCreate = Pick<
   Booking,
@@ -55,3 +56,5 @@ export type BookingPagination = {
 export type BookingCancelInputAdmin = Input<typeof BookingCancelInputAdmin>;
 
 export type BookingCompleteInputAdmin = Input<typeof BookingCompleteInputAdmin>;
+
+export type BookingUpdateInput = Input<typeof BookingUpdateInput>;

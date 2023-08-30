@@ -33,11 +33,9 @@ const Schema = object({
   userId: number("User ID must be a number", [
     minValue(1, "User ID must be greater than 0"),
   ]),
-  status: optional(
-    number("Status must be a number", [
-      minValue(1, "Status must be greater than 0"),
-    ])
-  ),
+  status: number("Status must be a number", [
+    minValue(1, "Status must be greater than 0"),
+  ]),
   amount: optional(
     number("Amount must be a number", [
       minValue(0, "Amount must be greater than 0"),
@@ -87,3 +85,5 @@ export const BookingCancelInput = pick(Schema, ["id"]);
 export const BookingCancelInputAdmin = pick(Schema, ["id", "userId"]);
 
 export const BookingCompleteInputAdmin = pick(Schema, ["id", "userId"]);
+
+export const BookingUpdateInput = pick(Schema, ["status", "id"]);

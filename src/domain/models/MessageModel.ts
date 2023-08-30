@@ -1,6 +1,10 @@
 import { Input } from "valibot";
 import { User } from "./UserModel";
-import { MessageCreateInput, MessageSendInput } from "../schemas/MessageSchema";
+import {
+  MessageCreateInput,
+  MessageSendInput,
+  MessageUpdateInput,
+} from "../schemas/MessageSchema";
 import {
   MessageTemplateCreateInput,
   MessageTemplateUpdateInput,
@@ -22,6 +26,10 @@ export type Message = {
   user?: User;
   messageTemplate?: MessageTemplate;
 };
+
+export type MessageUpdate = Omit<Message, "createdAt" | "updatedAt">;
+
+export type MessageUpdateInput = Input<typeof MessageUpdateInput>;
 
 export type MessageCreate = Omit<Message, "id" | "createdAt" | "updatedAt">;
 

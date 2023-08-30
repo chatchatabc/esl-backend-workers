@@ -1,5 +1,5 @@
 import { Env } from "../..";
-import { Message, MessageCreate } from "../models/MessageModel";
+import { Message, MessageCreate, MessageUpdate } from "../models/MessageModel";
 
 export async function messageDbCreate(params: MessageCreate, env: Env) {
   try {
@@ -89,6 +89,39 @@ export async function messageDbGetAllTotal(env: Env) {
   } catch (e) {
     console.log(e);
     return undefined;
+  }
+}
+
+export async function messageDbUpdate(params: MessageUpdate, env: Env) {
+  try {
+    const {
+      id,
+      sendAt,
+      userId,
+      status,
+      cron,
+      messageTemplateId,
+      phone,
+      templateValues,
+    } = params;
+    const stmt = env.DB.prepare(
+      "UPDATE messages SET sendAt = ?, userId = ?, status = ?, cron = ?, messageTemplateId = ?, phone = ?, templateValues = ?, updatedAt = ? WHERE id = ?"
+    ).bind(
+      sendAt,
+      userId,
+      status,
+      cron,
+      messageTemplateId,
+      phone,
+      templateValues,
+      Date.now(),
+      id
+    );
+    await stmt.run();
+    return true;
+  } catch (e) {
+    console.log(e);
+    return null;
   }
 }
 

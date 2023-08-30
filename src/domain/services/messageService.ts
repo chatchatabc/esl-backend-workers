@@ -1,12 +1,18 @@
 import { Env } from "../..";
 import { smsSend } from "../infra/sms";
-import { Message, MessageCreate, MessageSend } from "../models/MessageModel";
+import {
+  Message,
+  MessageCreate,
+  MessageSend,
+  MessageUpdate,
+} from "../models/MessageModel";
 import {
   messageDbCreate,
   messageDbGetAll,
   messageDbGetAllByDate,
   messageDbGetAllTotal,
   messageDbGetAllWithCron,
+  messageDbUpdate,
 } from "../repositories/messageRepo";
 import { messageTemplateGet } from "./messageTemplate";
 import { utilFailedResponse } from "./utilService";
@@ -60,6 +66,15 @@ export async function messageGetAllWithCron(env: Env) {
   }
 
   return query.results as Message[];
+}
+
+export async function messageUpdate(params: MessageUpdate, env: Env) {
+  const query = await messageDbUpdate(params, env);
+  if (!query) {
+    throw utilFailedResponse("Unable to update message", 500);
+  }
+
+  return true;
 }
 
 export async function messageSend(params: MessageSend, env: Env) {

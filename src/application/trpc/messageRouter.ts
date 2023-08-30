@@ -2,11 +2,13 @@ import { trpcProcedureAdmin, trpcRouterCreate } from "../../domain/infra/trpc";
 import {
   MessageCreateInput,
   MessageSendInput,
+  MessageUpdateInput,
 } from "../../domain/schemas/MessageSchema";
 import {
   messageCreate,
   messageGetAll,
   messageSend,
+  messageUpdate,
 } from "../../domain/services/messageService";
 
 export default trpcRouterCreate({
@@ -39,5 +41,9 @@ export default trpcRouterCreate({
     const { env } = opts.ctx;
 
     return messageSend(opts.input, env);
+  }),
+
+  update: trpcProcedureAdmin.input(MessageUpdateInput).mutation((opts) => {
+    return messageUpdate(opts.input, opts.ctx.env);
   }),
 });

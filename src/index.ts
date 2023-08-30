@@ -6,6 +6,7 @@ import {
   cronConfirmBooking,
   cronSendCronMessages,
   cronSendScheduledMessages,
+  cronService,
 } from "./domain/services/cronService";
 import cron from "cron-parser";
 
@@ -59,9 +60,7 @@ export default {
       const parsedCron = cron.parseExpression("*/10 * * * *");
       const timestamp = parsedCron.next().toDate().getTime();
 
-      ctx.waitUntil(cronSendScheduledMessages(timestamp, env));
-      ctx.waitUntil(cronSendCronMessages(timestamp, env));
-      ctx.waitUntil(cronConfirmBooking(env));
+      ctx.waitUntil(cronService(timestamp, env));
     }
   },
 };

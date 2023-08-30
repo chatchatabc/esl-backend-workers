@@ -59,6 +59,13 @@ export async function cronRemindClass(env: Env) {
   return true;
 }
 
+export async function cronService(timestamp: number, env: Env) {
+  await cronConfirmBooking(timestamp, env);
+  await cronSendScheduledMessages(timestamp, env);
+
+  return true;
+}
+
 /**
  * Send all current scheduled messages when cron job is triggered
  * @param env { Env }
@@ -66,7 +73,7 @@ export async function cronRemindClass(env: Env) {
  */
 export async function cronSendScheduledMessages(timestamp: number, env: Env) {
   const start = 0;
-  const end = timestamp + 1 * 60 * 1000;
+  const end = timestamp + 10 * 60 * 1000;
   const messages = await messageGetAllByDate({ start, end }, env);
   if (!messages) {
     throw new Error("Failed to get messages");
@@ -85,14 +92,15 @@ export async function cronSendScheduledMessages(timestamp: number, env: Env) {
       templateParam: message.templateValues,
     };
 
-    const resSms = await smsSend(sms);
-    if (!resSms || resSms.Code !== "OK") {
-      message.status = 3;
-    } else {
-      message.status = 2;
-      await env.KV.put("scheduledMessage", messageTemplate.message);
-      console.log("Scheduled message sent: ", messageTemplate.message);
-    }
+    // const resSms = await smsSend(sms);
+    // if (!resSms || resSms.Code !== "OK") {
+    //   message.status = 3;
+    // } else {
+    //   message.status = 2;
+    //   await env.KV.put("scheduledMessage", messageTemplate.message);
+    //   console.log("Scheduled message sent: ", messageTemplate.message);
+    // }
+    message.status = 2;
 
     newMesssages.push(message);
   }
@@ -142,9 +150,9 @@ export async function cronSendCronMessages(timestamp: number, env: Env) {
  * @param bindings { Env }
  * @returns { boolean }
  */
-export async function cronConfirmBooking(bindings: Env) {
+export async function cronConfirmBooking(timestsamp: number, bindings: Env) {
   const start = 0;
-  const end = Date.now() + 6 * 60 * 60 * 1000;
+  const end = timestsamp + 10 * 60 * 1000;
 
   // Get all bookings with pending status
   const bookings = await bookingDbGetAllByDateStart(
@@ -206,7 +214,7 @@ export async function cronConfirmBooking(bindings: Env) {
       userId: booking.userId,
       messageTemplateId: 1,
       phone: booking.user!.phone!,
-      cron: "0 0 0 * *",
+      cron: "0 0 1 1 1",
       status: 1,
       sendAt: booking.start - 10 * 60 * 1000,
       templateValues: JSON.stringify({

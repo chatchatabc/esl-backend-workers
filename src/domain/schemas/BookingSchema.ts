@@ -40,7 +40,7 @@ const Schema = object({
   ),
   amount: optional(
     number("Amount must be a number", [
-      minValue(1, "Amount must be greater than 0"),
+      minValue(0, "Amount must be greater than 0"),
     ])
   ),
   bookingId: number("ID must be a number", [

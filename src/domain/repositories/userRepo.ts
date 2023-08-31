@@ -35,11 +35,12 @@ export async function userDbInsert(body: UserCreate, env: Env) {
     firstName,
     lastName,
     phoneVerifiedAt,
+    alias,
   } = body;
   const date = Date.now();
   try {
     await env.DB.prepare(
-      "INSERT INTO users (username, password, createdAt, updatedAt, roleId, credits, phone, firstName, lastName, phoneVerifiedAt, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+      "INSERT INTO users (username, password, createdAt, updatedAt, roleId, credits, phone, firstName, lastName, phoneVerifiedAt, status, alias) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
     )
       .bind(
         username,
@@ -52,7 +53,8 @@ export async function userDbInsert(body: UserCreate, env: Env) {
         firstName,
         lastName,
         phoneVerifiedAt,
-        status
+        status,
+        alias
       )
       .run();
     return true;
@@ -148,27 +150,28 @@ export async function userDbUpdate(params: User, env: Env) {
     phoneVerifiedAt,
     status,
     credits,
+    alias,
   } = params;
 
   const date = new Date().getTime();
   try {
-    await env.DB.prepare(
-      "UPDATE users SET username = ?, password = ?, roleId = ?, updatedAt = ?, firstName = ?, lastName = ?, phone = ?, phoneVerifiedAt = ?, status = ?, credits = ? WHERE id = ?"
-    )
-      .bind(
-        username,
-        password,
-        roleId,
-        date,
-        firstName,
-        lastName,
-        phone,
-        phoneVerifiedAt,
-        status,
-        credits,
-        id
-      )
-      .run();
+    const stmt = env.DB.prepare(
+      "UPDATE users SET username = ?, password = ?, roleId = ?, firstName = ?, lastName = ?, phone = ?, phoneVerifiedAt = ?, status = ?, credits = ?, alias = ?, updatedAt = ? WHERE id = ?"
+    ).bind(
+      username,
+      password,
+      roleId,
+      firstName,
+      lastName,
+      phone,
+      phoneVerifiedAt,
+      status,
+      credits,
+      alias,
+      date,
+      id
+    );
+    await stmt.run();
 
     return true;
   } catch (e) {

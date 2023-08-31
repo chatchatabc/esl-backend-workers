@@ -11,7 +11,7 @@ export async function creditAdd(params: CreditAdd, env: Env) {
 
   const logsCredit: LogsCreditCreate = {
     userId: params.userId,
-    amount: params.amount,
+    amount: params.credits,
     title: "Credit Add",
     details: `Credit Add ${params.credits}`,
   };

@@ -1,13 +1,14 @@
 import { Env } from "../..";
 import { CommonPagination } from "../models/CommonModel";
 import { CourseCreate } from "../models/CourseModel";
-import { Teacher, TeacherCreate } from "../models/TeacherModel";
+import { Teacher, TeacherCreate, TeacherUpdate } from "../models/TeacherModel";
 import {
   teacherDBCreate,
   teacherDbGet,
   teacherDbGetAll,
   teacherDbGetAllTotal,
   teacherDbGetByUser,
+  teacherDbUpdate,
   teacherDbValidateCourse,
 } from "../repositories/teacherRepo";
 import { courseCreate } from "./courseService";
@@ -77,6 +78,17 @@ export async function teacherCreate(params: TeacherCreate, env: Env) {
   const query = await teacherDBCreate(params, env);
   if (!query) {
     throw utilFailedResponse("Cannot create teacher", 500);
+  }
+
+  return true;
+}
+
+export async function teacherUpdate(params: TeacherUpdate, env: Env) {
+  await teacherGet({ teacherId: params.id }, env);
+
+  const query = await teacherDbUpdate(params, env);
+  if (!query) {
+    throw utilFailedResponse("Cannot update teacher", 500);
   }
 
   return true;

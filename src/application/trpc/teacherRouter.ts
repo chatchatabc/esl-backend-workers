@@ -10,8 +10,12 @@ import {
   teacherGet,
   teacherGetAll,
   teacherGetByUser,
+  teacherUpdate,
 } from "../../domain/services/teacherService";
-import { TeacherCreateInput } from "../../domain/schemas/TeacherSchema";
+import {
+  TeacherCreateInput,
+  TeacherUpdateInput,
+} from "../../domain/schemas/TeacherSchema";
 
 export default trpcRouterCreate({
   get: trpcProcedureUser
@@ -32,5 +36,9 @@ export default trpcRouterCreate({
 
   create: trpcProcedureAdmin.input(TeacherCreateInput).query((opts) => {
     return teacherCreate(opts.input, opts.ctx.env);
+  }),
+
+  update: trpcProcedureAdmin.input(TeacherUpdateInput).mutation((opts) => {
+    return teacherUpdate(opts.input, opts.ctx.env);
   }),
 });

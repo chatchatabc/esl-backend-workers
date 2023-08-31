@@ -1,6 +1,6 @@
 import { Env } from "../..";
 import { CommonPagination } from "../models/CommonModel";
-import { Teacher, TeacherCreate } from "../models/TeacherModel";
+import { Teacher, TeacherCreate, TeacherUpdate } from "../models/TeacherModel";
 
 export async function teacherDbGet(params: { teacherId: number }, env: Env) {
   const { teacherId } = params;
@@ -86,6 +86,23 @@ export async function teacherDBCreate(params: TeacherCreate, env: Env) {
     const stmt = env.DB.prepare(
       "INSERT INTO teachers (userId, bio, alias, status, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?)"
     ).bind(userId, bio, alias, status, date, date);
+    await stmt.run();
+
+    return true;
+  } catch (e) {
+    console.log(e);
+    return null;
+  }
+}
+
+export async function teacherDbUpdate(params: TeacherUpdate, env: Env) {
+  const { id, bio, alias, status } = params;
+  const date = Date.now();
+
+  try {
+    const stmt = env.DB.prepare(
+      "UPDATE teachers SET bio = ?, alias = ?, status = ?, updatedAt = ? WHERE id = ?"
+    ).bind(bio, alias, status, date, id);
     await stmt.run();
 
     return true;

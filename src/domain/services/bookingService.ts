@@ -127,12 +127,8 @@ export async function bookingCreate(
   teacher.user = await userGet({ userId: params.teacherId }, env);
 
   // Check if the course belongs to the teacher
-  const courseValid = await teacherValidateCourse(
-    { teacherId: teacher.id, courseId: course.id },
-    env
-  );
-  if (!courseValid) {
-    throw utilFailedResponse("Course does not belong to teacher", 400);
+  if (course.teacherId !== teacher.id) {
+    throw utilFailedResponse("Course does not belong to teacher", 500);
   }
 
   // Check if the user has enough credit

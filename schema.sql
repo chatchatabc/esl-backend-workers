@@ -89,7 +89,7 @@ VALUES
  * One-to-one relationship with users table
  * One-to-many relationship with schedules table
  * One-to-many relationship with bookings table
- * Many-to-many relationship with courses table
+ * one-to-many relationship with courses table
  */
 DROP TABLE IF EXISTS teachers;
 
@@ -111,13 +111,14 @@ VALUES
 
 /*
  * Course Entity
- * Many-to-many relationship with teachers table
+ * Many-to-one relationship with teachers table
  */
 DROP TABLE IF EXISTS courses;
 
 CREATE TABLE
   IF NOT EXISTS courses (
     id INTEGER PRIMARY KEY,
+    teacherId INTEGER NOT NULL,
     price INTEGER NOT NULL,
     name TEXT NOT NULL,
     description TEXT,
@@ -126,29 +127,16 @@ CREATE TABLE
   );
 
 INSERT INTO
-  courses (price, name, description, createdAt, updatedAt)
+  courses (
+    teacherId,
+    price,
+    name,
+    description,
+    createdAt,
+    updatedAt
+  )
 VALUES
-  (50, 'Normal Class', 'Normal Class', 0, 0);
-
-/*
- * Teacher Course Entity
- * Join table for teachers and courses
- */
-DROP TABLE IF EXISTS teachersCourses;
-
-CREATE TABLE
-  IF NOT EXISTS teachersCourses (
-    id INTEGER PRIMARY KEY,
-    teacherId INTEGER NOT NULL,
-    courseId INTEGER NOT NULL,
-    createdAt TIMESTAMP NOT NULL,
-    updatedAt TIMESTAMP NOT NULL
-  );
-
-INSERT INTO
-  teachersCourses (teacherId, courseId, createdAt, updatedAt)
-VALUES
-  (1, 1, 0, 0);
+  (1, 50, 'Normal Class', 'Normal Class', 0, 0);
 
 /*
  * Role Entity
@@ -205,7 +193,7 @@ CREATE TABLE
     amount INTEGER NOT NULL,
     start TIMESTAMP NOT NULL,
     end TIMESTAMP NOT NULL,
-    status INTEGER NOT NULL,
+    status INTEGER NOT NULL, -- 1: pending, 2: confirmed, 3: completed, 4: cancelled, 5: absent, 6: expired, -1: deleted
     message TEXT,
     createdAt TIMESTAMP NOT NULL,
     updatedAt TIMESTAMP NOT NULL
@@ -229,6 +217,25 @@ CREATE TABLE
   );
 
 /*
+ * LogsMoney Entity
+ * Many-to-one relationship with users table
+ */
+DROP TABLE IF EXISTS logsMoney;
+
+CREATE TABLE
+  IF NOT EXISTS logsMoney (
+    id INTEGER PRIMARY KEY,
+    userId INTEGER NOT NULL,
+    title TEXT NOT NULL,
+    details TEXT NOT NULL,
+    credits INTEGER NOT NULL,
+    amount INTEGER NOT NULL,
+    currency TEXT NOT NULL,
+    createdAt TIMESTAMP NOT NULL,
+    updatedAt TIMESTAMP NOT NULL
+  );
+
+/*
  * Message Entity
  * Many-to-one relationship with users table
  */
@@ -237,12 +244,13 @@ DROP TABLE IF EXISTS messages;
 CREATE TABLE
   IF NOT EXISTS messages (
     id INTEGER PRIMARY KEY,
-    userId INTEGER NOT NULL,
-    subject TEXT NOT NULL,
-    message TEXT NOT NULL,
+    messageTemplateId INTEGER NOT NULL,
+    userId INTEGER,
+    phone TEXT NOT NULL,
+    templateValues TEXT,
     cron TEXT NOT NULL,
     sendAt TIMESTAMP,
-    status INTEGER NOT NULL, -- 0: inactive, 1: active, 2: successful, 3: failed, -1: deleted
+    status INTEGER NOT NULL, -- 0: inactive, 1: scheduled, 2: successful, 3: failed, 4: recurring -1: deleted
     createdAt TIMESTAMP NOT NULL,
     updatedAt TIMESTAMP NOT NULL
   );
@@ -256,9 +264,11 @@ DROP TABLE IF EXISTS messageTemplates;
 CREATE TABLE
   IF NOT EXISTS messageTemplates (
     id INTEGER PRIMARY KEY,
+    smsId INTEGER NOT NULL, -- ID from SMS service provider
     signature TEXT NOT NULL,
     title TEXT NOT NULL,
     message TEXT NOT NULL,
+    variables TEXT, -- Separated by comma
     status INTEGER NOT NULL, -- 1: active, -1: deleted
     createdAt TIMESTAMP NOT NULL,
     updatedAt TIMESTAMP NOT NULL
@@ -266,27 +276,23 @@ CREATE TABLE
 
 INSERT INTO
   messageTemplates (
+    smsId,
+    signature,
     title,
     message,
+    variables,
     status,
-    signature,
     createdAt,
     updatedAt
   )
 VALUES
   (
-    'Phone Verification',
-    '您的手机验证码是123456，有效期仅5分钟。',
-    1,
+    'SMS_462695548',
     '恰恰英语',
-    0,
-    0
-  ),
-  (
     'Class Reminder',
-    '您好！您的课程于2023/08/23 14:00开始，请提前*分钟登陆您的账号，感谢您的支持',
+    '您好！您的课程于#datetime#开始，请提前分钟登陆您的账号，感谢您的支持',
+    'datetime',
     1,
-    '恰恰英语',
     0,
     0
   );

@@ -1,6 +1,6 @@
 import { Env } from "../..";
 import { CommonPagination } from "../models/CommonModel";
-import { LogsCreditCreate } from "../models/LogsModel";
+import { LogsCreditCreate, LogsMoneyCreate } from "../models/LogsModel";
 import {
   User,
   UserCreate,
@@ -127,42 +127,39 @@ export async function userCreate(params: UserCreate, env: Env) {
     throw utilFailedResponse("Error, unable to create user", 500);
   }
 
-  user = await userDbGetByUsername({ username: params.username }, env);
-  if (!user) {
-    throw utilFailedResponse("Error, unable to get user", 500);
-  }
-
-  delete user.password;
+  user = await userGetByUsername({ username: params.username }, env);
   return user;
 }
 
 export async function userAddCredit(
   params: {
-    receiverId: number;
-    senderId: number;
+    userId: number;
+    credits: number;
     amount: number;
+    currency: string;
   },
   env: Env
 ) {
-  const user = await userGet({ userId: params.receiverId }, env);
-  if (!user) {
-    throw utilFailedResponse("Unable to get user", 500);
-  }
-
-  user.credit += params.amount;
-  if (user.credit < 0) {
-    throw utilFailedResponse("Insufficient credit", 400);
-  }
+  const user = await userGet({ userId: params.userId }, env);
+  user.credits += params.amount;
 
   const logsCredit: LogsCreditCreate = {
-    receiverId: params.receiverId,
-    senderId: params.senderId,
-    amount: params.amount,
-    status: 2,
+    userId: params.userId,
+    amount: params.credits,
     title: "Top-up",
+    details: "Top-up",
   };
 
-  const query = await userDbAddCredit({ user, logsCredit }, env);
+  const logsMoney: LogsMoneyCreate = {
+    userId: params.userId,
+    amount: params.amount,
+    credits: params.credits,
+    currency: params.currency,
+    title: "Top-up",
+    details: "Top-up",
+  };
+
+  const query = await userDbAddCredit({ user, logsCredit, logsMoney }, env);
   if (!query) {
     throw utilFailedResponse("Unable to add credit", 500);
   }

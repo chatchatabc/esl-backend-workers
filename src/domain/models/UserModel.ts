@@ -1,5 +1,5 @@
 import { Input } from "valibot";
-import { UserCreateInput } from "../schemas/UserSchema";
+import { UserCreateInput, UserUpdateInput } from "../schemas/UserSchema";
 import { CommonPagination } from "./CommonModel";
 
 export type User = {
@@ -13,11 +13,9 @@ export type User = {
   password?: string;
 
   phoneVerifiedAt: number | null;
-  emailVerifiedAt: number | null;
   firstName: string | null;
   lastName: string | null;
   phone: string | null;
-  email: string | null;
   alias: string | null;
 
   role?: UserRole;
@@ -41,10 +39,7 @@ export type UserRegister = UserLogin & {
   confirmPassword: string;
 };
 
-export type UserUpdateInput = Omit<
-  UserUpdate,
-  "createdAt" | "updatedAt" | "password" | "phoneVerifiedAt" | "emailVerifiedAt"
->;
+export type UserUpdateInput = Input<typeof UserUpdateInput>;
 
 export type UserRole = {
   name: string;

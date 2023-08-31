@@ -1,6 +1,6 @@
 import { Env } from "../..";
 import { CommonPagination } from "../models/CommonModel";
-import { LogsCreditCreate } from "../models/LogsModel";
+import { LogsCreditCreate, LogsMoneyCreate } from "../models/LogsModel";
 import {
   User,
   UserCreate,
@@ -29,19 +29,17 @@ export async function userDbInsert(body: UserCreate, env: Env) {
     username,
     password,
     roleId,
-    credit,
+    credits,
     status,
-    email,
     phone,
     firstName,
     lastName,
     phoneVerifiedAt,
-    emailVerifiedAt,
   } = body;
   const date = Date.now();
   try {
     await env.DB.prepare(
-      "INSERT INTO users (username, password, createdAt, updatedAt, roleId, credit, email, phone, firstName, lastName, phoneVerifiedAt, emailVerifiedAt, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+      "INSERT INTO users (username, password, createdAt, updatedAt, roleId, credits, phone, firstName, lastName, phoneVerifiedAt, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
     )
       .bind(
         username,
@@ -49,13 +47,11 @@ export async function userDbInsert(body: UserCreate, env: Env) {
         date,
         date,
         roleId,
-        credit,
-        email,
+        credits,
         phone,
         firstName,
         lastName,
         phoneVerifiedAt,
-        emailVerifiedAt,
         status
       )
       .run();
@@ -149,17 +145,15 @@ export async function userDbUpdate(params: User, env: Env) {
     firstName,
     lastName,
     phone,
-    email,
     phoneVerifiedAt,
-    emailVerifiedAt,
     status,
-    credit,
+    credits,
   } = params;
 
   const date = new Date().getTime();
   try {
     await env.DB.prepare(
-      "UPDATE users SET username = ?, password = ?, roleId = ?, updatedAt = ?, firstName = ?, lastName = ?, phone = ?, email = ?, phoneVerifiedAt = ?, emailVerifiedAt = ?, status = ?, credit = ? WHERE id = ?"
+      "UPDATE users SET username = ?, password = ?, roleId = ?, updatedAt = ?, firstName = ?, lastName = ?, phone = ?, phoneVerifiedAt = ?, status = ?, credits = ? WHERE id = ?"
     )
       .bind(
         username,
@@ -169,11 +163,9 @@ export async function userDbUpdate(params: User, env: Env) {
         firstName,
         lastName,
         phone,
-        email,
         phoneVerifiedAt,
-        emailVerifiedAt,
         status,
-        credit,
+        credits,
         id
       )
       .run();
@@ -186,28 +178,43 @@ export async function userDbUpdate(params: User, env: Env) {
 }
 
 export async function userDbAddCredit(
-  params: { user: User; logsCredit: LogsCreditCreate },
+  params: {
+    user: User;
+    logsCredit: LogsCreditCreate;
+    logsMoney: LogsMoneyCreate;
+  },
   env: Env
 ) {
-  const { user, logsCredit } = params;
+  const { user, logsCredit, logsMoney } = params;
   const date = Date.now();
   try {
     const userStmt = env.DB.prepare(
-      "UPDATE users SET credit = ? WHERE id = ?"
-    ).bind(user.credit, user.id);
+      "UPDATE users SET credits = ?, updatedAt = ? WHERE id = ?"
+    ).bind(user.credits, date, user.id);
     const logCreditStmt = env.DB.prepare(
-      "INSERT INTO logsCredit (receiverId, senderId, amount, title, status, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?, ?)"
+      "INSERT INTO logsCredit (userId, amount, title, details, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?, ?)"
     ).bind(
-      logsCredit.receiverId,
-      logsCredit.senderId,
+      logsCredit.userId,
       logsCredit.amount,
       logsCredit.title,
-      logsCredit.status,
+      logsCredit.details,
+      date,
+      date
+    );
+    const logsMoneyStmt = env.DB.prepare(
+      "INSERT INTO logsMoney (userId, amount, title, details, credits, currency, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
+    ).bind(
+      logsMoney.userId,
+      logsMoney.amount,
+      logsMoney.title,
+      logsMoney.details,
+      logsMoney.credits,
+      logsMoney.currency,
       date,
       date
     );
 
-    await env.DB.batch([userStmt, logCreditStmt]);
+    await env.DB.batch([userStmt, logCreditStmt, logsMoneyStmt]);
     return true;
   } catch (e) {
     console.log(e);

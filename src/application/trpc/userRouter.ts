@@ -1,4 +1,4 @@
-import { coerce, number, object, string } from "valibot";
+import { number, object, string } from "valibot";
 import {
   trpcProcedureAdmin,
   trpcProcedureUser,
@@ -48,7 +48,10 @@ export default trpcRouterCreate({
       throw utilFailedResponse("Password not match", 400);
     }
 
-    return userCreate(opts.input, opts.ctx.env);
+    // Default values
+    const phoneVerifiedAt = Date.now();
+
+    return userCreate({ ...opts.input, phoneVerifiedAt }, opts.ctx.env);
   }),
 
   update: trpcProcedureAdmin.input(UserUpdateInput).mutation((opts) => {
@@ -91,21 +94,5 @@ export default trpcRouterCreate({
       }
 
       return true;
-    }),
-
-  addCredit: trpcProcedureAdmin
-    .input(
-      object({
-        userId: coerce(number(), Number),
-        amount: coerce(number(), Number),
-      })
-    )
-    .mutation((opts) => {
-      const senderId = opts.ctx.userId;
-      const receiverId = opts.input.userId;
-      return userAddCredit(
-        { amount: opts.input.amount, senderId, receiverId },
-        opts.ctx.env
-      );
     }),
 });

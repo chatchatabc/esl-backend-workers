@@ -10,13 +10,17 @@ import { User } from "../models/UserModel";
 import { utilQueryAddWhere } from "../services/utilService";
 
 export async function bookingDbGetAll(params: BookingPagination, env: Env) {
-  const { userId, page, size, status } = params;
+  const { userId, page, size, status, teacherId } = params;
 
   const queryParams = [];
   let query = "SELECT * FROM bookings";
   if (userId) {
-    query = utilQueryAddWhere(query, "teacherId = ? OR userId = ?");
-    queryParams.push(userId, userId);
+    query = utilQueryAddWhere(query, "userId = ?");
+    queryParams.push(userId);
+  }
+  if (teacherId) {
+    query = utilQueryAddWhere(query, "teacherId = ?");
+    queryParams.push(teacherId);
   }
   if (status === undefined) {
     query = utilQueryAddWhere(query, "status = 1 OR status = 2 OR status = 3");

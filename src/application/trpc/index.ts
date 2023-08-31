@@ -9,19 +9,21 @@ import messageRouter from "./messageRouter";
 import messageTemplateRouter from "./messageTemplateRouter";
 import roleRouter from "./roleRouter";
 import courseRouter from "./courseRouter";
+import creditRouter from "./creditRouter";
 
 // tRPC Main Router
 const trpcRouter = trpcRouterCreate({
   auth: authRouter,
   booking: bookingRouter,
   course: courseRouter,
+  credit: creditRouter,
   logs: logsRouter,
-  schedule: scheduleRouter,
-  user: userRouter,
-  teacher: teacherRouter,
   message: messageRouter,
   messageTemplate: messageTemplateRouter,
   role: roleRouter,
+  schedule: scheduleRouter,
+  teacher: teacherRouter,
+  user: userRouter,
 });
 
 export default trpcRouter;

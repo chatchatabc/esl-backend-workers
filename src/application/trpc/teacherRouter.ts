@@ -6,10 +6,12 @@ import {
 } from "../../domain/infra/trpc";
 import { CommonPaginationInput } from "../../domain/schemas/CommonSchema";
 import {
+  teacherCreate,
   teacherGet,
   teacherGetAll,
   teacherGetByUser,
 } from "../../domain/services/teacherService";
+import { TeacherCreateInput } from "../../domain/schemas/TeacherSchema";
 
 export default trpcRouterCreate({
   get: trpcProcedureUser
@@ -26,5 +28,9 @@ export default trpcRouterCreate({
 
   getAll: trpcProcedureAdmin.input(CommonPaginationInput).query((opts) => {
     return teacherGetAll(opts.input, opts.ctx.env);
+  }),
+
+  create: trpcProcedureAdmin.input(TeacherCreateInput).query((opts) => {
+    return teacherCreate(opts.input, opts.ctx.env);
   }),
 });

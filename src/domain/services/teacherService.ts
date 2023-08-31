@@ -1,13 +1,17 @@
 import { Env } from "../..";
 import { CommonPagination } from "../models/CommonModel";
-import { Teacher } from "../models/TeacherModel";
+import { CourseCreate } from "../models/CourseModel";
+import { Teacher, TeacherCreate } from "../models/TeacherModel";
 import {
+  teacherDBCreate,
   teacherDbGet,
   teacherDbGetAll,
   teacherDbGetAllTotal,
   teacherDbGetByUser,
   teacherDbValidateCourse,
 } from "../repositories/teacherRepo";
+import { courseCreate } from "./courseService";
+import { userGet } from "./userService";
 import { utilFailedResponse } from "./utilService";
 
 export async function teacherGet(params: { teacherId: number }, env: Env) {
@@ -57,4 +61,23 @@ export async function teacherValidateCourse(
   }
 
   return isValid;
+}
+
+export async function teacherCreate(params: TeacherCreate, env: Env) {
+  const user = await userGet({ userId: params.userId }, env);
+  if (user.roleId !== 3) {
+    throw utilFailedResponse("User is not a teacher", 500);
+  }
+
+  const teacher = await teacherDbGetByUser({ userId: params.userId }, env);
+  if (teacher) {
+    throw utilFailedResponse("Teacher already exists", 500);
+  }
+
+  const query = await teacherDBCreate(params, env);
+  if (!query) {
+    throw utilFailedResponse("Cannot create teacher", 500);
+  }
+
+  return true;
 }

@@ -73,7 +73,7 @@ export async function cronService(timestamp: number, env: Env) {
  */
 export async function cronSendScheduledMessages(timestamp: number, env: Env) {
   const start = 0;
-  const end = timestamp + 10 * 60 * 1000;
+  const end = timestamp + 30 * 60 * 1000;
   const messages = await messageGetAllByDate({ start, end }, env);
   if (!messages) {
     throw new Error("Failed to get messages");
@@ -92,15 +92,15 @@ export async function cronSendScheduledMessages(timestamp: number, env: Env) {
       templateParam: message.templateValues,
     };
 
-    // const resSms = await smsSend(sms);
-    // if (!resSms || resSms.Code !== "OK") {
-    //   message.status = 3;
-    // } else {
-    //   message.status = 2;
-    //   await env.KV.put("scheduledMessage", messageTemplate.message);
-    //   console.log("Scheduled message sent: ", messageTemplate.message);
-    // }
-    message.status = 2;
+    const resSms = await smsSend(sms);
+    if (!resSms || resSms.Code !== "OK") {
+      message.status = 3;
+    } else {
+      message.status = 2;
+      await env.KV.put("scheduledMessage", messageTemplate.message);
+      console.log("Scheduled message sent: ", messageTemplate.message);
+    }
+    // message.status = 2;
 
     newMesssages.push(message);
   }
@@ -152,7 +152,7 @@ export async function cronSendCronMessages(timestamp: number, env: Env) {
  */
 export async function cronConfirmBooking(timestsamp: number, bindings: Env) {
   const start = 0;
-  const end = timestsamp + 10 * 60 * 1000;
+  const end = timestsamp + 30 * 60 * 1000;
 
   // Get all bookings with pending status
   const bookings = await bookingDbGetAllByDateStart(

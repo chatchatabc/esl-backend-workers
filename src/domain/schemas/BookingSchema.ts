@@ -1,5 +1,5 @@
 import {
-  boolean,
+  array,
   custom,
   minValue,
   nullish,
@@ -48,6 +48,11 @@ const Schema = object({
       minValue(1, "Advance booking must be greater than 0"),
     ])
   ),
+  bookingIds: array(
+    number("Booking ID must be a number", [
+      minValue(1, "Booking ID must be greater than 0"),
+    ])
+  ),
 });
 
 export const BookingCreateInput = transform(
@@ -85,5 +90,10 @@ export const BookingCancelInput = pick(Schema, ["id"]);
 export const BookingCancelInputAdmin = pick(Schema, ["id", "userId"]);
 
 export const BookingCompleteInputAdmin = pick(Schema, ["id", "userId"]);
+
+export const BookingUpdateStatusManyInputByAdmin = pick(Schema, [
+  "bookingIds",
+  "status",
+]);
 
 export const BookingUpdateInput = pick(Schema, ["status", "id"]);

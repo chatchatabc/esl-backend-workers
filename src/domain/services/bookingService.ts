@@ -17,6 +17,7 @@ import {
   bookingDbGetAllTotal,
   bookingDbGetOverlap,
   bookingDbUpdate,
+  bookingDbUpdateStatusMany,
 } from "../repositories/bookingRepo";
 import { scheduleDbValidateBooking } from "../repositories/scheduleRepo";
 import { courseGet } from "./courseService";
@@ -373,6 +374,87 @@ export async function bookingComplete(
   );
   if (!query) {
     throw utilFailedResponse("Was not able to complete booking", 500);
+  }
+
+  return true;
+}
+
+export async function bookingUpdateStatusMany(
+  params: { bookingIds: number[]; status: number },
+  env: Env
+) {
+  const bookings: Booking[] = [];
+  const users: User[] = [];
+  const logsCredits: LogsCreditCreate[] = [];
+
+  for (const bookingId of params.bookingIds) {
+    const booking = await bookingGet({ bookingId }, env);
+    const user = await userGet({ userId: booking.userId }, env);
+    const teacher = await teacherGet({ teacherId: booking.teacherId }, env);
+    teacher.user = await userGet({ userId: teacher.userId }, env);
+
+    if (booking.status === 4) {
+      throw utilFailedResponse("Cannot update a cancelled booking", 400);
+    }
+
+    // Check if booking is already completed
+    if (booking.status === 3 && params.status !== 3) {
+      teacher.user.credits -= booking.amount;
+      logsCredits.push({
+        title: "Cancelled Class",
+        details: `Cancelled Class ${utilDateFormatter(
+          "zh-CN",
+          new Date(booking.start)
+        )} ${utilTimeFormatter("zh-CN", new Date(booking.start))}`,
+        userId: teacher.user.id,
+        amount: -booking.amount,
+      } as LogsCreditCreate);
+    }
+
+    // Check if booking will be completed
+    else if (params.status === 3) {
+      teacher.user.credits += booking.amount;
+      logsCredits.push({
+        title: "Class Completed",
+        details: `Class ${utilDateFormatter(
+          "zh-CN",
+          new Date(booking.start)
+        )} ${utilTimeFormatter("zh-CN", new Date(booking.start))} Completed`,
+        userId: teacher.user.id,
+        amount: booking.amount,
+      } as LogsCreditCreate);
+    }
+
+    // If booking is cancelled, update user credit
+    if (params.status === 4) {
+      user.credits += booking.amount;
+      logsCredits.push({
+        title: "Cancelled Class",
+        details: `Cancelled Class ${utilDateFormatter(
+          "zh-CN",
+          new Date(booking.start)
+        )} ${utilTimeFormatter("zh-CN", new Date(booking.start))}`,
+        userId: user.id,
+        amount: booking.amount,
+      } as LogsCreditCreate);
+    }
+
+    // Update booking status
+    booking.status = params.status;
+
+    // Add to array
+    bookings.push(booking);
+    users.push(user);
+    users.push(teacher.user!);
+    console.log(teacher.user, booking, user);
+  }
+
+  const query = await bookingDbUpdateStatusMany(
+    { bookings, users, logsCredits },
+    env
+  );
+  if (!query) {
+    throw utilFailedResponse("Failed to update Booking", 500);
   }
 
   return true;

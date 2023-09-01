@@ -521,3 +521,51 @@ export async function bookingDbUpdate(
     return null;
   }
 }
+
+export async function bookingDbUpdateStatusMany(
+  params: {
+    bookings: Booking[];
+    users: User[];
+    logsCredits: LogsCreditCreate[];
+  },
+  env: Env
+) {
+  const { bookings, users, logsCredits } = params;
+  const date = Date.now();
+
+  try {
+    const userStmt = env.DB.prepare(
+      "UPDATE users SET credits = ?, updatedAt = ? WHERE id = ?"
+    );
+    const bookingStmt = env.DB.prepare(
+      "UPDATE bookings SET status = ?, updatedAt = ? WHERE id = ?"
+    );
+    const logsCreditStmt = env.DB.prepare(
+      "INSERT INTO logsCredit (title, userId, amount, details, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?)"
+    );
+
+    await env.DB.batch([
+      ...users.map((user) => {
+        return userStmt.bind(user.credits, date, user.id);
+      }),
+      ...bookings.map((booking) => {
+        return bookingStmt.bind(booking.status, date, booking.id);
+      }),
+      ...logsCredits.map((logsCredit) => {
+        return logsCreditStmt.bind(
+          logsCredit.title,
+          logsCredit.userId,
+          logsCredit.amount,
+          logsCredit.details,
+          date,
+          date
+        );
+      }),
+    ]);
+
+    return true;
+  } catch (e) {
+    console.log(e);
+    return null;
+  }
+}

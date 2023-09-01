@@ -10,6 +10,7 @@ import {
   BookingCreateInput,
   BookingCreateInputAdmin,
   BookingUpdateInput,
+  BookingUpdateStatusManyInputByAdmin,
 } from "../../domain/schemas/BookingSchema";
 import { CommonPaginationInput } from "../../domain/schemas/CommonSchema";
 import {
@@ -19,6 +20,7 @@ import {
   bookingCreateMany,
   bookingGetAll,
   bookingUpdate,
+  bookingUpdateStatusMany,
 } from "../../domain/services/bookingService";
 import { utilFailedResponse } from "../../domain/services/utilService";
 
@@ -84,6 +86,13 @@ export default trpcRouterCreate({
       const { env } = opts.ctx;
       const bookingId = opts.input.id;
       return bookingCancel({ ...opts.input, bookingId }, env);
+    }),
+
+  updateStatusManyByAdmin: trpcProcedureAdmin
+    .input(BookingUpdateStatusManyInputByAdmin)
+    .mutation((opts) => {
+      const { env } = opts.ctx;
+      return bookingUpdateStatusMany(opts.input, env);
     }),
 
   update: trpcProcedureAdmin.input(BookingUpdateInput).mutation((opts) => {

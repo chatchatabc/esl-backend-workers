@@ -216,7 +216,7 @@ export async function cronConfirmBooking(timestsamp: number, bindings: Env) {
       phone: booking.user!.phone!,
       cron: "0 0 1 1 1",
       status: 1,
-      sendAt: booking.start - 10 * 60 * 1000,
+      sendAt: booking.start - 30 * 60 * 1000,
       templateValues: JSON.stringify({
         datetime: `${startDate} ${startTime}`,
       }),

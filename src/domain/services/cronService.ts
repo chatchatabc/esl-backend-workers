@@ -98,8 +98,8 @@ export async function cronSendScheduledMessages(timestamp: number, env: Env) {
       message.status = 3;
     } else {
       message.status = 2;
-      await env.KV.put("scheduledMessage", messageTemplate.message);
-      console.log("Scheduled message sent: ", messageTemplate.message);
+      // await env.KV.put("scheduledMessage", messageTemplate.message);
+      // console.log("Scheduled message sent: ", messageTemplate.message);
     }
     // message.status = 2;
 

@@ -72,22 +72,26 @@ export async function smsSend(params: SmsSend, env: Env) {
 
   try {
     const res = await fetch(url, { method: "GET" });
-    const data = await res.json();
-    return data as {
+    const data = (await res.json()) as {
       Message: string;
       RequestId: string;
       BizId: string;
       Code: string;
     };
+
+    if (data.Code !== "OK") {
+      const error = {
+        data,
+        url,
+        stringToSign,
+        signature,
+      };
+      await env.KV.put(phoneNumbers + " " + timestamp, JSON.stringify(error));
+    }
+
+    return data;
   } catch (e) {
     console.log(e);
-    const error = {
-      e,
-      url,
-      stringToSign,
-      signature,
-    };
-    await env.KV.put(phoneNumbers + " " + timestamp, JSON.stringify(error));
     return null;
   }
 }

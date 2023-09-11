@@ -1,6 +1,7 @@
 import { Env } from "../..";
 import { SmsSend } from "../models/SmsModel";
 import CryptoJS from "crypto-js";
+import { v4 as uuidv4 } from "uuid";
 
 const accessKeyId = "LTAI5tGiV15PDjkXDRhV9yRE";
 const accessKeySecret = "E9GPX1SGW6SPMWp52mer71E6oMxZ45";
@@ -52,14 +53,14 @@ function smsSignature(params: {
  */
 export async function smsSend(params: SmsSend, env: Env) {
   const { phoneNumbers, signName, templateCode, templateParam } = params;
-  const timestamp = new Date().toISOString();
+  const timestamp = new Date().toISOString().replace(/\.\d{3}/, "");
 
   const query = `AccessKeyId=${accessKeyId}&Action=SendSms&Format=JSON&PhoneNumbers=${smsUrlEncoder(
     phoneNumbers
   )}&SignName=${smsUrlEncoder(
     signName
   )}&SignatureMethod=HMAC-SHA1&SignatureNonce=${smsUrlEncoder(
-    timestamp
+    uuidv4()
   )}&SignatureVersion=1.0&TemplateCode=${templateCode}${
     templateParam ? `&TemplateParam=${smsUrlEncoder(templateParam)}` : ""
   }&Timestamp=${smsUrlEncoder(timestamp)}&Version=${smsVersion}`;

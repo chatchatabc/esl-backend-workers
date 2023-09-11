@@ -92,7 +92,8 @@ export async function cronSendScheduledMessages(timestamp: number, env: Env) {
       templateParam: message.templateValues,
     };
 
-    const resSms = await smsSend(sms);
+    const date = new Date();
+    const resSms = await smsSend(sms, env);
     if (!resSms || resSms.Code !== "OK") {
       message.status = 3;
     } else {

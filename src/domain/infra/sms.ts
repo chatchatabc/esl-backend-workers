@@ -1,3 +1,4 @@
+import { Env } from "../..";
 import { SmsSend } from "../models/SmsModel";
 import CryptoJS from "crypto-js";
 
@@ -49,7 +50,7 @@ function smsSignature(params: {
  * Authorization Reference: https://next.api.aliyun.com/document/Dysmsapi/2017-05-25/ram
  * General Reference: https://next.api.aliyun.com/document/Dysmsapi/2017-05-25/SendSms
  */
-export async function smsSend(params: SmsSend) {
+export async function smsSend(params: SmsSend, env: Env) {
   const { phoneNumbers, signName, templateCode, templateParam } = params;
   const timestamp = new Date().toISOString();
 
@@ -79,6 +80,13 @@ export async function smsSend(params: SmsSend) {
     };
   } catch (e) {
     console.log(e);
+    const error = {
+      e,
+      url,
+      stringToSign,
+      signature,
+    };
+    await env.KV.put(phoneNumbers + " " + timestamp, JSON.stringify(error));
     return null;
   }
 }

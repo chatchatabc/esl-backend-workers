@@ -80,12 +80,15 @@ export async function messageUpdate(params: MessageUpdate, env: Env) {
 export async function messageSend(params: MessageSend, env: Env) {
   const messageTemplate = await messageTemplateGet(params, env);
 
-  const sms = await smsSend({
-    phoneNumbers: params.phone,
-    signName: messageTemplate.signature,
-    templateCode: messageTemplate.smsId,
-    templateParam: params.templateValues,
-  });
+  const sms = await smsSend(
+    {
+      phoneNumbers: params.phone,
+      signName: messageTemplate.signature,
+      templateCode: messageTemplate.smsId,
+      templateParam: params.templateValues,
+    },
+    env
+  );
 
   console.log(sms);
   if (!sms || sms.Code !== "OK") {

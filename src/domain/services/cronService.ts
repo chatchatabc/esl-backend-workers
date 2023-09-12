@@ -92,16 +92,17 @@ export async function cronSendScheduledMessages(timestamp: number, env: Env) {
       templateParam: message.templateValues,
     };
 
-    const date = new Date();
-    const resSms = await smsSend(sms, env);
-    if (!resSms || resSms.Code !== "OK") {
-      message.status = 3;
-    } else {
-      message.status = 2;
-      // await env.KV.put("scheduledMessage", messageTemplate.message);
-      // console.log("Scheduled message sent: ", messageTemplate.message);
+    let errorAttempts = 0;
+    while (errorAttempts < 5 && message.status !== 2) {
+      const resSms = await smsSend(sms, env);
+      if (!resSms || resSms.Code !== "OK") {
+        message.status = 3;
+        errorAttempts++;
+      } else {
+        message.status = 2;
+        break;
+      }
     }
-    // message.status = 2;
 
     newMesssages.push(message);
   }

@@ -87,7 +87,7 @@ export async function userDbGetAll(params: UserPagination, env: Env) {
 
   if (teacherId) {
     query =
-      "SELECT users.* FROM users JOIN (SELECT * FROM bookings WHERE teacherId = ? AND bookings.status != 4 GROUP BY userId) as uniqueBookings ON users.id = uniqueBookings.userId";
+      "SELECT users.* FROM users JOIN (SELECT * FROM bookings WHERE teacherId = ? AND bookings.status IN (1,2) GROUP BY userId) as uniqueBookings ON users.id = uniqueBookings.userId";
     queryParams.push(teacherId);
   }
 
@@ -132,7 +132,7 @@ export async function userDbGetAllTotal(params: UserPagination, env: Env) {
 
     if (teacherId) {
       query =
-        "SELECT COUNT(*) AS total FROM users JOIN (SELECT * FROM bookings WHERE teacherId = ? AND bookings.status != 4 GROUP BY userId) as uniqueBookings ON users.id = uniqueBookings.userId";
+        "SELECT COUNT(*) AS total FROM users JOIN (SELECT * FROM bookings WHERE teacherId = ? AND bookings.status IN (1,2) GROUP BY userId) as uniqueBookings ON users.id = uniqueBookings.userId";
       queryParams.push(teacherId);
     }
 

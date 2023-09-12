@@ -43,7 +43,7 @@ export async function messageGetAll(
   return {
     ...params,
     content: query.results as Message[],
-    total,
+    totalElements: total as number,
   };
 }
 

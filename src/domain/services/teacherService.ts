@@ -46,7 +46,7 @@ export async function teacherGetAll(params: CommonPagination, env: Env) {
 
   return {
     content: teachers.results as Teacher[],
-    totalElements,
+    totalElements: totalElements as number,
     ...params,
   };
 }

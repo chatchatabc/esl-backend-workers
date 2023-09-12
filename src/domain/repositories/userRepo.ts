@@ -80,15 +80,22 @@ export async function userDbGet(params: { userId: number }, env: Env) {
 }
 
 export async function userDbGetAll(params: UserPagination, env: Env) {
-  const { page, size, roleId } = params;
+  const { page, size, roleId, teacherId } = params;
 
   const queryParams = [];
   let query = "SELECT * FROM users";
+
+  if (teacherId) {
+    query =
+      "SELECT users.* FROM users JOIN (SELECT * FROM bookings WHERE teacherId = ? AND bookings.status != 4 GROUP BY userId) as uniqueBookings ON users.id = uniqueBookings.userId";
+    queryParams.push(teacherId);
+  }
 
   if (roleId) {
     query = utilQueryAddWhere(query, "roleId = ?");
     queryParams.push(roleId);
   }
+
   query += " LIMIT ?, ?";
   queryParams.push((page - 1) * size, size);
 

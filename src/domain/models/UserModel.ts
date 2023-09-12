@@ -50,4 +50,5 @@ export type UserRole = {
 
 export type UserPagination = CommonPagination & {
   roleId?: number;
+  teacherId?: number;
 };

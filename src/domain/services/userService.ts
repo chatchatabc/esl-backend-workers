@@ -4,6 +4,7 @@ import { LogsCreditCreate, LogsMoneyCreate } from "../models/LogsModel";
 import {
   User,
   UserCreate,
+  UserPagination,
   UserRole,
   UserUpdateInput,
 } from "../models/UserModel";
@@ -42,7 +43,7 @@ export async function userGetByUsername(
   return user;
 }
 
-export async function userGetAll(params: CommonPagination, env: Env) {
+export async function userGetAll(params: UserPagination, env: Env) {
   const query = await userDbGetAll(params, env);
   if (!query) {
     throw utilFailedResponse("Unable to get users", 500);

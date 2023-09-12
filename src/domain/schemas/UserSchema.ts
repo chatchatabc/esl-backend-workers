@@ -78,4 +78,5 @@ export const UserRegisterProfile = pick(Schema, [
   "firstName",
   "lastName",
   "phone",
+  "alias",
 ]);

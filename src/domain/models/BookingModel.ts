@@ -55,6 +55,8 @@ export type BookingPagination = {
   day?: number;
   teacherId?: number;
   sort?: string;
+  start?: number;
+  end?: number;
 } & CommonPagination;
 
 export type BookingCancelInputAdmin = Input<typeof BookingCancelInputAdmin>;

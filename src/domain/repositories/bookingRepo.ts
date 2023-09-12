@@ -10,7 +10,8 @@ import { User } from "../models/UserModel";
 import { utilQueryAddWhere } from "../services/utilService";
 
 export async function bookingDbGetAll(params: BookingPagination, env: Env) {
-  const { userId, page, size, status, teacherId, sort, day } = params;
+  const { userId, page, size, status, teacherId, sort, day, start, end } =
+    params;
 
   const queryParams = [];
   let query = "SELECT * FROM bookings";
@@ -41,6 +42,18 @@ export async function bookingDbGetAll(params: BookingPagination, env: Env) {
     whereQuery +=
       "strftime('%w', datetime(start / 1000, 'unixepoch', '+8 hours')) = ?";
     queryParams.push(String(day));
+  }
+
+  if (start !== undefined) {
+    whereQuery += whereQuery ? " AND " : "";
+    whereQuery += "start > ?";
+    queryParams.push(start);
+  }
+
+  if (end !== undefined) {
+    whereQuery += whereQuery ? " AND " : "";
+    whereQuery += "end < ?";
+    queryParams.push(end);
   }
 
   if (whereQuery) {

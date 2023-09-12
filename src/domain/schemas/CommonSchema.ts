@@ -54,6 +54,8 @@ export const CommonPaginationInput = transform(
       )
     ),
     day: optional(number("Invalid day value, should be a number")),
+    start: optional(number("Invalid start value, should be a number")),
+    end: optional(number("Invalid end value, should be a number")),
   }),
   (input) => {
     return {

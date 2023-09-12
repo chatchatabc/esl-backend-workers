@@ -26,10 +26,11 @@ import { utilFailedResponse } from "../../domain/services/utilService";
 
 export default trpcRouterCreate({
   getAll: trpcProcedureUser.input(CommonPaginationInput).query((opts) => {
-    const { userId, env } = opts.ctx;
-    opts.input.userId = userId;
+    const { input, ctx } = opts;
+    const { userId, env } = ctx;
+    input.userId = userId;
 
-    return bookingGetAll(opts.input, env);
+    return bookingGetAll(input, env);
   }),
 
   getAllAdmin: trpcProcedureAdmin.input(CommonPaginationInput).query((opts) => {

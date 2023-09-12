@@ -10,27 +10,46 @@ import { User } from "../models/UserModel";
 import { utilQueryAddWhere } from "../services/utilService";
 
 export async function bookingDbGetAll(params: BookingPagination, env: Env) {
-  const { userId, page, size, status, teacherId } = params;
+  const { userId, page, size, status, teacherId, sort } = params;
 
   const queryParams = [];
   let query = "SELECT * FROM bookings";
+  let whereQuery = "";
+  let endQuery = " ORDER BY createdAt DESC";
+
   if (userId) {
-    query = utilQueryAddWhere(query, "userId = ?");
+    whereQuery += "userId = ?";
     queryParams.push(userId);
   }
+
   if (teacherId) {
-    query = utilQueryAddWhere(query, "teacherId = ?");
+    whereQuery += whereQuery ? " AND " : "";
+    whereQuery += "teacherId = ?";
     queryParams.push(teacherId);
   }
-  if (status === undefined) {
-    query = utilQueryAddWhere(query, "status = 1 OR status = 2 OR status = 3");
-  } else if (typeof status === "number") {
-    query = utilQueryAddWhere(query, "status = ?");
-    queryParams.push(status);
+
+  if (status) {
+    whereQuery += whereQuery ? " AND " : "";
+    whereQuery += "status IN (";
+    whereQuery += status.map(() => "?").join(",");
+    whereQuery += ")";
+    queryParams.push(...status);
   }
-  query += " ORDER BY createdAt DESC";
-  query += " LIMIT ?, ?";
+
+  if (whereQuery) {
+    query += " WHERE " + whereQuery;
+  }
+
+  if (sort) {
+    const sortArr = sort.split(",");
+    const sortField = sortArr[0];
+    const sortType = (sortArr[1] || "DESC").toUpperCase();
+    endQuery = ` ORDER BY ${sortField} ${sortType}`;
+  }
+
+  endQuery += " LIMIT ?, ?";
   queryParams.push((page - 1) * size, size);
+  query += endQuery;
 
   try {
     const results = await env.DB.prepare(query)
@@ -48,18 +67,33 @@ export async function bookingDbGetAllTotal(
   params: BookingPagination,
   env: Env
 ) {
-  const { userId, status } = params;
+  const { userId, status, teacherId } = params;
 
   const queryParams = [];
   let query = "SELECT COUNT(*) AS total FROM bookings";
+  let whereQuery = "";
 
   if (userId) {
-    query = utilQueryAddWhere(query, "teacherId = ? OR userId = ?");
-    queryParams.push(userId, userId);
+    whereQuery += "userId = ?";
+    queryParams.push(userId);
   }
+
+  if (teacherId) {
+    whereQuery += whereQuery ? " AND " : "";
+    whereQuery += "teacherId = ?";
+    queryParams.push(teacherId);
+  }
+
   if (status) {
-    query = utilQueryAddWhere(query, "status = ?");
-    queryParams.push(status);
+    whereQuery += whereQuery ? " AND " : "";
+    whereQuery += "status IN (";
+    whereQuery += status.map(() => "?").join(",");
+    whereQuery += ")";
+    queryParams.push(...status);
+  }
+
+  if (whereQuery) {
+    query += " WHERE " + whereQuery;
   }
 
   try {

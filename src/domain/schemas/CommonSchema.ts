@@ -1,4 +1,5 @@
 import {
+  array,
   coerce,
   minValue,
   number,
@@ -6,7 +7,6 @@ import {
   optional,
   string,
   transform,
-  union,
 } from "valibot";
 
 export const CommonPaginationInput = transform(
@@ -27,12 +27,8 @@ export const CommonPaginationInput = transform(
         Number
       )
     ),
-    status: optional(
-      union([
-        number("Invalid status value, should be a number"),
-        string("Invalid status value, should be a string"),
-      ])
-    ),
+    sort: optional(string("Invalid sort value, should be a string")),
+    status: optional(array(number("Invalid status value, should be a number"))),
     userId: optional(
       coerce(
         number("Invalid userId value, should be a number", [
@@ -57,6 +53,7 @@ export const CommonPaginationInput = transform(
         Number
       )
     ),
+    day: optional(array(number("Invalid day value, should be a number"))),
   }),
   (input) => {
     return {

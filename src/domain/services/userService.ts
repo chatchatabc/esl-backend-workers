@@ -49,8 +49,8 @@ export async function userGetAll(params: UserPagination, env: Env) {
     throw utilFailedResponse("Unable to get users", 500);
   }
 
-  const total = await userDbGetAllTotal(env);
-  if (!total && total !== 0) {
+  const total = await userDbGetAllTotal(params, env);
+  if (total === null) {
     throw utilFailedResponse("Unable to get users total", 500);
   }
 
@@ -62,17 +62,17 @@ export async function userGetAll(params: UserPagination, env: Env) {
   return {
     ...params,
     content: users as User[],
-    totalElements: total,
+    totalElements: Number(total),
   };
 }
 
-export async function userGetAllRole(params: CommonPagination, env: Env) {
+export async function userGetAllRole(params: UserPagination, env: Env) {
   const roles = await userDbGetAllRole(params, env);
   if (!roles) {
     throw utilFailedResponse("Unable to get roles", 500);
   }
 
-  const totalElements = await userDbGetAllTotal(env);
+  const totalElements = await userDbGetAllTotal(params, env);
   if (!totalElements && totalElements !== 0) {
     throw utilFailedResponse("Unable to get roles total", 500);
   }

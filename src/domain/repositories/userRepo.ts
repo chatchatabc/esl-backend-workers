@@ -123,14 +123,30 @@ export async function userDbGetAllRole(params: CommonPagination, env: Env) {
   }
 }
 
-export async function userDbGetAllTotal(env: Env) {
+export async function userDbGetAllTotal(params: UserPagination, env: Env) {
+  const { teacherId, roleId } = params;
+
   try {
-    const stmt = env.DB.prepare("SELECT COUNT(*) AS total FROM users");
+    let query = "SELECT COUNT(*) AS total FROM users";
+    const queryParams = [];
+
+    if (teacherId) {
+      query =
+        "SELECT COUNT(*) AS total FROM users JOIN (SELECT * FROM bookings WHERE teacherId = ? AND bookings.status != 4 GROUP BY userId) as uniqueBookings ON users.id = uniqueBookings.userId";
+      queryParams.push(teacherId);
+    }
+
+    if (roleId) {
+      query = utilQueryAddWhere(query, "roleId = ?");
+      queryParams.push(roleId);
+    }
+
+    const stmt = env.DB.prepare(query).bind(...queryParams);
     const total = await stmt.first("total");
     return Number(total);
   } catch (e) {
     console.log(e);
-    return undefined;
+    return null;
   }
 }
 

@@ -10,7 +10,7 @@ import { User } from "../models/UserModel";
 import { utilQueryAddWhere } from "../services/utilService";
 
 export async function bookingDbGetAll(params: BookingPagination, env: Env) {
-  const { userId, page, size, status, teacherId, sort } = params;
+  const { userId, page, size, status, teacherId, sort, day } = params;
 
   const queryParams = [];
   let query = "SELECT * FROM bookings";
@@ -34,6 +34,13 @@ export async function bookingDbGetAll(params: BookingPagination, env: Env) {
     whereQuery += status.map(() => "?").join(",");
     whereQuery += ")";
     queryParams.push(...status);
+  }
+
+  if (day !== undefined) {
+    whereQuery += whereQuery ? " AND " : "";
+    whereQuery +=
+      "strftime('%w', datetime(start / 1000, 'unixepoch', '+8 hours')) = ?";
+    queryParams.push(String(day));
   }
 
   if (whereQuery) {
@@ -67,7 +74,7 @@ export async function bookingDbGetAllTotal(
   params: BookingPagination,
   env: Env
 ) {
-  const { userId, status, teacherId } = params;
+  const { userId, status, teacherId, day } = params;
 
   const queryParams = [];
   let query = "SELECT COUNT(*) AS total FROM bookings";
@@ -90,6 +97,13 @@ export async function bookingDbGetAllTotal(
     whereQuery += status.map(() => "?").join(",");
     whereQuery += ")";
     queryParams.push(...status);
+  }
+
+  if (day !== undefined) {
+    whereQuery += whereQuery ? " AND " : "";
+    whereQuery +=
+      "strftime('%w', datetime(start / 1000, 'unixepoch', '+8 hours')) = ?";
+    queryParams.push(String(day));
   }
 
   if (whereQuery) {

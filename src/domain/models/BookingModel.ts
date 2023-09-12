@@ -52,6 +52,7 @@ export type BookingCreateInputAdmin = Input<typeof BookingCreateInputAdmin>;
 export type BookingPagination = {
   userId?: number;
   status?: number[];
+  day?: number;
   teacherId?: number;
   sort?: string;
 } & CommonPagination;

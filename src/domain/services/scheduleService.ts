@@ -112,7 +112,7 @@ export async function scheduleDeleteMany(
     throw utilFailedResponse("Unauthorized", 401);
   }
 
-  const success = await scheduleDbDeleteMany(schedules, env);
+  const success = await scheduleDbDeleteMany(scheduleIds, env);
   if (!success) {
     throw utilFailedResponse("Failed to delete schedules", 500);
   }

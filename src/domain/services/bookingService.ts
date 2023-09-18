@@ -61,6 +61,7 @@ export async function bookingUpdate(
   }
 
   const role = await roleGet({ roleId: performedBy.roleId }, env);
+  console.log(role);
 
   // Create LogsCredit and update teacher's credits
   const logsCredits: LogsCreditCreate[] = [];
@@ -92,7 +93,7 @@ export async function bookingUpdate(
   if (params.status === 4) {
     user.credits += booking.amount;
     logsCredits.push({
-      title: "Cancelled Class",
+      title: `Class Cancelled by ${role.name}`,
       details: `Cancelled Class ${utilDateFormatter(
         "zh-CN",
         new Date(booking.start)
@@ -440,7 +441,7 @@ export async function bookingUpdateStatusMany(
     if (params.status === 4) {
       user.credits += booking.amount;
       logsCredits.push({
-        title: "Cancelled Class",
+        title: `Class Cancelled by ${role.name}`,
         details: `Cancelled Class ${utilDateFormatter(
           "zh-CN",
           new Date(booking.start)

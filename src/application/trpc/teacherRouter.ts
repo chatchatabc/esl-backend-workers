@@ -24,13 +24,13 @@ export default trpcRouterCreate({
       return teacherGet(opts.input, opts.ctx.env);
     }),
 
-  getByUser: trpcProcedureUser
+  getByUser: trpcProcedureAdmin
     .input(object({ userId: number() }))
     .query((opts) => {
       return teacherGetByUser(opts.input, opts.ctx.env);
     }),
 
-  getAll: trpcProcedureAdmin.input(CommonPaginationInput).query((opts) => {
+  getAll: trpcProcedureUser.input(CommonPaginationInput).query((opts) => {
     return teacherGetAll(opts.input, opts.ctx.env);
   }),
 

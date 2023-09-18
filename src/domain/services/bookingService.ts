@@ -52,6 +52,10 @@ export async function bookingUpdate(
   teacher.user = await userGet({ userId: teacher.userId }, env);
   const user = await userGet({ userId: booking.userId }, env);
 
+  const bookingStart = new Date(booking.start);
+  const bookingStartDate = utilDateFormatter("zh-CN", bookingStart);
+  const bookingStartTime = utilTimeFormatter("zh-CN", bookingStart);
+
   if (booking.status === params.status) {
     throw utilFailedResponse("Cannot update to same status", 400);
   }
@@ -67,22 +71,16 @@ export async function bookingUpdate(
   if (booking.status !== 3 && params.status === 3) {
     teacher.user.credits += booking.amount;
     logsCredits.push({
-      title: "Class Completed",
-      details: `Class ${utilDateFormatter(
-        "zh-CN",
-        new Date(booking.start)
-      )} ${utilTimeFormatter("zh-CN", new Date(booking.start))} Completed`,
+      title: `Class ${bookingStartDate} ${bookingStartTime} Completed`,
+      details: `Class ${bookingStartDate} ${bookingStartTime} Completed`,
       userId: teacher.user.id,
       amount: booking.amount,
     });
   } else if (booking.status === 3 && params.status !== 3) {
     teacher.user.credits -= booking.amount;
     logsCredits.push({
-      title: `Class Cancelled by ${role.name}`,
-      details: `Cancelled Class ${utilDateFormatter(
-        "zh-CN",
-        new Date(booking.start)
-      )} ${utilTimeFormatter("zh-CN", new Date(booking.start))}`,
+      title: `Class ${bookingStartDate} ${bookingStartTime} - Cancelled by ${role.name}`,
+      details: `Cancelled Class ${bookingStartDate} ${bookingStartTime}`,
       userId: teacher.user.id,
       amount: -booking.amount,
     });
@@ -92,11 +90,8 @@ export async function bookingUpdate(
   if (params.status === 4) {
     user.credits += booking.amount;
     logsCredits.push({
-      title: `Class Cancelled by ${role.name}`,
-      details: `Cancelled Class ${utilDateFormatter(
-        "zh-CN",
-        new Date(booking.start)
-      )} ${utilTimeFormatter("zh-CN", new Date(booking.start))}`,
+      title: `Class ${bookingStartDate} ${bookingStartTime} - Cancelled by ${role.name}`,
+      details: `Cancelled Class ${bookingStartDate} ${bookingStartTime}`,
       userId: user.id,
       amount: booking.amount,
     });
@@ -404,6 +399,10 @@ export async function bookingUpdateStatusMany(
     const teacher = await teacherGet({ teacherId: booking.teacherId }, env);
     teacher.user = await userGet({ userId: teacher.userId }, env);
 
+    const bookingStart = new Date(booking.start);
+    const bookingStartDate = utilDateFormatter("zh-CN", bookingStart);
+    const bookingStartTime = utilTimeFormatter("zh-CN", bookingStart);
+
     if (booking.status === 4) {
       throw utilFailedResponse("Cannot update a cancelled booking", 400);
     }
@@ -412,11 +411,8 @@ export async function bookingUpdateStatusMany(
     if (booking.status === 3 && params.status !== 3) {
       teacher.user.credits -= booking.amount;
       logsCredits.push({
-        title: `Class Cancelled by ${role.name}`,
-        details: `Cancelled Class ${utilDateFormatter(
-          "zh-CN",
-          new Date(booking.start)
-        )} ${utilTimeFormatter("zh-CN", new Date(booking.start))}`,
+        title: `Class ${bookingStartDate} ${bookingStartTime} - Cancelled by ${role.name}`,
+        details: `Cancelled Class ${bookingStartDate} ${bookingStartTime}`,
         userId: teacher.user.id,
         amount: -booking.amount,
       } as LogsCreditCreate);
@@ -426,11 +422,8 @@ export async function bookingUpdateStatusMany(
     else if (params.status === 3) {
       teacher.user.credits += booking.amount;
       logsCredits.push({
-        title: "Class Completed",
-        details: `Class ${utilDateFormatter(
-          "zh-CN",
-          new Date(booking.start)
-        )} ${utilTimeFormatter("zh-CN", new Date(booking.start))} Completed`,
+        title: `Class ${bookingStartDate} ${bookingStartTime} Completed`,
+        details: `Class ${bookingStartDate} ${bookingStartTime} Completed`,
         userId: teacher.user.id,
         amount: booking.amount,
       } as LogsCreditCreate);
@@ -440,11 +433,8 @@ export async function bookingUpdateStatusMany(
     if (params.status === 4) {
       user.credits += booking.amount;
       logsCredits.push({
-        title: `Class Cancelled by ${role.name}`,
-        details: `Cancelled Class ${utilDateFormatter(
-          "zh-CN",
-          new Date(booking.start)
-        )} ${utilTimeFormatter("zh-CN", new Date(booking.start))}`,
+        title: `Class ${bookingStartDate} ${bookingStartTime} - Cancelled by ${role.name}`,
+        details: `Cancelled Class ${bookingStartDate} ${bookingStartTime}`,
         userId: user.id,
         amount: booking.amount,
       } as LogsCreditCreate);

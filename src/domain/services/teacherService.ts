@@ -1,6 +1,5 @@
 import { Env } from "../..";
 import { CommonPagination } from "../models/CommonModel";
-import { CourseCreate } from "../models/CourseModel";
 import { Teacher, TeacherCreate, TeacherUpdate } from "../models/TeacherModel";
 import {
   teacherDBCreate,
@@ -11,7 +10,6 @@ import {
   teacherDbUpdate,
   teacherDbValidateCourse,
 } from "../repositories/teacherRepo";
-import { courseCreate } from "./courseService";
 import { userGet } from "./userService";
 import { utilFailedResponse } from "./utilService";
 
@@ -20,6 +18,8 @@ export async function teacherGet(params: { teacherId: number }, env: Env) {
   if (!teacher) {
     throw utilFailedResponse("Cannot get teacher", 500);
   }
+  const user = await userGet({ userId: teacher.userId }, env);
+  teacher.user = user;
 
   return teacher as Teacher;
 }

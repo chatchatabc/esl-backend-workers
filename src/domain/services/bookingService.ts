@@ -61,7 +61,6 @@ export async function bookingUpdate(
   }
 
   const role = await roleGet({ roleId: performedBy.roleId }, env);
-  console.log(role);
 
   // Create LogsCredit and update teacher's credits
   const logsCredits: LogsCreditCreate[] = [];

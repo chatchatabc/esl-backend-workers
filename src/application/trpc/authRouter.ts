@@ -1,4 +1,4 @@
-import { object, string } from "valibot";
+import { minLength, object, string } from "valibot";
 import {
   trpcProcedure,
   trpcProcedureUser,
@@ -99,12 +99,13 @@ export default trpcRouterCreate({
   }),
 
   validatePhoneToken: trpcProcedureUser
-    .input((values: any = {}) => {
-      if (!values.token) {
-        throw utilFailedResponse("Missing token", 400);
-      }
-      return values as { token: string };
-    })
+    .input(
+      object({
+        token: string("Token must be a string", [
+          minLength(1, "Token is required"),
+        ]),
+      })
+    )
     .mutation((opts) => {
       const { userId = 0, env } = opts.ctx;
       const { token } = opts.input;

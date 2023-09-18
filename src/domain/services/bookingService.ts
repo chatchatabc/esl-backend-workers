@@ -21,6 +21,7 @@ import {
 } from "../repositories/bookingRepo";
 import { scheduleDbValidateBooking } from "../repositories/scheduleRepo";
 import { courseGet } from "./courseService";
+import { roleGet } from "./roleService";
 import { teacherGet, teacherValidateCourse } from "./teacherService";
 import { userGet } from "./userService";
 import {
@@ -41,7 +42,11 @@ export async function bookingGet(params: { bookingId: number }, env: Env) {
 /*
  * Can only update booking status for now.
  */
-export async function bookingUpdate(params: BookingUpdate, env: Env) {
+export async function bookingUpdate(
+  params: BookingUpdate,
+  env: Env,
+  performedBy: User
+) {
   const booking = await bookingGet({ bookingId: params.id }, env);
   const teacher = await teacherGet({ teacherId: booking.teacherId }, env);
   teacher.user = await userGet({ userId: teacher.userId }, env);
@@ -54,6 +59,8 @@ export async function bookingUpdate(params: BookingUpdate, env: Env) {
   if (booking.status === 4) {
     throw utilFailedResponse("Cannot update a cancelled booking", 400);
   }
+
+  const role = await roleGet({ roleId: performedBy.roleId }, env);
 
   // Create LogsCredit and update teacher's credits
   const logsCredits: LogsCreditCreate[] = [];
@@ -71,7 +78,7 @@ export async function bookingUpdate(params: BookingUpdate, env: Env) {
   } else if (booking.status === 3 && params.status !== 3) {
     teacher.user.credits -= booking.amount;
     logsCredits.push({
-      title: "Cancelled Class",
+      title: `Class Cancelled by ${role.name}`,
       details: `Cancelled Class ${utilDateFormatter(
         "zh-CN",
         new Date(booking.start)
@@ -291,6 +298,7 @@ export async function bookingCancel(
   values: {
     bookingId: number;
     userId: number;
+    performedBy: User;
   },
   env: Env
 ) {
@@ -381,11 +389,14 @@ export async function bookingComplete(
 
 export async function bookingUpdateStatusMany(
   params: { bookingIds: number[]; status: number },
-  env: Env
+  env: Env,
+  performedBy: User
 ) {
   const bookings: Booking[] = [];
   const users: User[] = [];
   const logsCredits: LogsCreditCreate[] = [];
+
+  const role = await roleGet({ roleId: performedBy.roleId }, env);
 
   for (const bookingId of params.bookingIds) {
     const booking = await bookingGet({ bookingId }, env);
@@ -401,7 +412,7 @@ export async function bookingUpdateStatusMany(
     if (booking.status === 3 && params.status !== 3) {
       teacher.user.credits -= booking.amount;
       logsCredits.push({
-        title: "Cancelled Class",
+        title: `Class Cancelled by ${role.name}`,
         details: `Cancelled Class ${utilDateFormatter(
           "zh-CN",
           new Date(booking.start)

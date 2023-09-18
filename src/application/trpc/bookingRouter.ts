@@ -5,7 +5,6 @@ import {
 } from "../../domain/infra/trpc";
 import {
   BookingCancelInput,
-  BookingCancelInputAdmin,
   BookingCompleteInputAdmin,
   BookingCreateInput,
   BookingCreateInputAdmin,
@@ -14,7 +13,6 @@ import {
 } from "../../domain/schemas/BookingSchema";
 import { CommonPaginationInput } from "../../domain/schemas/CommonSchema";
 import {
-  bookingCancel,
   bookingComplete,
   bookingCreate,
   bookingCreateMany,
@@ -76,28 +74,20 @@ export default trpcRouterCreate({
     }),
 
   cancel: trpcProcedureUser.input(BookingCancelInput).mutation((opts) => {
-    const { userId, env } = opts.ctx;
-    const bookingId = opts.input.id;
-    return bookingCancel({ ...opts.input, bookingId, userId }, env);
+    const { env, user } = opts.ctx;
+    const { id } = opts.input;
+    return bookingUpdate({ id, status: 4 }, env, user);
   }),
-
-  cancelAdmin: trpcProcedureAdmin
-    .input(BookingCancelInputAdmin)
-    .mutation((opts) => {
-      const { env } = opts.ctx;
-      const bookingId = opts.input.id;
-      return bookingCancel({ ...opts.input, bookingId }, env);
-    }),
 
   updateStatusManyByAdmin: trpcProcedureAdmin
     .input(BookingUpdateStatusManyInputByAdmin)
     .mutation((opts) => {
-      const { env } = opts.ctx;
-      return bookingUpdateStatusMany(opts.input, env);
+      const { env, user } = opts.ctx;
+      return bookingUpdateStatusMany(opts.input, env, user);
     }),
 
   update: trpcProcedureAdmin.input(BookingUpdateInput).mutation((opts) => {
-    const { env } = opts.ctx;
-    return bookingUpdate(opts.input, env);
+    const { env, user } = opts.ctx;
+    return bookingUpdate(opts.input, env, user);
   }),
 });

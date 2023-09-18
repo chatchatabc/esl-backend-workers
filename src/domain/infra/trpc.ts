@@ -2,7 +2,7 @@ import { inferAsyncReturnType, initTRPC } from "@trpc/server";
 import { Env } from "../..";
 import { authGetTokenPayload } from "../services/authService";
 import { utilFailedResponse } from "../services/utilService";
-import { userDbGet } from "../repositories/userRepo";
+import { userGet } from "../services/userService";
 
 type Props = {
   req: Request;
@@ -15,26 +15,26 @@ type Props = {
 export function trpcContext({ resHeaders, req, ...props }: Props) {
   const origin = req.headers.get("Origin") ?? "";
 
+  // Set CORS headers
+  resHeaders.append("Access-Control-Allow-Origin", origin);
+  resHeaders.append("Access-Control-Allow-Methods", "*");
+  resHeaders.append("Access-Control-Allow-Headers", "Content-Type");
+  resHeaders.append("Access-Control-Allow-Credentials", "true");
+
   // Get token from cookie
-  const setCookieHeader = req.headers.get("Cookie");
-  const tokenCookie = setCookieHeader
+  const getCookieHeader = req.headers.get("Cookie");
+  const tokenCookie = getCookieHeader
     ?.split(";")
     .find((c) => c.includes("token="));
   const token = tokenCookie?.trim()?.slice(6);
 
   // Get userID from token
-  const userId = authGetTokenPayload(token ?? "") ?? 0;
+  const userId = authGetTokenPayload(token ?? "");
 
   // Clear cookie if token is invalid
   if (!userId && token) {
     resHeaders.append("Set-Cookie", "token=; Max-Age=0");
   }
-
-  // Set CORS headers if origin is valid
-  resHeaders.append("Access-Control-Allow-Origin", origin);
-  resHeaders.append("Access-Control-Allow-Methods", "*");
-  resHeaders.append("Access-Control-Allow-Headers", "Content-Type");
-  resHeaders.append("Access-Control-Allow-Credentials", "true");
 
   return { ...props, resHeaders, req, userId };
 }
@@ -50,32 +50,35 @@ export const trpcRouterCreate = trpc.router;
 // tRPC procedure
 export const trpcProcedure = trpc.procedure;
 
-// tRPC procedure with user middleware
 export const trpcProcedureUser = trpcProcedure.use(
-  trpc.middleware((opts) => {
-    if (opts.ctx.userId === 0) {
-      throw utilFailedResponse("Invalid Token", 403);
+  trpc.middleware(async (opts) => {
+    const { userId } = opts.ctx;
+
+    if (!userId) {
+      throw utilFailedResponse("Unauthorized", 401);
     }
-    return opts.next(opts);
+
+    const user = await userGet({ userId }, opts.ctx.env);
+
+    return opts.next({ ...opts, ctx: { ...opts.ctx, user, userId } });
   })
 );
 
 // tRPC procedure with admin middleware
 export const trpcProcedureAdmin = trpcProcedure.use(
   trpc.middleware(async (opts) => {
-    const { userId, env } = opts.ctx;
-    if (userId === 0) {
-      throw utilFailedResponse("Invalid Token", 403);
+    const { userId } = opts.ctx;
+
+    if (!userId) {
+      throw utilFailedResponse("Unauthorized", 401);
     }
 
-    const user = await userDbGet({ userId }, env);
-    if (!user) {
-      throw utilFailedResponse("User Not Found", 404);
-    }
+    const user = await userGet({ userId }, opts.ctx.env);
 
     if (user.roleId !== 1) {
       throw utilFailedResponse("Forbidden Access", 403);
     }
-    return opts.next(opts);
+
+    return opts.next({ ...opts, ctx: { ...opts.ctx, user, userId } });
   })
 );

@@ -1,5 +1,9 @@
 import { Input } from "valibot";
-import { UserCreateInput, UserUpdateInput } from "../schemas/UserSchema";
+import {
+  UserCreateInput,
+  UserRegisterInput,
+  UserUpdateInput,
+} from "../schemas/UserSchema";
 import { CommonPagination } from "./CommonModel";
 
 export type User = {
@@ -38,6 +42,8 @@ export type UserLogin = {
 export type UserRegister = UserLogin & {
   confirmPassword: string;
 };
+
+export type UserRegisterInput = Input<typeof UserRegisterInput>;
 
 export type UserUpdateInput = Input<typeof UserUpdateInput>;
 

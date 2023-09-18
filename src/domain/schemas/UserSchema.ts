@@ -11,9 +11,7 @@ import {
 
 const Schema = object({
   id: number("ID is required", [minValue(1, "ID must be greater than 0")]),
-  alias: string("Alias is required", [
-    minLength(1, "Alias must be at least 1 character long"),
-  ]),
+  alias: string("Alias must be string", [minLength(1, "Alias is required")]),
   username: string("Username is required", [
     minLength(1, "Username must be at least 1 character long"),
   ]),
@@ -79,4 +77,10 @@ export const UserRegisterProfile = pick(Schema, [
   "lastName",
   "phone",
   "alias",
+]);
+
+export const UserRegisterInput = pick(Schema, [
+  "username",
+  "password",
+  "confirmPassword",
 ]);

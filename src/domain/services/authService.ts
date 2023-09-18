@@ -12,8 +12,10 @@ import {
   utilGenerateRandomCode,
   utilHashHmac256,
 } from "./utilService";
-import { smsSend } from "../infra/sms";
 import { UserCreate, UserLogin, UserRegister } from "../models/UserModel";
+import { userGet } from "./userService";
+import { messageSend } from "./messageService";
+import { MessageSend } from "../models/MessageModel";
 
 const jwtHeader = JSON.stringify({ alg: "HS256", typ: "JWT" });
 const base64Header = utilEncodeBase64(jwtHeader);
@@ -48,14 +50,14 @@ export function authGetTokenPayload(token: string) {
   }
 
   if (!authValidateToken(token)) {
-    return undefined;
+    return null;
   }
 
   const payload = utilDecodeBase64(token.split(".")[1]);
   const data = JSON.parse(payload) as { id: number; exp: number };
 
   if (data.exp < Date.now() / 1000) {
-    return undefined;
+    return null;
   }
 
   return data.id;
@@ -73,11 +75,10 @@ export async function authRegister(input: UserRegister, env: Env) {
     ...input,
     status: 1,
     roleId: 2,
-    credit: 0,
+    credits: 0,
+    alias: null,
     phone: null,
     phoneVerifiedAt: null,
-    emailVerifiedAt: null,
-    email: null,
     firstName: null,
     lastName: null,
   };
@@ -111,10 +112,7 @@ export async function authLogin(params: UserLogin, env: Env) {
 
 export async function authGetPhoneToken(params: { userId: number }, env: Env) {
   // Get user
-  const user = await userDbGet(params, env);
-  if (!user) {
-    throw utilFailedResponse("Cannot find user", 404);
-  }
+  const user = await userGet(params, env);
 
   // Check if user has phone number
   if (!user.phone) {
@@ -147,19 +145,15 @@ export async function authGetPhoneToken(params: { userId: number }, env: Env) {
   await env.KV.put(randomToken, JSON.stringify(data));
 
   // Send message
-  const message = {
-    mobile: user.phone,
-    content: `【恰恰英语】您的手机验证码是${randomToken}，有效期仅5分钟。`,
+  const message: MessageSend = {
+    userId: user.id,
+    phone: user.phone,
+    messageTemplateId: 2,
+    templateValues: JSON.stringify({ code: randomToken }),
   };
-  const response = await smsSend(message);
-  if (!response || response.error_code === 0) {
-    throw utilFailedResponse("Failed to send message", 500);
-  }
+  const response = await messageSend(message, env);
 
-  // Save timestamp to KV
-  await env.KV.put(user.phone, JSON.stringify(Date.now()));
-
-  return response;
+  return true;
 }
 
 export async function authValidatePhoneToken(

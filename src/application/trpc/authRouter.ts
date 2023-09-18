@@ -1,3 +1,4 @@
+import { object, string } from "valibot";
 import {
   trpcProcedure,
   trpcProcedureUser,
@@ -45,15 +46,12 @@ export default trpcRouterCreate({
     }),
 
   login: trpcProcedure
-    .input((values: any = {}) => {
-      if (!values.username || !values.password) {
-        throw utilFailedResponse("Missing fields for login", 400);
-      }
-      return {
-        username: values.username as string,
-        password: values.password as string,
-      };
-    })
+    .input(
+      object({
+        username: string(),
+        password: string(),
+      })
+    )
     .mutation(async (opts) => {
       const user = await authLogin(opts.input, opts.ctx.env);
       const token = authCreateJsonWebToken(user.id);
@@ -95,12 +93,12 @@ export default trpcRouterCreate({
       return userUpdateProfile(newData, env);
     }),
 
-  getPhoneToken: trpcProcedure.query((opts) => {
-    const { userId = 0, env } = opts.ctx;
+  getPhoneToken: trpcProcedureUser.query((opts) => {
+    const { userId, env } = opts.ctx;
     return authGetPhoneToken({ userId }, env);
   }),
 
-  validatePhoneToken: trpcProcedure
+  validatePhoneToken: trpcProcedureUser
     .input((values: any = {}) => {
       if (!values.token) {
         throw utilFailedResponse("Missing token", 400);

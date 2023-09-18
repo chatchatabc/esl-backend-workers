@@ -151,7 +151,21 @@ export async function authGetPhoneToken(params: { userId: number }, env: Env) {
     messageTemplateId: 2,
     templateValues: JSON.stringify({ code: randomToken }),
   };
-  const response = await messageSend(message, env);
+
+  let isSuccess = false;
+  let retry = 0;
+  while (!isSuccess && retry < 5) {
+    try {
+      await messageSend(message, env);
+      isSuccess = true;
+    } catch (e) {
+      retry += 1;
+    }
+  }
+
+  if (!isSuccess) {
+    throw utilFailedResponse("Failed to send message", 500);
+  }
 
   return true;
 }

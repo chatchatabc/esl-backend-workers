@@ -18,15 +18,18 @@ export async function bookingDbGetAll(params: BookingPagination, env: Env) {
   let whereQuery = "";
   let endQuery = " ORDER BY createdAt DESC";
 
-  if (userId) {
-    whereQuery += "userId = ?";
-    queryParams.push(userId);
-  }
-
-  if (teacherId) {
+  if (userId && teacherId) {
+    whereQuery += whereQuery ? " AND " : "";
+    whereQuery += "(userId = ? OR teacherId = ?)";
+    queryParams.push(userId, teacherId);
+  } else if (teacherId) {
     whereQuery += whereQuery ? " AND " : "";
     whereQuery += "teacherId = ?";
     queryParams.push(teacherId);
+  } else if (userId) {
+    whereQuery += whereQuery ? " AND " : "";
+    whereQuery += "userId = ?";
+    queryParams.push(userId);
   }
 
   if (status) {

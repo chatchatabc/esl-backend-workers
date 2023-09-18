@@ -7,6 +7,7 @@ import {
   teacherDbGetAll,
   teacherDbGetAllTotal,
   teacherDbGetByUser,
+  teacherDbGetByUserUsername,
   teacherDbUpdate,
   teacherDbValidateCourse,
 } from "../repositories/teacherRepo";
@@ -26,6 +27,18 @@ export async function teacherGet(params: { teacherId: number }, env: Env) {
 
 export async function teacherGetByUser(params: { userId: number }, env: Env) {
   const teacher = await teacherDbGetByUser(params, env);
+  if (!teacher) {
+    throw utilFailedResponse("Cannot get teacher", 500);
+  }
+
+  return teacher as Teacher;
+}
+
+export async function teacherGetByUserUsername(
+  params: { username: string },
+  env: Env
+) {
+  const teacher = await teacherDbGetByUserUsername(params, env);
   if (!teacher) {
     throw utilFailedResponse("Cannot get teacher", 500);
   }

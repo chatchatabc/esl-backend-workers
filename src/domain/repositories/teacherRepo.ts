@@ -34,6 +34,25 @@ export async function teacherDbGetByUser(params: { userId: number }, env: Env) {
   }
 }
 
+export async function teacherDbGetByUserUsername(
+  params: { username: string },
+  env: Env
+) {
+  const { username } = params;
+
+  try {
+    const stmt = env.DB.prepare(
+      "SELECT * FROM teachers WHERE userId = (SELECT id FROM users WHERE username = ?)"
+    );
+    const teacher = await stmt.bind(username).first<Teacher>();
+
+    return teacher;
+  } catch (e) {
+    console.log(e);
+    return null;
+  }
+}
+
 export async function teacherDbGetAll(params: CommonPagination, env: Env) {
   const { page, size } = params;
 

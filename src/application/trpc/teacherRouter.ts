@@ -1,4 +1,4 @@
-import { number, object } from "valibot";
+import { number, object, string } from "valibot";
 import {
   trpcProcedureAdmin,
   trpcProcedureUser,
@@ -10,6 +10,7 @@ import {
   teacherGet,
   teacherGetAll,
   teacherGetByUser,
+  teacherGetByUserUsername,
   teacherUpdate,
 } from "../../domain/services/teacherService";
 import {
@@ -28,6 +29,12 @@ export default trpcRouterCreate({
     .input(object({ userId: number() }))
     .query((opts) => {
       return teacherGetByUser(opts.input, opts.ctx.env);
+    }),
+
+  getByUserUsername: trpcProcedureUser
+    .input(object({ username: string("Username must be a string") }))
+    .query((opts) => {
+      return teacherGetByUserUsername(opts.input, opts.ctx.env);
     }),
 
   getAll: trpcProcedureUser.input(CommonPaginationInput).query((opts) => {

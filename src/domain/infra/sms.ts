@@ -80,6 +80,7 @@ export async function smsSend(params: SmsSend, env: Env) {
     };
 
     if (data.Code !== "OK") {
+      console.log(data);
       const error = {
         data,
         url,

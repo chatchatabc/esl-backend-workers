@@ -7,7 +7,7 @@ import {
   BookingCreateInput,
   BookingCreateInputAdmin,
   BookingUpdateInput,
-  BookingUpdateStatusManyInputByAdmin,
+  BookingUpdateStatusManyInput,
 } from "../schemas/BookingSchema";
 import { Course } from "./CourseModel";
 import { Teacher } from "./TeacherModel";
@@ -57,6 +57,7 @@ export type BookingPagination = {
   sort?: string;
   start?: number;
   end?: number;
+  bookingIds?: number[];
 } & CommonPagination;
 
 export type BookingCancelInputAdmin = Input<typeof BookingCancelInputAdmin>;
@@ -65,6 +66,6 @@ export type BookingCompleteInputAdmin = Input<typeof BookingCompleteInputAdmin>;
 
 export type BookingUpdateInput = Input<typeof BookingUpdateInput>;
 
-export type BookingUpdateStatusManyInputByAdmin = Input<
-  typeof BookingUpdateStatusManyInputByAdmin
+export type BookingUpdateStatusManyInput = Input<
+  typeof BookingUpdateStatusManyInput
 >;

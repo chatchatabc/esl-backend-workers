@@ -10,8 +10,18 @@ import { User } from "../models/UserModel";
 import { utilQueryAddWhere } from "../services/utilService";
 
 export async function bookingDbGetAll(params: BookingPagination, env: Env) {
-  const { userId, page, size, status, teacherId, sort, day, start, end } =
-    params;
+  const {
+    userId,
+    page,
+    size,
+    status,
+    teacherId,
+    sort,
+    day,
+    start,
+    end,
+    bookingIds,
+  } = params;
 
   const queryParams = [];
   let query = "SELECT * FROM bookings";
@@ -57,6 +67,14 @@ export async function bookingDbGetAll(params: BookingPagination, env: Env) {
     whereQuery += whereQuery ? " AND " : "";
     whereQuery += "end < ?";
     queryParams.push(end);
+  }
+
+  if (bookingIds) {
+    whereQuery += whereQuery ? " AND " : "";
+    whereQuery += "id IN (";
+    whereQuery += bookingIds.map(() => "?").join(",");
+    whereQuery += ")";
+    queryParams.push(...bookingIds);
   }
 
   if (whereQuery) {

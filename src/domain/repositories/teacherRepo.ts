@@ -13,13 +13,13 @@ export async function teacherDbGet(
   let whereQuery = "";
 
   if (teacherId) {
-    whereQuery += "id = ";
+    whereQuery += "id = ?";
     queryParams.push(teacherId);
   }
 
   if (userId) {
     whereQuery += whereQuery ? " AND " : "";
-    whereQuery += "userId = ";
+    whereQuery += "userId = ?";
     queryParams.push(userId);
   }
 

@@ -6,42 +6,26 @@ import {
   teacherDbGet,
   teacherDbGetAll,
   teacherDbGetAllTotal,
-  teacherDbGetByUser,
-  teacherDbGetByUserUsername,
   teacherDbUpdate,
   teacherDbValidateCourse,
 } from "../repositories/teacherRepo";
 import { userGet } from "./userService";
 import { utilFailedResponse } from "./utilService";
 
-export async function teacherGet(params: { teacherId: number }, env: Env) {
+export async function teacherGet(
+  params: { teacherId?: number; userId?: number; userUsername?: string },
+  env: Env
+) {
+  if (!params.teacherId && !params.userId && !params.userUsername) {
+    throw utilFailedResponse("Invalid params", 400);
+  }
+
   const teacher = await teacherDbGet(params, env);
   if (!teacher) {
     throw utilFailedResponse("Cannot get teacher", 500);
   }
   const user = await userGet({ userId: teacher.userId }, env);
   teacher.user = user;
-
-  return teacher as Teacher;
-}
-
-export async function teacherGetByUser(params: { userId: number }, env: Env) {
-  const teacher = await teacherDbGetByUser(params, env);
-  if (!teacher) {
-    throw utilFailedResponse("Cannot get teacher", 500);
-  }
-
-  return teacher as Teacher;
-}
-
-export async function teacherGetByUserUsername(
-  params: { username: string },
-  env: Env
-) {
-  const teacher = await teacherDbGetByUserUsername(params, env);
-  if (!teacher) {
-    throw utilFailedResponse("Cannot get teacher", 500);
-  }
 
   return teacher as Teacher;
 }
@@ -83,7 +67,7 @@ export async function teacherCreate(params: TeacherCreate, env: Env) {
     throw utilFailedResponse("User is not a teacher", 500);
   }
 
-  const teacher = await teacherDbGetByUser({ userId: params.userId }, env);
+  const teacher = await teacherGet({ userId: params.userId }, env);
   if (teacher) {
     throw utilFailedResponse("Teacher already exists", 500);
   }

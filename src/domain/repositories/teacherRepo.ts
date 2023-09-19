@@ -2,49 +2,41 @@ import { Env } from "../..";
 import { CommonPagination } from "../models/CommonModel";
 import { Teacher, TeacherCreate, TeacherUpdate } from "../models/TeacherModel";
 
-export async function teacherDbGet(params: { teacherId: number }, env: Env) {
-  const { teacherId } = params;
-
-  try {
-    const teacher = await env.DB.prepare("SELECT * FROM teachers WHERE id = ?")
-      .bind(teacherId)
-      .first<Teacher>();
-
-    return teacher;
-  } catch (e) {
-    console.log(e);
-    return null;
-  }
-}
-
-export async function teacherDbGetByUser(params: { userId: number }, env: Env) {
-  const { userId } = params;
-
-  try {
-    const teacher = await env.DB.prepare(
-      "SELECT * FROM teachers WHERE userId = ?"
-    )
-      .bind(userId)
-      .first<Teacher>();
-
-    return teacher;
-  } catch (e) {
-    console.log(e);
-    return null;
-  }
-}
-
-export async function teacherDbGetByUserUsername(
-  params: { username: string },
+export async function teacherDbGet(
+  params: { teacherId?: number; userId?: number; userUsername?: string },
   env: Env
 ) {
-  const { username } = params;
+  const { teacherId, userId, userUsername } = params;
+
+  const queryParams = [];
+  let query = "SELECT * FROM teachers";
+  let whereQuery = "";
+
+  if (teacherId) {
+    whereQuery += "id = ";
+    queryParams.push(teacherId);
+  }
+
+  if (userId) {
+    whereQuery += whereQuery ? " AND " : "";
+    whereQuery += "userId = ";
+    queryParams.push(userId);
+  }
+
+  if (userUsername) {
+    whereQuery += whereQuery ? " AND " : "";
+    whereQuery += "userId = (SELECT id FROM users WHERE username = ?)";
+    queryParams.push(userUsername);
+  }
+
+  if (whereQuery) {
+    query += ` WHERE ${whereQuery}`;
+  }
 
   try {
-    const stmt = env.DB.prepare(
-      "SELECT * FROM teachers WHERE userId = (SELECT id FROM users WHERE username = ?)"
-    );
-    const teacher = await stmt.bind(username).first<Teacher>();
+    const teacher = await env.DB.prepare(query)
+      .bind(...queryParams)
+      .first<Teacher>();
 
     return teacher;
   } catch (e) {

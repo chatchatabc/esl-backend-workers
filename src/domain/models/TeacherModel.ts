@@ -14,7 +14,7 @@ export type Teacher = {
   updatedAt: number;
   status: number;
 
-  user?: User;
+  user: User;
 };
 
 export type TeacherCreate = Pick<

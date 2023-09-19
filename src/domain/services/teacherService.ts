@@ -31,10 +31,18 @@ export async function teacherGet(
 }
 
 export async function teacherGetAll(params: CommonPagination, env: Env) {
-  const teachers = await teacherDbGetAll(params, env);
-  if (!teachers) {
+  const query = await teacherDbGetAll(params, env);
+  if (!query) {
     throw utilFailedResponse("Cannot get teachers", 500);
   }
+
+  const teachers = await Promise.all(
+    query.results.map(async (teacher) => {
+      const user = await userGet({ userId: teacher.userId }, env);
+      teacher.user = user;
+      return teacher;
+    })
+  );
 
   const totalElements = await teacherDbGetAllTotal(env);
   if (totalElements === null) {
@@ -42,7 +50,7 @@ export async function teacherGetAll(params: CommonPagination, env: Env) {
   }
 
   return {
-    content: teachers.results as Teacher[],
+    content: teachers as Teacher[],
     totalElements: totalElements as number,
     ...params,
   };

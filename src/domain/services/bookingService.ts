@@ -385,27 +385,24 @@ export async function bookingUpdateStatusMany(
   env: Env,
   performedBy: User
 ) {
-  const { content: bookings } = await bookingGetAll(
+  const { content: bookingsOld } = await bookingGetAll(
     { bookingIds: params.bookingIds, page: 1, size: 10000 },
     env
   );
+  const bookings: Booking[] = [];
   const users: User[] = [];
   const logsCredits: LogsCreditCreate[] = [];
 
   const role = await roleGet({ roleId: performedBy.roleId }, env);
 
-  for (const booking of bookings) {
+  for (const booking of bookingsOld) {
     const user = await userGet({ userId: booking.userId }, env);
     const teacher = await teacherGet({ teacherId: booking.teacherId }, env);
-    teacher.user = await userGet({ userId: teacher.userId }, env);
 
-    // Check if user is the owner
-    if (performedBy.roleId === 2) {
-      if (user.id !== performedBy.id) {
-        throw utilFailedResponse("Unauthorized", 403);
-      }
-    } else if (performedBy.roleId === 3) {
-      if (teacher.user.id !== performedBy.id) {
+    // Check if user is not an admin
+    if (performedBy.roleId !== 1) {
+      // Check if the user is the owner or the teacher
+      if (user.id !== performedBy.id && teacher.userId !== performedBy.id) {
         throw utilFailedResponse("Unauthorized", 403);
       }
     }

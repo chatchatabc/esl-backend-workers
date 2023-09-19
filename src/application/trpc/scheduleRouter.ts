@@ -18,7 +18,7 @@ import {
   scheduleGetAll,
   scheduleUpdateMany,
 } from "../../domain/services/scheduleService";
-import { teacherGetByUser } from "../../domain/services/teacherService";
+import { teacherGet } from "../../domain/services/teacherService";
 import { utilFailedResponse } from "../../domain/services/utilService";
 
 export default trpcRouterCreate({
@@ -44,7 +44,7 @@ export default trpcRouterCreate({
         throw utilFailedResponse("Invalid time range");
       }
 
-      const teacher = await teacherGetByUser({ userId }, env);
+      const teacher = await teacherGet({ userId }, env);
       return scheduleUpdateMany({ teacherId: teacher.id, schedules }, env);
     }),
 
@@ -71,7 +71,7 @@ export default trpcRouterCreate({
       const { userId, env } = opts.ctx;
       const { schedules } = opts.input;
 
-      const teacher = await teacherGetByUser({ userId }, env);
+      const teacher = await teacherGet({ userId }, env);
 
       return scheduleCreateMany({ teacherId: teacher.id, schedules }, env);
     }),
@@ -99,7 +99,7 @@ export default trpcRouterCreate({
       const { userId, env } = opts.ctx;
       const { scheduleIds } = opts.input;
 
-      const teacher = await teacherGetByUser({ userId }, env);
+      const teacher = await teacherGet({ userId }, env);
 
       return scheduleDeleteMany({ scheduleIds, teacherId: teacher.id }, env);
     }),

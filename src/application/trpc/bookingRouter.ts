@@ -9,7 +9,7 @@ import {
   BookingCreateInput,
   BookingCreateInputAdmin,
   BookingUpdateInput,
-  BookingUpdateStatusManyInputByAdmin,
+  BookingUpdateStatusManyInput,
 } from "../../domain/schemas/BookingSchema";
 import { CommonPaginationInput } from "../../domain/schemas/CommonSchema";
 import {
@@ -79,8 +79,8 @@ export default trpcRouterCreate({
     return bookingUpdate({ id, status: 4 }, env, user);
   }),
 
-  updateStatusManyByAdmin: trpcProcedureAdmin
-    .input(BookingUpdateStatusManyInputByAdmin)
+  updateStatusMany: trpcProcedureUser
+    .input(BookingUpdateStatusManyInput)
     .mutation((opts) => {
       const { env, user } = opts.ctx;
       return bookingUpdateStatusMany(opts.input, env, user);

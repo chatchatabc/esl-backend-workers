@@ -91,7 +91,7 @@ export const BookingCancelInputAdmin = pick(Schema, ["id", "userId"]);
 
 export const BookingCompleteInputAdmin = pick(Schema, ["id", "userId"]);
 
-export const BookingUpdateStatusManyInputByAdmin = pick(Schema, [
+export const BookingUpdateStatusManyInput = pick(Schema, [
   "bookingIds",
   "status",
 ]);

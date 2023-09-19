@@ -387,17 +387,30 @@ export async function bookingUpdateStatusMany(
   env: Env,
   performedBy: User
 ) {
-  const bookings: Booking[] = [];
+  const { content: bookings } = await bookingGetAll(
+    { bookingIds: params.bookingIds, page: 1, size: 10000 },
+    env
+  );
   const users: User[] = [];
   const logsCredits: LogsCreditCreate[] = [];
 
   const role = await roleGet({ roleId: performedBy.roleId }, env);
 
-  for (const bookingId of params.bookingIds) {
-    const booking = await bookingGet({ bookingId }, env);
+  for (const booking of bookings) {
     const user = await userGet({ userId: booking.userId }, env);
     const teacher = await teacherGet({ teacherId: booking.teacherId }, env);
     teacher.user = await userGet({ userId: teacher.userId }, env);
+
+    // Check if user is the owner
+    if (performedBy.roleId === 2) {
+      if (user.id !== performedBy.id) {
+        throw utilFailedResponse("Unauthorized", 403);
+      }
+    } else if (performedBy.roleId === 3) {
+      if (teacher.user.id !== performedBy.id) {
+        throw utilFailedResponse("Unauthorized", 403);
+      }
+    }
 
     const bookingStart = new Date(booking.start);
     const bookingStartDate = utilDateFormatter("zh-CN", bookingStart);

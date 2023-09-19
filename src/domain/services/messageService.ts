@@ -90,7 +90,6 @@ export async function messageSend(params: MessageSend, env: Env) {
     env
   );
 
-  console.log(sms);
   if (!sms || sms.Code !== "OK") {
     throw utilFailedResponse("Failed to send message", 500);
   }

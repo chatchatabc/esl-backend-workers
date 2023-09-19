@@ -368,8 +368,6 @@ export async function bookingComplete(
     amount: booking.amount,
   };
 
-  console.log(logsCredit);
-
   // Perform transaction query
   const query = await bookingDbComplete(
     { booking, user: teacher.user, logsCredit },
@@ -460,7 +458,6 @@ export async function bookingUpdateStatusMany(
     bookings.push(booking);
     users.push(user);
     users.push(teacher.user!);
-    console.log(teacher.user, booking, user);
   }
 
   const query = await bookingDbUpdateStatusMany(

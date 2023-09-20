@@ -104,7 +104,7 @@ CREATE TABLE
     id INTEGER PRIMARY KEY,
     uuid TEXT NOT NULL UNIQUE,
     userId INTEGER NOT NULL UNIQUE, -- Foreign key from users table
-    alias TEXT NOT NULL,
+    alias TEXT,
     bio TEXT,
     status INTEGER NOT NULL, -- 0: inactive, 1: active
     createdBy INTEGER NOT NULL, -- Foreign key from users table
@@ -146,7 +146,7 @@ CREATE TABLE
     id INTEGER PRIMARY KEY,
     uuid TEXT NOT NULL UNIQUE,
     userId INTEGER NOT NULL UNIQUE, -- Foreign key from users table
-    alias TEXT NOT NULL,
+    alias TEXT,
     bio TEXT,
     status INTEGER NOT NULL, -- 0: inactive, 1: active
     createdBy INTEGER NOT NULL, -- Foreign key from users table

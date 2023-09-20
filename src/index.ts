@@ -2,12 +2,7 @@ import { fetchRequestHandler } from "@trpc/server/adapters/fetch";
 import { utilValidateOrigin } from "./domain/services/utilService";
 import trpcRouter from "./application/trpc";
 import { trpcContext } from "./domain/infra/trpc";
-import {
-  cronConfirmBooking,
-  cronSendCronMessages,
-  cronSendScheduledMessages,
-  cronService,
-} from "./domain/services/cronService";
+import { cronService } from "./domain/services/cronService";
 import cron from "cron-parser";
 
 export type Env = {

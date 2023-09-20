@@ -7,7 +7,7 @@ import {
   UserPagination,
   UserRole,
 } from "../models/UserModel";
-import { utilQueryAddWhere } from "../services/utilService";
+import { utilFailedResponse, utilQueryAddWhere } from "../services/utilService";
 
 export async function userDbGetByUsername(
   params: { username: string },
@@ -22,6 +22,53 @@ export async function userDbGetByUsername(
     .first()) as User | null;
 
   return results;
+}
+
+export async function userDbCreate(
+  user: UserCreate,
+  env: Env,
+  createdBy: number
+) {
+  const {
+    username,
+    password,
+    roleId,
+    firstName,
+    lastName,
+    phone,
+    phoneVerifiedAt,
+    status,
+    credits,
+    alias,
+    email,
+    emailVerifiedAt,
+  } = user;
+  const now = Date.now();
+  try {
+    const stmt = await env.DB.prepare(
+      "INSERT INTO users (username, password, createdAt, updatedAt, roleId, credits, phone, firstName, lastName, phoneVerifiedAt, status, alias, email, emailVerifiedAt, createdBy) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+    ).bind(
+      username,
+      password,
+      now,
+      now,
+      roleId,
+      credits,
+      phone,
+      firstName,
+      lastName,
+      phoneVerifiedAt,
+      status,
+      alias,
+      email,
+      emailVerifiedAt,
+      createdBy
+    );
+    return stmt;
+  } catch (e) {
+    console.log(e);
+    throw utilFailedResponse("Cannot generate user statement", 500);
+  }
 }
 
 export async function userDbInsert(body: UserCreate, env: Env) {

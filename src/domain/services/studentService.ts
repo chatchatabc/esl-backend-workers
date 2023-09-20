@@ -1,6 +1,10 @@
 import { Env } from "../..";
-import { Student } from "../models/StudentModel";
-import { studentDbGet, studentDbGetByUser } from "../repositories/studentRepo";
+import { Student, StudentCreate } from "../models/StudentModel";
+import {
+  studentDbCreate,
+  studentDbGet,
+  studentDbGetByUser,
+} from "../repositories/studentRepo";
 import { utilFailedResponse } from "./utilService";
 
 export async function studentGet(
@@ -46,5 +50,20 @@ export async function studentGetByUser(
   } catch (e) {
     console.log(e);
     throw utilFailedResponse("Cannot get student", 500);
+  }
+}
+
+export async function studentCreate(
+  params: StudentCreate,
+  env: Env,
+  createdBy: number
+) {
+  const studentStmt = await studentDbCreate(params, env, createdBy);
+  try {
+    await env.DB.batch(studentStmt);
+    return true;
+  } catch (e) {
+    console.log(e);
+    throw utilFailedResponse("Cannot create student", 500);
   }
 }

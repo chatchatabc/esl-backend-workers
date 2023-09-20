@@ -17,9 +17,11 @@ export type User = {
   password?: string;
 
   phoneVerifiedAt: number | null;
+  emailVerifiedAt: number | null;
   firstName: string | null;
   lastName: string | null;
   phone: string | null;
+  email: string | null;
   alias: string | null;
 
   role?: UserRole;
@@ -27,10 +29,22 @@ export type User = {
 
 export type UserCreateInput = Input<typeof UserCreateInput>;
 
-export type UserCreate = Omit<
+export type UserCreate = Pick<
   User,
-  "id" | "createdAt" | "updatedAt" | "role" | "password"
-> & { password: string };
+  | "roleId"
+  | "credits"
+  | "status"
+  | "username"
+  | "phoneVerifiedAt"
+  | "emailVerifiedAt"
+  | "phone"
+  | "email"
+  | "firstName"
+  | "lastName"
+  | "alias"
+> & {
+  password: string;
+};
 
 export type UserUpdate = Omit<User, "role">;
 

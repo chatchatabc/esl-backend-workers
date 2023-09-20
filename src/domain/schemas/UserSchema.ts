@@ -76,7 +76,6 @@ export const UserCreateInput = transform(
         "phoneVerifiedAt",
         "credits",
         "email",
-        "status",
       ])
     ),
   ]),
@@ -86,7 +85,7 @@ export const UserCreateInput = transform(
       phoneVerifiedAt: input.phoneVerifiedAt ?? null,
       emailVerifiedAt: input.emailVerifiedAt ?? null,
       credits: input.credits ?? 0,
-      status: input.status ?? 1,
+      status: 1,
       firstName: input.firstName ?? null,
       lastName: input.lastName ?? null,
       alias: input.alias ?? null,

@@ -1,6 +1,7 @@
 /*
  * User Entity
  * One-to-one relationship with teachers table
+ * One-to-one relationship with users table
  * One-to-many relationship with bookings table
  * Many-to-one relationship with roles table
  */
@@ -9,7 +10,7 @@ DROP TABLE IF EXISTS users;
 CREATE TABLE
   IF NOT EXISTS users (
     id INTEGER PRIMARY KEY,
-    roleId INTEGER NOT NULL,
+    roleId INTEGER NOT NULL, -- 1: admin, 2: student, 3: teacher
     username TEXT NOT NULL UNIQUE,
     password TEXT NOT NULL,
     phone TEXT,
@@ -20,14 +21,15 @@ CREATE TABLE
     phoneVerifiedAt TIMESTAMP,
     emailVerifiedAt TIMESTAMP,
     credits INTEGER NOT NULL,
-    status INTEGER NOT NULL,
+    status INTEGER NOT NULL, -- 0: inactive, 1: active
+    createdBy INTEGER NOT NULL, -- Foreign key from users table
     createdAt TIMESTAMP NOT NULL,
     updatedAt TIMESTAMP NOT NULL
   );
 
 INSERT INTO
   users (
-    roleId, -- 1: admin, 2: student, 3: teacher
+    roleId,
     username,
     password,
     phone,
@@ -36,7 +38,8 @@ INSERT INTO
     alias,
     phoneVerifiedAt,
     credits,
-    status, -- 1: active, 2: inactive, -1: deleted
+    status,
+    createdBy,
     createdAt,
     updatedAt
   )
@@ -52,6 +55,7 @@ VALUES
     0,
     1000,
     1,
+    1,
     0,
     0
   ),
@@ -66,6 +70,7 @@ VALUES
     0,
     1000,
     1,
+    1,
     0,
     0
   ),
@@ -79,6 +84,7 @@ VALUES
     'Teacher Michelle',
     0,
     1000,
+    1,
     1,
     0,
     0
@@ -96,18 +102,80 @@ DROP TABLE IF EXISTS teachers;
 CREATE TABLE
   IF NOT EXISTS teachers (
     id INTEGER PRIMARY KEY,
-    userId INTEGER NOT NULL UNIQUE,
+    uuid TEXT NOT NULL UNIQUE,
+    userId INTEGER NOT NULL UNIQUE, -- Foreign key from users table
     alias TEXT NOT NULL,
     bio TEXT,
-    status INTEGER NOT NULL,
+    status INTEGER NOT NULL, -- 0: inactive, 1: active
+    createdBy INTEGER NOT NULL, -- Foreign key from users table
     createdAt TIMESTAMP NOT NULL,
     updatedAt TIMESTAMP NOT NULL
   );
 
 INSERT INTO
-  teachers (userId, alias, bio, status, createdAt, updatedAt)
+  teachers (
+    uuid,
+    userId,
+    alias,
+    bio,
+    status,
+    createdBy,
+    createdAt,
+    updatedAt
+  )
 VALUES
-  (3, 'Teacher Michelle', 'I am a teacher', 1, 0, 0);
+  (
+    'teacher',
+    3,
+    'Teacher Michelle',
+    'I am a teacher',
+    1,
+    1,
+    0,
+    0
+  );
+
+/*
+ * Student Entity
+ * One-to-one relationship with users table
+ */
+DROP TABLE IF EXISTS students;
+
+CREATE TABLE
+  IF NOT EXISTS students (
+    id INTEGER PRIMARY KEY,
+    uuid TEXT NOT NULL UNIQUE,
+    userId INTEGER NOT NULL UNIQUE, -- Foreign key from users table
+    alias TEXT NOT NULL,
+    bio TEXT,
+    status INTEGER NOT NULL, -- 0: inactive, 1: active
+    createdBy INTEGER NOT NULL, -- Foreign key from users table
+    createdAt TIMESTAMP NOT NULL,
+    updatedAt TIMESTAMP NOT NULL
+  );
+
+INSERT INTO
+  students (
+    uuid,
+    userId,
+    alias,
+    bio,
+    status,
+    createdBy,
+    createdAt,
+    updatedAt
+  )
+VALUES
+  (
+    'student',
+    2,
+    'JoyGwapo',
+    'I am a student',
+    1,
+    1,
+    0,
+    0
+  );
 
 /*
  * Course Entity
@@ -118,25 +186,41 @@ DROP TABLE IF EXISTS courses;
 CREATE TABLE
   IF NOT EXISTS courses (
     id INTEGER PRIMARY KEY,
-    teacherId INTEGER NOT NULL,
+    uuid TEXT NOT NULL UNIQUE,
+    teacherId INTEGER NOT NULL, -- Foreign key from teachers table
     price INTEGER NOT NULL,
     name TEXT NOT NULL,
     description TEXT,
+    status INTEGER NOT NULL, -- 0: inactive, 1: active
+    createdBy INTEGER NOT NULL, -- Foreign key from users table
     createdAt TIMESTAMP NOT NULL,
     updatedAt TIMESTAMP NOT NULL
   );
 
 INSERT INTO
   courses (
+    uuid,
     teacherId,
     price,
     name,
     description,
+    status,
+    createdBy,
     createdAt,
     updatedAt
   )
 VALUES
-  (1, 50, 'Normal Class', 'Normal Class', 0, 0);
+  (
+    'normal-class',
+    1,
+    50,
+    'Normal Class',
+    'Normal Class',
+    1,
+    1,
+    0,
+    0
+  );
 
 /*
  * Role Entity
@@ -147,17 +231,18 @@ DROP TABLE IF EXISTS roles;
 CREATE TABLE
   IF NOT EXISTS roles (
     id INTEGER PRIMARY KEY,
-    name TEXT,
+    name TEXT NOT NULL UNIQUE,
+    createdBy INTEGER NOT NULL, -- Foreign key from users table
     createdAt TIMESTAMP NOT NULL,
     updatedAt TIMESTAMP NOT NULL
   );
 
 INSERT INTO
-  roles (name, createdAt, updatedAt)
+  roles (name, createdBy, createdAt, updatedAt)
 VALUES
-  ('admin', 0, 0),
-  ('student', 0, 0),
-  ('teacher', 0, 0);
+  ('admin', 1, 0, 0),
+  ('student', 1, 0, 0),
+  ('teacher', 1, 0, 0);
 
 /*
  * Schedule Entity
@@ -171,7 +256,8 @@ CREATE TABLE
     teacherId INTEGER NOT NULL,
     startTime INTEGER NOT NULL,
     endTime INTEGER NOT NULL,
-    day INTEGER NOT NULL,
+    weekDay INTEGER NOT NULL,
+    createdBy INTEGER NOT NULL, -- Foreign key from users table
     createdAt TIMESTAMP NOT NULL,
     updatedAt TIMESTAMP NOT NULL
   );
@@ -187,14 +273,16 @@ DROP TABLE IF EXISTS bookings;
 CREATE TABLE
   IF NOT EXISTS bookings (
     id INTEGER PRIMARY KEY,
-    courseId INTEGER NOT NULL,
-    teacherId INTEGER NOT NULL,
-    userId INTEGER NOT NULL,
+    uuid TEXT NOT NULL UNIQUE,
+    courseId INTEGER NOT NULL, -- Foreign key from courses table
+    teacherId INTEGER NOT NULL, -- Foreign key from teachers table
+    studentId INTEGER NOT NULL, -- Foreign key from users table
     amount INTEGER NOT NULL,
     start TIMESTAMP NOT NULL,
     end TIMESTAMP NOT NULL,
     status INTEGER NOT NULL, -- 1: pending, 2: confirmed, 3: completed, 4: cancelled, 5: absent, 6: expired, -1: deleted
     message TEXT,
+    createdBy INTEGER NOT NULL, -- Foreign key from users table
     createdAt TIMESTAMP NOT NULL,
     updatedAt TIMESTAMP NOT NULL
   );
@@ -208,29 +296,33 @@ DROP TABLE IF EXISTS logsCredit;
 CREATE TABLE
   IF NOT EXISTS logsCredit (
     id INTEGER PRIMARY KEY,
-    userId INTEGER NOT NULL,
+    userId INTEGER NOT NULL, -- Foreign key from users table
     title TEXT NOT NULL,
     details TEXT NOT NULL,
     amount INTEGER NOT NULL,
+    createdBy INTEGER NOT NULL, -- Foreign key from users table
     createdAt TIMESTAMP NOT NULL,
     updatedAt TIMESTAMP NOT NULL
   );
 
 /*
- * LogsMoney Entity
+ * Fund Entity
  * Many-to-one relationship with users table
  */
-DROP TABLE IF EXISTS logsMoney;
+DROP TABLE IF EXISTS funds;
 
 CREATE TABLE
-  IF NOT EXISTS logsMoney (
+  IF NOT EXISTS funds (
     id INTEGER PRIMARY KEY,
-    userId INTEGER NOT NULL,
+    uuid TEXT NOT NULL UNIQUE,
+    userId INTEGER NOT NULL, -- Foreign key from users table
     title TEXT NOT NULL,
     details TEXT NOT NULL,
     credits INTEGER NOT NULL,
     amount INTEGER NOT NULL,
     currency TEXT NOT NULL,
+    status INTEGER NOT NULL, -- 1: pending, 2: confirmed, 3: completed, 4: cancelled
+    createdBy INTEGER NOT NULL, -- Foreign key from users table
     createdAt TIMESTAMP NOT NULL,
     updatedAt TIMESTAMP NOT NULL
   );
@@ -244,13 +336,15 @@ DROP TABLE IF EXISTS messages;
 CREATE TABLE
   IF NOT EXISTS messages (
     id INTEGER PRIMARY KEY,
-    messageTemplateId INTEGER NOT NULL,
-    userId INTEGER,
+    uuid TEXT NOT NULL UNIQUE,
+    messageTemplateId INTEGER NOT NULL, -- Foreign key from messageTemplates table
+    userId INTEGER, -- Foreign key from users table
     phone TEXT NOT NULL,
     templateValues TEXT,
     cron TEXT NOT NULL,
     sendAt TIMESTAMP,
     status INTEGER NOT NULL, -- 0: inactive, 1: scheduled, 2: successful, 3: failed, 4: recurring -1: deleted
+    createdBy INTEGER NOT NULL, -- Foreign key from users table
     createdAt TIMESTAMP NOT NULL,
     updatedAt TIMESTAMP NOT NULL
   );
@@ -264,12 +358,13 @@ DROP TABLE IF EXISTS messageTemplates;
 CREATE TABLE
   IF NOT EXISTS messageTemplates (
     id INTEGER PRIMARY KEY,
-    smsId INTEGER NOT NULL, -- ID from SMS service provider
+    smsId TEXT NOT NULL UNIQUE, -- ID from SMS service provider
     signature TEXT NOT NULL,
     title TEXT NOT NULL,
     message TEXT NOT NULL,
     variables TEXT, -- Separated by comma
-    status INTEGER NOT NULL, -- 1: active, -1: deleted
+    status INTEGER NOT NULL, -- 0: inactive, 1: active
+    createdBy INTEGER NOT NULL, -- Foreign key from users table
     createdAt TIMESTAMP NOT NULL,
     updatedAt TIMESTAMP NOT NULL
   );
@@ -282,6 +377,7 @@ INSERT INTO
     message,
     variables,
     status,
+    createdBy,
     createdAt,
     updatedAt
   )
@@ -292,6 +388,7 @@ VALUES
     'Class Reminder',
     '您好！您的课程于#datetime#开始，请提前分钟登陆您的账号，感谢您的支持',
     'datetime',
+    1,
     1,
     0,
     0

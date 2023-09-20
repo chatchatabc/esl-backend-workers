@@ -42,16 +42,13 @@ export default trpcRouterCreate({
   }),
 
   create: trpcProcedureAdmin.input(UserCreateInput).mutation((opts) => {
-    const { confirmPassword, password } = opts.input;
+    const { confirmPassword, ...data } = opts.input;
 
-    if (confirmPassword !== password) {
+    if (confirmPassword !== data.password) {
       throw utilFailedResponse("Password not match", 400);
     }
 
-    // Default values
-    const phoneVerifiedAt = Date.now();
-
-    return userCreate({ ...opts.input, phoneVerifiedAt }, opts.ctx.env);
+    return userCreate(data, opts.ctx.env);
   }),
 
   update: trpcProcedureAdmin.input(UserUpdateInput).mutation((opts) => {

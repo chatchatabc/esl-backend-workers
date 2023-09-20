@@ -1,56 +1,60 @@
 import {
-  custom,
+  merge,
   minLength,
   minValue,
   number,
   object,
   omit,
+  partial,
   pick,
   string,
+  transform,
 } from "valibot";
 
-const Schema = object({
-  id: number("ID is required", [minValue(1, "ID must be greater than 0")]),
-  alias: string("Alias must be string", [minLength(1, "Alias is required")]),
-  username: string("Username is required", [
-    minLength(1, "Username must be at least 1 character long"),
+export const UserSchema = object({
+  id: number("ID must be a number", [minValue(1, "ID must be greater than 0")]),
+  alias: string("Alias must be a string", [minLength(1, "Alias is required")]),
+  username: string("Username must be a string", [
+    minLength(1, "Username is required"),
   ]),
-  password: string("Password is required", [
-    minLength(1, "Password must be at least 1 character long"),
+  password: string("Password must be a string", [
+    minLength(1, "Password is required"),
   ]),
-  confirmPassword: string("Confirm password is required", [
-    minLength(1, "Confirm password must be at least 1 character long"),
+  confirmPassword: string("Confirm password must be a string", [
+    minLength(1, "Confirm password is required"),
   ]),
-  firstName: string("First name is required", [
-    minLength(1, "First name must be at least 1 character long"),
+  firstName: string("First name must be a string", [
+    minLength(1, "First name is required"),
   ]),
-  lastName: string("Last name is required", [
-    minLength(1, "Last name must be at least 1 character long"),
+  lastName: string("Last name must be a string", [
+    minLength(1, "Last name is required"),
   ]),
-  phone: string("Phone is required", [
-    minLength(1, "Phone must be at least 1 character long"),
-  ]),
-  roleId: number("Role ID is required", [
+  phone: string("Phone must be a string", [minLength(1, "Phone is required")]),
+  email: string("Email must be a string", [minLength(1, "Email is required")]),
+  roleId: number("Role ID must be a number", [
     minValue(1, "Role ID must be greater than 0"),
   ]),
-  status: number("Status is required", [
+  status: number("Status must be a number", [
     minValue(1, "Status must be greater than 0"),
   ]),
-  createdAt: number("Created at is required", [
+  createdAt: number("Created at must be a number", [
     minValue(0, "Created timestamp must not be negative"),
   ]),
-  updatedAt: number("Updated at is required", [
+  updatedAt: number("Updated at must be a number", [
     minValue(0, "Updated timestamp must not be negative"),
   ]),
-  credits: number("Credits is required", [
+  credits: number("Credits must be a number", [
     minValue(0, "Credits must be not be negative"),
   ]),
-  phoneVerifiedAt: number("Phone verified at is required", [
+  phoneVerifiedAt: number("Phone verified at must be a number", [
     minValue(0, "Phone verified timestamp must not be negative"),
+  ]),
+  emailVerifiedAt: number("Email verified at must be a number", [
+    minValue(0, "Email verified timestamp must not be negative"),
   ]),
 });
 
-export const User = omit(Schema, ["confirmPassword"]);
+export const User = omit(UserSchema, ["confirmPassword"]);
 
 export const UserUpdateInput = omit(User, [
   "updatedAt",
@@ -59,27 +63,53 @@ export const UserUpdateInput = omit(User, [
   "password",
 ]);
 
-export const UserCreateInput = omit(Schema, [
-  "updatedAt",
-  "createdAt",
-  "id",
-  "phoneVerifiedAt",
-]);
+export const UserCreateInput = transform(
+  merge([
+    pick(UserSchema, ["confirmPassword", "password", "username", "roleId"]),
+    partial(
+      pick(UserSchema, [
+        "phone",
+        "emailVerifiedAt",
+        "firstName",
+        "lastName",
+        "alias",
+        "phoneVerifiedAt",
+        "credits",
+        "email",
+        "status",
+      ])
+    ),
+  ]),
+  (input) => {
+    return {
+      ...input,
+      phoneVerifiedAt: input.phoneVerifiedAt ?? null,
+      emailVerifiedAt: input.emailVerifiedAt ?? null,
+      credits: input.credits ?? 0,
+      status: input.status ?? 1,
+      firstName: input.firstName ?? null,
+      lastName: input.lastName ?? null,
+      alias: input.alias ?? null,
+      phone: input.phone ?? null,
+      email: input.email ?? null,
+    };
+  }
+);
 
-export const UserRegister = pick(Schema, [
+export const UserRegister = pick(UserSchema, [
   "username",
   "password",
   "confirmPassword",
 ]);
 
-export const UserRegisterProfile = pick(Schema, [
+export const UserRegisterProfile = pick(UserSchema, [
   "firstName",
   "lastName",
   "phone",
   "alias",
 ]);
 
-export const UserRegisterInput = pick(Schema, [
+export const UserRegisterInput = pick(UserSchema, [
   "username",
   "password",
   "confirmPassword",

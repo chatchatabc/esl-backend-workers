@@ -1,3 +1,5 @@
+import { UserCreate } from "./UserModel";
+
 export type Student = {
   id: number;
   uuid: string;
@@ -10,10 +12,8 @@ export type Student = {
   updatedAt: string;
 };
 
-export type StudentCreate = Pick<
-  Student,
-  "uuid" | "bio" | "status" | "userId" | "alias"
->;
+export type StudentCreate = Pick<Student, "bio" | "status" | "alias"> &
+  UserCreate;
 
 export type StudentUpdate = Pick<
   Student,

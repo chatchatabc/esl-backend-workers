@@ -1,4 +1,15 @@
-import { minLength, minValue, number, object, pick, string } from "valibot";
+import {
+  merge,
+  minLength,
+  minValue,
+  number,
+  object,
+  partial,
+  pick,
+  string,
+  transform,
+} from "valibot";
+import { UserCreateInput } from "./UserSchema";
 
 export const StudentSchema = object({
   userId: number("User ID must be a number", [
@@ -23,13 +34,24 @@ export const StudentGetByUserInput = pick(StudentSchema, [
   "username",
 ]);
 
-export const StudentCreateInput = pick(StudentSchema, [
-  "alias",
-  "bio",
-  "status",
-  "userId",
-  "uuid",
-]);
+export const StudentCreateInput = transform(
+  merge([UserCreateInput, partial(pick(StudentSchema, ["bio"]))]),
+  (input) => {
+    return {
+      ...input,
+      status: 1,
+      alias: input.alias ?? null,
+      bio: input.bio ?? null,
+      firstName: input.firstName ?? null,
+      lastName: input.lastName ?? null,
+      phone: input.phone ?? null,
+      email: input.email ?? null,
+      credits: input.credits ?? 0,
+      phoneVerifiedAt: input.phoneVerifiedAt ?? null,
+      emailVerifiedAt: input.emailVerifiedAt ?? null,
+    };
+  }
+);
 
 export const StudentUpdateInput = pick(StudentSchema, [
   "id",

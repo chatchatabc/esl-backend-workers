@@ -1,5 +1,8 @@
 import { Env } from "../..";
+import { StudentCreate } from "../models/StudentModel";
 import { utilFailedResponse } from "../services/utilService";
+import { v4 as uuidv4 } from "uuid";
+import { userDbCreate } from "./userRepo";
 
 export async function studentDbGet(
   params: Partial<{ studentId: number; uuid: string }>,
@@ -67,6 +70,31 @@ export async function studentDbGetByUser(
   try {
     const stmt = env.DB.prepare(query).bind(...queryParams);
     return stmt;
+  } catch (e) {
+    console.log(e);
+    throw utilFailedResponse("Cannot generate student statement", 500);
+  }
+}
+
+export async function studentDbCreate(
+  params: StudentCreate,
+  env: Env,
+  createdBy: number
+) {
+  const { bio, status, alias, ...user } = params;
+  const now = Date.now();
+  const uuid = uuidv4();
+
+  try {
+    const userStmt = await userDbCreate(
+      { ...user, status, alias },
+      env,
+      createdBy
+    );
+    const studentStmt = env.DB.prepare(
+      "INSERT INTO students (uuid, bio, status, userId, alias, createdBy, createdAt, updatedAt) VALUES (?, ?, ?, last_insert_rowid(), ?, ?, ?, ?)"
+    ).bind(uuid, bio, status, alias, createdBy, now, now);
+    return [userStmt, studentStmt];
   } catch (e) {
     console.log(e);
     throw utilFailedResponse("Cannot generate student statement", 500);

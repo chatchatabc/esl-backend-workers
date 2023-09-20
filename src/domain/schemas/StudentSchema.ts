@@ -9,6 +9,11 @@ export const StudentSchema = object({
   username: string("Username must be a string", [
     minLength(1, "Username is required"),
   ]),
+  status: number("Status must be a number", [
+    minValue(0, "Status must not be negative"),
+  ]),
+  alias: string("Alias must be a string", [minLength(1, "Alias is required")]),
+  bio: string("Bio must be a string", [minLength(1, "Bio is required")]),
 });
 
 export const StudentGetInput = pick(StudentSchema, ["id", "uuid"]);
@@ -16,4 +21,21 @@ export const StudentGetInput = pick(StudentSchema, ["id", "uuid"]);
 export const StudentGetByUserInput = pick(StudentSchema, [
   "userId",
   "username",
+]);
+
+export const StudentCreateInput = pick(StudentSchema, [
+  "alias",
+  "bio",
+  "status",
+  "userId",
+  "uuid",
+]);
+
+export const StudentUpdateInput = pick(StudentSchema, [
+  "id",
+  "alias",
+  "bio",
+  "status",
+  "userId",
+  "uuid",
 ]);

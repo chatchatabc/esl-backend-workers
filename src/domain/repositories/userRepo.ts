@@ -243,8 +243,8 @@ export async function userDbUpdate(params: User, env: Env) {
     credits,
     alias,
   } = params;
-
   const date = new Date().getTime();
+
   try {
     const stmt = env.DB.prepare(
       "UPDATE users SET username = ?, password = ?, roleId = ?, firstName = ?, lastName = ?, phone = ?, phoneVerifiedAt = ?, status = ?, credits = ?, alias = ?, updatedAt = ? WHERE id = ?"
@@ -262,12 +262,11 @@ export async function userDbUpdate(params: User, env: Env) {
       date,
       id
     );
-    await stmt.run();
 
-    return true;
+    return stmt;
   } catch (e) {
     console.log(e);
-    return null;
+    throw utilFailedResponse("Unable to generate user update statement", 500);
   }
 }
 

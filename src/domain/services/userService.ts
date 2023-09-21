@@ -1,11 +1,11 @@
 import { Env } from "../..";
-import { CommonPagination } from "../models/CommonModel";
 import { LogsCreditCreate, LogsMoneyCreate } from "../models/LogsModel";
 import {
   User,
   UserCreate,
   UserPagination,
   UserRole,
+  UserUpdate,
   UserUpdateInput,
 } from "../models/UserModel";
 import {
@@ -96,20 +96,19 @@ export async function userUpdateProfile(params: UserUpdateInput, env: Env) {
   return user;
 }
 
-export async function userUpdate(params: UserUpdateInput, env: Env) {
-  let user = await userDbGet({ userId: params.id }, env);
-  if (!user) {
-    throw utilFailedResponse("Unable to get user", 500);
-  }
+export async function userUpdate(params: UserUpdate, env: Env) {
+  let user = await userGet({ userId: params.id }, env);
   user = { ...user, ...params };
 
   const query = await userDbUpdate(user, env);
-  if (!query) {
-    throw utilFailedResponse("Error, unable to update user", 500);
-  }
 
-  delete user.password;
-  return user as User;
+  try {
+    await env.DB.batch([query]);
+    return true;
+  } catch (e) {
+    console.log(e);
+    throw utilFailedResponse("Unable to update user", 500);
+  }
 }
 
 export async function userCreate(params: UserCreate, env: Env) {

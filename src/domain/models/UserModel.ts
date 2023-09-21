@@ -1,6 +1,7 @@
 import { Input } from "valibot";
 import {
   UserCreateInput,
+  UserGetInput,
   UserRegisterInput,
   UserUpdateInput,
 } from "../schemas/UserSchema";
@@ -24,7 +25,7 @@ export type User = {
   email: string | null;
   alias: string | null;
 
-  role?: UserRole;
+  role: UserRole;
 };
 
 export type UserCreateInput = Input<typeof UserCreateInput>;
@@ -72,3 +73,5 @@ export type UserPagination = CommonPagination & {
   roleId?: number;
   teacherId?: number;
 };
+
+export type UserGetInput = Input<typeof UserGetInput>;

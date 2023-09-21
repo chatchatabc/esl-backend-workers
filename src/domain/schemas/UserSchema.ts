@@ -113,3 +113,5 @@ export const UserRegisterInput = pick(UserSchema, [
   "password",
   "confirmPassword",
 ]);
+
+export const UserGetInput = partial(pick(UserSchema, ["id", "username"]));

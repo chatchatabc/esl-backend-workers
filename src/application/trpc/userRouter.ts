@@ -14,7 +14,9 @@ import {
   userGet,
   userGetAll,
   userGetAllRole,
+  userRevokePhoneVerification,
   userUpdate,
+  userVerifyPhone,
 } from "../../domain/services/userService";
 import { utilFailedResponse } from "../../domain/services/utilService";
 import { userDbGet, userDbUpdate } from "../../domain/repositories/userRepo";
@@ -59,40 +61,18 @@ export default trpcRouterCreate({
   }),
 
   verifyPhone: trpcProcedureAdmin
-    .input(object({ userId: number() }))
-    .mutation(async (opts) => {
-      const user = await userDbGet(opts.input, opts.ctx.env);
-      if (!user) {
-        throw utilFailedResponse("User not found", 400);
-      } else if (user.phoneVerifiedAt) {
-        throw utilFailedResponse("Phone already verified", 400);
-      }
-      user.phoneVerifiedAt = Date.now();
+    .input(object({ id: number("ID must be a number") }))
+    .mutation((opts) => {
+      const { id: userId } = opts.input;
 
-      const save = await userDbUpdate(user, opts.ctx.env);
-      if (!save) {
-        throw utilFailedResponse("Failed to save", 400);
-      }
-
-      return true;
+      return userVerifyPhone({ userId }, opts.ctx.env);
     }),
 
   revokePhoneVerification: trpcProcedureAdmin
-    .input(object({ userId: number() }))
+    .input(object({ id: number("ID must be a number") }))
     .mutation(async (opts) => {
-      const user = await userDbGet(opts.input, opts.ctx.env);
-      if (!user) {
-        throw utilFailedResponse("User not found", 400);
-      } else if (!user.phoneVerifiedAt) {
-        throw utilFailedResponse("Phone already verified", 400);
-      }
-      user.phoneVerifiedAt = null;
+      const { id: userId } = opts.input;
 
-      const save = await userDbUpdate(user, opts.ctx.env);
-      if (!save) {
-        throw utilFailedResponse("Failed to save", 400);
-      }
-
-      return true;
+      return userRevokePhoneVerification({ userId }, opts.ctx.env);
     }),
 });

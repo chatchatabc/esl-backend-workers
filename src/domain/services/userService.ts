@@ -131,6 +131,41 @@ export async function userCreate(
   }
 }
 
+export async function userVerifyPhone(params: { userId: number }, env: Env) {
+  const user = await userDbGet(params, env);
+  if (!user) {
+    throw utilFailedResponse("User not found", 404);
+  }
+  user.phoneVerifiedAt = Date.now();
+  const stmt = await userDbUpdate(user, env);
+  try {
+    await env.DB.batch([stmt]);
+    return true;
+  } catch (e) {
+    console.log(e);
+    throw utilFailedResponse("Unable to verify phone", 500);
+  }
+}
+
+export async function userRevokePhoneVerification(
+  params: { userId: number },
+  env: Env
+) {
+  const user = await userDbGet(params, env);
+  if (!user) {
+    throw utilFailedResponse("User not found", 404);
+  }
+  user.phoneVerifiedAt = null;
+  const stmt = await userDbUpdate(user, env);
+  try {
+    await env.DB.batch([stmt]);
+    return true;
+  } catch (e) {
+    console.log(e);
+    throw utilFailedResponse("Unable to verify phone", 500);
+  }
+}
+
 export async function userAddCredit(
   params: {
     userId: number;

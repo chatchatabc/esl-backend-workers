@@ -245,24 +245,79 @@ export async function userDbUpdate(params: User, env: Env) {
   } = params;
   const date = new Date().getTime();
 
-  try {
-    const stmt = env.DB.prepare(
-      "UPDATE users SET username = ?, password = ?, roleId = ?, firstName = ?, lastName = ?, phone = ?, phoneVerifiedAt = ?, status = ?, credits = ?, alias = ?, updatedAt = ? WHERE id = ?"
-    ).bind(
-      username,
-      password,
-      roleId,
-      firstName,
-      lastName,
-      phone,
-      phoneVerifiedAt,
-      status,
-      credits,
-      alias,
-      date,
-      id
-    );
+  let query = "UPDATE users";
+  let querySet = "";
+  const queryParams = [];
 
+  if (username) {
+    querySet += `username = ?`;
+    queryParams.push(username);
+  }
+
+  if (password) {
+    querySet += querySet ? ", " : "";
+    querySet += `password = ?`;
+    queryParams.push(password);
+  }
+
+  if (roleId) {
+    querySet += querySet ? ", " : "";
+    querySet += `roleId = ?`;
+    queryParams.push(roleId);
+  }
+
+  if (firstName) {
+    querySet += querySet ? ", " : "";
+    querySet += `firstName = ?`;
+    queryParams.push(firstName);
+  }
+
+  if (lastName) {
+    querySet += querySet ? ", " : "";
+    querySet += `lastName = ?`;
+    queryParams.push(lastName);
+  }
+
+  if (phone) {
+    querySet += querySet ? ", " : "";
+    querySet += `phone = ?`;
+    queryParams.push(phone);
+  }
+
+  if (phoneVerifiedAt) {
+    querySet += querySet ? ", " : "";
+    querySet += `phoneVerifiedAt = ?`;
+    queryParams.push(phoneVerifiedAt);
+  }
+
+  if (status) {
+    querySet += querySet ? ", " : "";
+    querySet += `status = ?`;
+    queryParams.push(status);
+  }
+
+  if (credits) {
+    querySet += querySet ? ", " : "";
+    querySet += `credits = ?`;
+    queryParams.push(credits);
+  }
+
+  if (alias) {
+    querySet += querySet ? ", " : "";
+    querySet += `alias = ?`;
+    queryParams.push(alias);
+  }
+
+  if (!querySet) {
+    throw utilFailedResponse("No update data", 400);
+  } else {
+    query += ` SET ${querySet}`;
+    query += ` WHERE id = ?`;
+    queryParams.push(id);
+  }
+
+  try {
+    const stmt = env.DB.prepare(query).bind(...queryParams);
     return stmt;
   } catch (e) {
     console.log(e);

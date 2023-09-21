@@ -249,60 +249,60 @@ export async function userDbUpdate(params: User, env: Env) {
   let querySet = "";
   const queryParams = [];
 
-  if (username) {
+  if (username !== undefined) {
     querySet += `username = ?`;
     queryParams.push(username);
   }
 
-  if (password) {
+  if (password !== undefined) {
     querySet += querySet ? ", " : "";
     querySet += `password = ?`;
     queryParams.push(password);
   }
 
-  if (roleId) {
+  if (roleId !== undefined) {
     querySet += querySet ? ", " : "";
     querySet += `roleId = ?`;
     queryParams.push(roleId);
   }
 
-  if (firstName) {
+  if (firstName !== undefined) {
     querySet += querySet ? ", " : "";
     querySet += `firstName = ?`;
     queryParams.push(firstName);
   }
 
-  if (lastName) {
+  if (lastName !== undefined) {
     querySet += querySet ? ", " : "";
     querySet += `lastName = ?`;
     queryParams.push(lastName);
   }
 
-  if (phone) {
+  if (phone !== undefined) {
     querySet += querySet ? ", " : "";
     querySet += `phone = ?`;
     queryParams.push(phone);
   }
 
-  if (phoneVerifiedAt) {
+  if (phoneVerifiedAt !== undefined) {
     querySet += querySet ? ", " : "";
     querySet += `phoneVerifiedAt = ?`;
     queryParams.push(phoneVerifiedAt);
   }
 
-  if (status) {
+  if (status !== undefined) {
     querySet += querySet ? ", " : "";
     querySet += `status = ?`;
     queryParams.push(status);
   }
 
-  if (credits) {
+  if (credits !== undefined) {
     querySet += querySet ? ", " : "";
     querySet += `credits = ?`;
     queryParams.push(credits);
   }
 
-  if (alias) {
+  if (alias !== undefined) {
     querySet += querySet ? ", " : "";
     querySet += `alias = ?`;
     queryParams.push(alias);

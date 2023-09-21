@@ -97,9 +97,11 @@ export async function userUpdateProfile(params: UserUpdateInput, env: Env) {
 }
 
 export async function userUpdate(params: UserUpdate, env: Env) {
-  let user = await userGet({ userId: params.id }, env);
+  let user = await userDbGet({ userId: params.id }, env);
+  if (!user) {
+    throw utilFailedResponse("User not found", 404);
+  }
   user = { ...user, ...params };
-
   const query = await userDbUpdate(user, env);
 
   try {

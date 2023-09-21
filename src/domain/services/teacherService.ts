@@ -69,23 +69,19 @@ export async function teacherValidateCourse(
   return isValid;
 }
 
-export async function teacherCreate(params: TeacherCreate, env: Env) {
-  const user = await userGet({ userId: params.userId }, env);
-  if (user.roleId !== 3) {
-    throw utilFailedResponse("User is not a teacher", 500);
-  }
-
-  const teacher = await teacherGet({ userId: params.userId }, env);
-  if (teacher) {
-    throw utilFailedResponse("Teacher already exists", 500);
-  }
-
-  const query = await teacherDBCreate(params, env);
-  if (!query) {
+export async function teacherCreate(
+  params: TeacherCreate,
+  env: Env,
+  createdBy: number
+) {
+  const stmts = await teacherDBCreate(params, env, createdBy);
+  try {
+    await env.DB.batch(stmts);
+    return true;
+  } catch (e) {
+    console.log(e);
     throw utilFailedResponse("Cannot create teacher", 500);
   }
-
-  return true;
 }
 
 export async function teacherUpdate(params: TeacherUpdate, env: Env) {

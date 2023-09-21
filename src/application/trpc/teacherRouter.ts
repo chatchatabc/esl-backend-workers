@@ -34,7 +34,9 @@ export default trpcRouterCreate({
   }),
 
   create: trpcProcedureAdmin.input(TeacherCreateInput).query((opts) => {
-    return teacherCreate(opts.input, opts.ctx.env);
+    const { userId, env } = opts.ctx;
+
+    return teacherCreate(opts.input, env, userId);
   }),
 
   update: trpcProcedureAdmin.input(TeacherUpdateInput).mutation((opts) => {

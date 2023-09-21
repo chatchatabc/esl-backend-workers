@@ -1,6 +1,8 @@
 import { Env } from "../..";
 import { CommonPagination } from "../models/CommonModel";
 import { Teacher, TeacherCreate, TeacherUpdate } from "../models/TeacherModel";
+import { utilFailedResponse } from "../services/utilService";
+import { userDbCreate } from "./userRepo";
 
 export async function teacherDbGet(
   params: { teacherId?: number; userId?: number; userUsername?: string },
@@ -89,20 +91,24 @@ export async function teacherDbValidateCourse(
   }
 }
 
-export async function teacherDBCreate(params: TeacherCreate, env: Env) {
-  const { userId, bio, alias, status } = params;
+export async function teacherDBCreate(
+  params: TeacherCreate,
+  env: Env,
+  createdBy: number
+) {
+  const { bio, ...user } = params;
   const date = Date.now();
 
   try {
-    const stmt = env.DB.prepare(
-      "INSERT INTO teachers (userId, bio, alias, status, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?)"
-    ).bind(userId, bio, alias, status, date, date);
-    await stmt.run();
+    const userStmt = await userDbCreate(user, env, createdBy);
+    const teacherStmt = env.DB.prepare(
+      "INSERT INTO teachers (bio, alias, uuid, userId, status, createdAt, updatedAt, createdBy) VALUES (?, ?, ?, last_insert_rowid(), ?, ?, ?, ?)"
+    ).bind(bio, user.alias, user.username, user.status, date, date, createdBy);
 
-    return true;
+    return [userStmt, teacherStmt];
   } catch (e) {
     console.log(e);
-    return null;
+    throw utilFailedResponse("Cannot generate teacher statement", 500);
   }
 }
 

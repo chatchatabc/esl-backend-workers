@@ -1,5 +1,5 @@
 import { Input } from "valibot";
-import type { User } from "./UserModel";
+import type { User, UserCreate } from "./UserModel";
 import {
   TeacherCreateInput,
   TeacherUpdateInput,
@@ -17,10 +17,8 @@ export type Teacher = {
   user: User;
 };
 
-export type TeacherCreate = Pick<
-  Teacher,
-  "userId" | "bio" | "alias" | "status"
->;
+export type TeacherCreate = Pick<Teacher, "bio" | "alias" | "status"> &
+  UserCreate;
 
 export type TeacherCreateInput = Input<typeof TeacherCreateInput>;
 

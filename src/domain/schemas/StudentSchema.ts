@@ -29,10 +29,9 @@ export const StudentSchema = object({
 
 export const StudentGetInput = pick(StudentSchema, ["id", "uuid"]);
 
-export const StudentGetByUserInput = pick(StudentSchema, [
-  "userId",
-  "username",
-]);
+export const StudentGetByUserInput = partial(
+  pick(StudentSchema, ["userId", "username"])
+);
 
 export const StudentCreateInput = transform(
   merge([UserCreateInput, partial(pick(StudentSchema, ["bio"]))]),

@@ -32,9 +32,6 @@ export async function teacherGet(
 
 export async function teacherGetAll(params: CommonPagination, env: Env) {
   const query = await teacherDbGetAll(params, env);
-  if (!query) {
-    throw utilFailedResponse("Cannot get teachers", 500);
-  }
 
   const teachers = await Promise.all(
     query.results.map(async (teacher) => {
@@ -45,14 +42,12 @@ export async function teacherGetAll(params: CommonPagination, env: Env) {
   );
 
   const totalElements = await teacherDbGetAllTotal(env);
-  if (totalElements === null) {
-    throw utilFailedResponse("Cannot get total elements", 500);
-  }
 
   return {
     content: teachers as Teacher[],
     totalElements: totalElements as number,
-    ...params,
+    page: params.page,
+    size: params.size,
   };
 }
 

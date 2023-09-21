@@ -50,26 +50,43 @@ export async function teacherDbGet(
 export async function teacherDbGetAll(params: CommonPagination, env: Env) {
   const { page, size } = params;
 
-  try {
-    const teachers = await env.DB.prepare("SELECT * FROM teachers LIMIT ?, ?")
-      .bind((page - 1) * size, size)
-      .all<Teacher>();
+  let query = "SELECT * FROM teachers";
+  let queryWhere = "";
+  const queryParams = [];
 
+  if (queryWhere) {
+    query += ` WHERE ${queryWhere}`;
+  }
+
+  query += " LIMIT ?, ?";
+  queryParams.push((page - 1) * size, size);
+
+  try {
+    const teachersStmt = await env.DB.prepare(query).bind(...queryParams);
+    const teachers = await teachersStmt.all<Teacher>();
     return teachers;
   } catch (e) {
     console.log(e);
-    return null;
+    throw utilFailedResponse("Cannot get teachers", 500);
   }
 }
 
 export async function teacherDbGetAllTotal(env: Env) {
+  let query = "SELECT COUNT(*) as total FROM teachers";
+  let queryWhere = "";
+  const queryParams: string[] = [];
+
+  if (queryWhere) {
+    query += ` WHERE ${queryWhere}`;
+  }
+
   try {
-    const stmt = env.DB.prepare("SELECT COUNT(*) as total FROM teachers");
+    const stmt = env.DB.prepare(query).bind(...queryParams);
     const total = await stmt.first<number>("total");
-    return total;
+    return total ?? 0;
   } catch (e) {
     console.log(e);
-    return null;
+    throw utilFailedResponse("Cannot get total teachers", 500);
   }
 }
 

@@ -65,7 +65,7 @@ export const UserUpdateInput = omit(User, [
 
 export const UserCreateInput = transform(
   merge([
-    pick(UserSchema, ["confirmPassword", "password", "username", "roleId"]),
+    pick(UserSchema, ["confirmPassword", "password", "username"]),
     partial(
       pick(UserSchema, [
         "phone",
@@ -76,6 +76,7 @@ export const UserCreateInput = transform(
         "phoneVerifiedAt",
         "credits",
         "email",
+        "roleId",
       ])
     ),
   ]),
@@ -91,6 +92,7 @@ export const UserCreateInput = transform(
       alias: input.alias ?? null,
       phone: input.phone ?? null,
       email: input.email ?? null,
+      roleId: input.roleId ?? 2,
     };
   }
 );
@@ -108,10 +110,26 @@ export const UserRegisterProfile = pick(UserSchema, [
   "alias",
 ]);
 
-export const UserRegisterInput = pick(UserSchema, [
-  "username",
-  "password",
-  "confirmPassword",
-]);
+export const UserRegisterInput = transform(
+  merge([
+    pick(UserSchema, ["username", "password", "confirmPassword"]),
+    partial(
+      pick(UserSchema, ["firstName", "lastName", "phone", "alias", "email"])
+    ),
+  ]),
+  (input) => {
+    return {
+      ...input,
+      firstName: input.firstName ?? null,
+      lastName: input.lastName ?? null,
+      alias: input.alias ?? null,
+      phone: input.phone ?? null,
+      email: input.email ?? null,
+      credits: 0,
+      roleId: 2,
+      status: 1,
+    };
+  }
+);
 
 export const UserGetInput = partial(pick(UserSchema, ["id", "username"]));

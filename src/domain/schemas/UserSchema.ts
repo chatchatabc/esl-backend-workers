@@ -2,6 +2,7 @@ import {
   merge,
   minLength,
   minValue,
+  nullable,
   number,
   object,
   omit,
@@ -13,7 +14,11 @@ import {
 
 export const UserSchema = object({
   id: number("ID must be a number", [minValue(1, "ID must be greater than 0")]),
-  alias: string("Alias must be a string", [minLength(1, "Alias is required")]),
+  alias: nullable(
+    string("Alias must be a string or null", [
+      minLength(1, "Alias is required"),
+    ])
+  ),
   username: string("Username must be a string", [
     minLength(1, "Username is required"),
   ]),
@@ -23,14 +28,26 @@ export const UserSchema = object({
   confirmPassword: string("Confirm password must be a string", [
     minLength(1, "Confirm password is required"),
   ]),
-  firstName: string("First name must be a string", [
-    minLength(1, "First name is required"),
-  ]),
-  lastName: string("Last name must be a string", [
-    minLength(1, "Last name is required"),
-  ]),
-  phone: string("Phone must be a string", [minLength(1, "Phone is required")]),
-  email: string("Email must be a string", [minLength(1, "Email is required")]),
+  firstName: nullable(
+    string("First name must be a string or null", [
+      minLength(1, "First name is required"),
+    ])
+  ),
+  lastName: nullable(
+    string("Last name must be a string or null", [
+      minLength(1, "Last name is required"),
+    ])
+  ),
+  phone: nullable(
+    string("Phone must be a string or null", [
+      minLength(1, "Phone is required"),
+    ])
+  ),
+  email: nullable(
+    string("Email must be a string or null", [
+      minLength(1, "Email is required"),
+    ])
+  ),
   roleId: number("Role ID must be a number", [
     minValue(1, "Role ID must be greater than 0"),
   ]),
@@ -46,21 +63,30 @@ export const UserSchema = object({
   credits: number("Credits must be a number", [
     minValue(0, "Credits must be not be negative"),
   ]),
-  phoneVerifiedAt: number("Phone verified at must be a number", [
-    minValue(0, "Phone verified timestamp must not be negative"),
-  ]),
-  emailVerifiedAt: number("Email verified at must be a number", [
-    minValue(0, "Email verified timestamp must not be negative"),
-  ]),
+  phoneVerifiedAt: nullable(
+    number("Phone verified at must be a number or null", [
+      minValue(0, "Phone verified timestamp must not be negative"),
+    ])
+  ),
+  emailVerifiedAt: nullable(
+    number("Email verified at must be a number or null", [
+      minValue(0, "Email verified timestamp must not be negative"),
+    ])
+  ),
 });
 
 export const User = omit(UserSchema, ["confirmPassword"]);
 
-export const UserUpdateInput = omit(User, [
-  "updatedAt",
-  "createdAt",
-  "phoneVerifiedAt",
-  "password",
+export const UserUpdateInput = pick(UserSchema, [
+  "id",
+  "roleId",
+  "status",
+  "credits",
+  "alias",
+  "firstName",
+  "lastName",
+  "phone",
+  "username",
 ]);
 
 export const UserCreateInput = transform(

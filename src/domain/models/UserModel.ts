@@ -47,7 +47,20 @@ export type UserCreate = Pick<
   password: string;
 };
 
-export type UserUpdate = Omit<User, "role">;
+export type UserUpdate = Pick<
+  User,
+  | "id"
+  | "alias"
+  | "username"
+  | "credits"
+  | "firstName"
+  | "lastName"
+  | "phone"
+  | "roleId"
+  | "status"
+>;
+
+export type UserUpdateInput = Input<typeof UserUpdateInput>;
 
 export type UserLogin = {
   username: string;
@@ -59,8 +72,6 @@ export type UserRegister = UserLogin & {
 };
 
 export type UserRegisterInput = Input<typeof UserRegisterInput>;
-
-export type UserUpdateInput = Input<typeof UserUpdateInput>;
 
 export type UserRole = {
   name: string;

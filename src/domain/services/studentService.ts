@@ -1,6 +1,9 @@
 import { Env } from "../..";
-import { CommonPagination } from "../models/CommonModel";
-import { Student, StudentCreate } from "../models/StudentModel";
+import {
+  Student,
+  StudentCreate,
+  StudentPagination,
+} from "../models/StudentModel";
 import {
   studentDbCreate,
   studentDbGet,
@@ -61,7 +64,7 @@ export async function studentGetByUser(
   }
 }
 
-export async function studentGetAll(params: CommonPagination, env: Env) {
+export async function studentGetAll(params: StudentPagination, env: Env) {
   const studentsQuery = await studentDbGetAll(params, env);
   const totalElements = await studentDbGetAllTotal(env);
 

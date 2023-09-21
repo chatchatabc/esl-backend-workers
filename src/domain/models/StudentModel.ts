@@ -1,3 +1,4 @@
+import { CommonPagination } from "./CommonModel";
 import { User, UserCreate } from "./UserModel";
 
 export type Student = {
@@ -21,3 +22,5 @@ export type StudentUpdate = Pick<
   Student,
   "id" | "alias" | "bio" | "status" | "userId" | "uuid"
 >;
+
+export type StudentPagination = CommonPagination & {};

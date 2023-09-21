@@ -33,6 +33,9 @@ const Schema = object({
   userId: number("User ID must be a number", [
     minValue(1, "User ID must be greater than 0"),
   ]),
+  studentId: number("Student ID must be a number", [
+    minValue(1, "Student ID must be greater than 0"),
+  ]),
   status: number("Status must be a number", [
     minValue(1, "Status must be greater than 0"),
   ]),
@@ -72,7 +75,7 @@ export const BookingCreateInputAdmin = transform(
     "teacherId",
     "start",
     "end",
-    "userId",
+    "studentId",
     "courseId",
     "message",
     "status",

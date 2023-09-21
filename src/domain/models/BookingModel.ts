@@ -14,21 +14,23 @@ import { Teacher } from "./TeacherModel";
 
 export type Booking = {
   id: number;
+  uuid: string;
   teacherId: number;
   courseId: number;
-  userId: number;
+  studentId: number;
   start: number;
   end: number;
   amount: number;
   status: number;
   createdAt: number;
   updatedAt: number;
+  createdBy: number;
 
   message: string | null;
 
-  user?: User;
-  teacher?: Teacher;
-  course?: Course;
+  student: User;
+  teacher: Teacher;
+  course: Course;
 };
 
 export type BookingUpdate = Pick<Booking, "id" | "status">;
@@ -37,7 +39,7 @@ export type BookingCreate = Pick<
   Booking,
   | "teacherId"
   | "courseId"
-  | "userId"
+  | "studentId"
   | "start"
   | "end"
   | "status"

@@ -124,6 +124,7 @@ export async function userCreate(
 
   try {
     await env.DB.batch([create]);
+    return true;
   } catch (e) {
     console.log(e);
     throw utilFailedResponse("Unable to create user", 500);

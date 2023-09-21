@@ -46,12 +46,12 @@ export default trpcRouterCreate({
     }
 
     if (data.roleId === 2) {
-      studentCreate({ ...data, bio: "" }, env, userId);
+      return studentCreate({ ...data, bio: "" }, env, userId);
     } else if (data.roleId === 3) {
-      teacherCreate({ ...data, bio: "" }, env, userId);
+      return teacherCreate({ ...data, bio: "" }, env, userId);
+    } else {
+      return userCreate(data, env, userId);
     }
-
-    return userCreate(data, env, userId);
   }),
 
   update: trpcProcedureAdmin.input(UserUpdateInput).mutation((opts) => {

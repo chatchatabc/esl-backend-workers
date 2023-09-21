@@ -1,8 +1,11 @@
 import { Env } from "../..";
+import { CommonPagination } from "../models/CommonModel";
 import { Student, StudentCreate } from "../models/StudentModel";
 import {
   studentDbCreate,
   studentDbGet,
+  studentDbGetAll,
+  studentDbGetAllTotal,
   studentDbGetByUser,
 } from "../repositories/studentRepo";
 import { userGet } from "./userService";
@@ -56,6 +59,24 @@ export async function studentGetByUser(
     console.log(e);
     throw utilFailedResponse("Cannot get student", 500);
   }
+}
+
+export async function studentGetAll(params: CommonPagination, env: Env) {
+  const studentsQuery = await studentDbGetAll(params, env);
+  const totalElements = await studentDbGetAllTotal(env);
+
+  const students: Student[] = [];
+  for (const student of studentsQuery.results) {
+    student.user = await userGet({ userId: student.userId }, env);
+    students.push(student);
+  }
+
+  return {
+    content: students,
+    totalElements,
+    page: params.page,
+    size: params.size,
+  };
 }
 
 export async function studentCreate(

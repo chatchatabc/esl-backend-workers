@@ -10,6 +10,7 @@ import {
 } from "../models/UserModel";
 import {
   userDbAddCredit,
+  userDbCreate,
   userDbGet,
   userDbGetAll,
   userDbGetAllRole,
@@ -113,20 +114,20 @@ export async function userUpdate(params: UserUpdate, env: Env) {
   }
 }
 
-export async function userCreate(params: UserCreate, env: Env) {
-  let user = await userDbGetByUsername({ username: params.username }, env);
-  if (user) {
-    throw utilFailedResponse("Username already exists", 400);
-  }
-
+export async function userCreate(
+  params: UserCreate,
+  env: Env,
+  createdBy: number
+) {
   params.password = utilHashHmac256(params.password);
-  const create = await userDbInsert(params, env);
-  if (!create) {
-    throw utilFailedResponse("Error, unable to create user", 500);
-  }
+  const create = await userDbCreate(params, env, createdBy);
 
-  user = await userGet({ username: params.username }, env);
-  return user;
+  try {
+    await env.DB.batch([create]);
+  } catch (e) {
+    console.log(e);
+    throw utilFailedResponse("Unable to create user", 500);
+  }
 }
 
 export async function userAddCredit(

@@ -19,6 +19,8 @@ import {
 import { utilFailedResponse } from "../../domain/services/utilService";
 import { userDbGet, userDbUpdate } from "../../domain/repositories/userRepo";
 import { CommonPaginationInput } from "../../domain/schemas/CommonSchema";
+import { studentCreate } from "../../domain/services/studentService";
+import { teacherCreate } from "../../domain/services/teacherService";
 
 export default trpcRouterCreate({
   get: trpcProcedureUser.input(UserGetInput).query((opts) => {
@@ -37,12 +39,19 @@ export default trpcRouterCreate({
 
   create: trpcProcedureAdmin.input(UserCreateInput).mutation((opts) => {
     const { confirmPassword, ...data } = opts.input;
+    const { env, userId } = opts.ctx;
 
     if (confirmPassword !== data.password) {
       throw utilFailedResponse("Password not match", 400);
     }
 
-    return userCreate(data, opts.ctx.env);
+    if (data.roleId === 2) {
+      studentCreate({ ...data, bio: "" }, env, userId);
+    } else if (data.roleId === 3) {
+      teacherCreate({ ...data, bio: "" }, env, userId);
+    }
+
+    return userCreate(data, env, userId);
   }),
 
   update: trpcProcedureAdmin.input(UserUpdateInput).mutation((opts) => {

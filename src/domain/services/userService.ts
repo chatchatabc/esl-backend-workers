@@ -18,29 +18,25 @@ import {
   userDbInsert,
   userDbUpdate,
 } from "../repositories/userRepo";
+import { roleGet } from "./roleService";
 import { utilFailedResponse, utilHashHmac256 } from "./utilService";
 
-export async function userGet(params: { userId: number }, env: Env) {
+export async function userGet(
+  params: { userId?: number; username?: string },
+  env: Env
+) {
+  if (!params.userId && !params.username) {
+    throw utilFailedResponse("User ID or username is required", 400);
+  }
+
   const user = await userDbGet(params, env);
   if (!user) {
-    throw utilFailedResponse("Unable to get user", 500);
+    throw utilFailedResponse("User not found", 404);
   }
+  user.role = await roleGet({ roleId: user.roleId }, env);
 
   delete user.password;
   return user as User;
-}
-
-export async function userGetByUsername(
-  params: { username: string },
-  env: Env
-) {
-  const user = await userDbGetByUsername(params, env);
-  if (!user) {
-    throw utilFailedResponse("Unable to get user", 500);
-  }
-
-  delete user.password;
-  return user;
 }
 
 export async function userGetAll(params: UserPagination, env: Env) {
@@ -128,7 +124,7 @@ export async function userCreate(params: UserCreate, env: Env) {
     throw utilFailedResponse("Error, unable to create user", 500);
   }
 
-  user = await userGetByUsername({ username: params.username }, env);
+  user = await userGet({ username: params.username }, env);
   return user;
 }
 

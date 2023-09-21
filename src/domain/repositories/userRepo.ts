@@ -111,18 +111,39 @@ export async function userDbInsert(body: UserCreate, env: Env) {
   }
 }
 
-export async function userDbGet(params: { userId: number }, env: Env) {
-  const { userId } = params;
+export async function userDbGet(
+  params: { userId?: number; username?: string },
+  env: Env
+) {
+  const { userId, username } = params;
+
+  const queryParams = [];
+  let query = "SELECT * FROM users";
+  let queryWhere = "";
+
+  if (userId) {
+    queryWhere += `id = ?`;
+    queryParams.push(userId);
+  }
+
+  if (username) {
+    queryWhere += queryWhere ? " AND " : "";
+    queryWhere += `username = ?`;
+    queryParams.push(username);
+  }
+
+  if (queryWhere) {
+    query += ` WHERE ${queryWhere}`;
+  }
+
+  query += " LIMIT 1";
 
   try {
-    const user = await env.DB.prepare("SELECT * FROM users WHERE id = ?")
-      .bind(userId)
-      .first<User>();
-
+    const stmt = env.DB.prepare(query).bind(...queryParams);
+    const user = await stmt.first<User>();
     return user;
   } catch (e) {
-    console.log(e);
-    return null;
+    throw utilFailedResponse("Cannot get user", 500);
   }
 }
 

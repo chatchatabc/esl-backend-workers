@@ -9,12 +9,10 @@ import {
   UserUpdateInput,
 } from "../../domain/schemas/UserSchema";
 import {
-  userAddCredit,
   userCreate,
   userGet,
   userGetAll,
   userGetAllRole,
-  userGetByUsername,
   userUpdate,
 } from "../../domain/services/userService";
 import { utilFailedResponse } from "../../domain/services/utilService";
@@ -25,12 +23,6 @@ export default trpcRouterCreate({
   get: trpcProcedureUser.input(object({ userId: number() })).query((opts) => {
     return userGet(opts.input, opts.ctx.env);
   }),
-
-  getByUsername: trpcProcedureAdmin
-    .input(object({ username: string() }))
-    .query((opts) => {
-      return userGetByUsername(opts.input, opts.ctx.env);
-    }),
 
   getAll: trpcProcedureAdmin.input(CommonPaginationInput).query((opts) => {
     return userGetAll(opts.input, opts.ctx.env);

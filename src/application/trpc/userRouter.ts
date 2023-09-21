@@ -1,4 +1,4 @@
-import { number, object, string } from "valibot";
+import { number, object } from "valibot";
 import {
   trpcProcedureAdmin,
   trpcProcedureUser,
@@ -6,6 +6,7 @@ import {
 } from "../../domain/infra/trpc";
 import {
   UserCreateInput,
+  UserGetInput,
   UserUpdateInput,
 } from "../../domain/schemas/UserSchema";
 import {
@@ -20,8 +21,9 @@ import { userDbGet, userDbUpdate } from "../../domain/repositories/userRepo";
 import { CommonPaginationInput } from "../../domain/schemas/CommonSchema";
 
 export default trpcRouterCreate({
-  get: trpcProcedureUser.input(object({ userId: number() })).query((opts) => {
-    return userGet(opts.input, opts.ctx.env);
+  get: trpcProcedureUser.input(UserGetInput).query((opts) => {
+    const { id: userId, username } = opts.input;
+    return userGet({ userId, username }, opts.ctx.env);
   }),
 
   getAll: trpcProcedureAdmin.input(CommonPaginationInput).query((opts) => {

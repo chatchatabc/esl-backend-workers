@@ -1,5 +1,9 @@
 import { Env } from "../..";
-import { StudentCreate } from "../models/StudentModel";
+import {
+  Student,
+  StudentCreate,
+  StudentPagination,
+} from "../models/StudentModel";
 import { utilFailedResponse } from "../services/utilService";
 import { v4 as uuidv4 } from "uuid";
 import { userDbCreate } from "./userRepo";
@@ -70,6 +74,38 @@ export async function studentDbGetByUser(
   try {
     const stmt = env.DB.prepare(query).bind(...queryParams);
     return stmt;
+  } catch (e) {
+    console.log(e);
+    throw utilFailedResponse("Cannot generate student statement", 500);
+  }
+}
+
+export async function studentDbGetAll(params: StudentPagination, env: Env) {
+  const { page, size } = params;
+
+  let query = "SELECT * FROM students";
+  let queryParams = [];
+
+  query += ` LIMIT ?, ?`;
+  queryParams.push((page - 1) * size, size);
+
+  try {
+    const stmt = env.DB.prepare(query).bind(...queryParams);
+    const results = await stmt.all<Student>();
+    return results;
+  } catch (e) {
+    console.log(e);
+    throw utilFailedResponse("Cannot get all students", 500);
+  }
+}
+
+export async function studentDbGetAllTotal(env: Env) {
+  const query = "SELECT COUNT(*) as total FROM students";
+
+  try {
+    const stmt = env.DB.prepare(query);
+    const total = await stmt.first<number>("total");
+    return total ?? 0;
   } catch (e) {
     console.log(e);
     throw utilFailedResponse("Cannot generate student statement", 500);

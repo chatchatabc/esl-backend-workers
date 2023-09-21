@@ -39,6 +39,7 @@ export const StudentCreateInput = transform(
     return {
       ...input,
       status: 1,
+      roleId: 2,
       alias: input.alias ?? null,
       bio: input.bio ?? null,
       firstName: input.firstName ?? null,

@@ -1,5 +1,7 @@
+import { Input } from "valibot";
 import { CommonPagination } from "./CommonModel";
 import { User, UserCreate } from "./UserModel";
+import { StudentCreateInput } from "../schemas/StudentSchema";
 
 export type Student = {
   id: number;
@@ -24,3 +26,5 @@ export type StudentUpdate = Pick<
 >;
 
 export type StudentPagination = CommonPagination & {};
+
+export type StudentCreateInput = Input<typeof StudentCreateInput>;

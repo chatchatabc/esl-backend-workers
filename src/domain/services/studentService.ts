@@ -5,6 +5,7 @@ import {
   studentDbGet,
   studentDbGetByUser,
 } from "../repositories/studentRepo";
+import { userGet } from "./userService";
 import { utilFailedResponse } from "./utilService";
 
 export async function studentGet(
@@ -23,7 +24,9 @@ export async function studentGet(
     if (!students.length) {
       throw utilFailedResponse("Student not found", 404);
     }
-    return students[0];
+    const student = students[0];
+    student.user = await userGet({ userId: student.userId }, env);
+    return student;
   } catch (e) {
     console.log(e);
     throw utilFailedResponse("Cannot get student", 500);
@@ -46,7 +49,9 @@ export async function studentGetByUser(
     if (!students.length) {
       throw utilFailedResponse("Student not found", 404);
     }
-    return students[0];
+    const student = students[0];
+    student.user = await userGet({ userId: student.userId }, env);
+    return student;
   } catch (e) {
     console.log(e);
     throw utilFailedResponse("Cannot get student", 500);

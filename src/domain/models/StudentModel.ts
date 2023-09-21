@@ -1,4 +1,4 @@
-import { UserCreate } from "./UserModel";
+import { User, UserCreate } from "./UserModel";
 
 export type Student = {
   id: number;
@@ -10,6 +10,8 @@ export type Student = {
   createdBy: number;
   createdAt: string;
   updatedAt: string;
+
+  user: User;
 };
 
 export type StudentCreate = Pick<Student, "bio" | "status" | "alias"> &

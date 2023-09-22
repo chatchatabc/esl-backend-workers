@@ -9,12 +9,15 @@ import { UserRegisterProfile } from "../../domain/schemas/UserSchema";
 import {
   authCreateJsonWebToken,
   authGetPhoneToken,
-  authLogin,
-  authRegister,
   authValidatePhoneToken,
 } from "../../domain/services/authService";
 import { userGet, userUpdateProfile } from "../../domain/services/userService";
-import { utilFailedResponse } from "../../domain/services/utilService";
+import {
+  utilFailedResponse,
+  utilHashHmac256,
+} from "../../domain/services/utilService";
+import { AuthLoginInput } from "../../domain/schemas/AuthSchema";
+import { userDbGet } from "../../domain/repositories/userRepo";
 
 export default trpcRouterCreate({
   register: trpcProcedure
@@ -45,22 +48,27 @@ export default trpcRouterCreate({
       return user;
     }),
 
-  login: trpcProcedure
-    .input(
-      object({
-        username: string(),
-        password: string(),
-      })
-    )
-    .mutation(async (opts) => {
-      const user = await authLogin(opts.input, opts.ctx.env);
-      const token = authCreateJsonWebToken(user.id);
-      opts.ctx.resHeaders.append(
-        "Set-Cookie",
-        `token=${token}; Path=/; SameSite=None; Secure; HttpOnly`
-      );
-      return user;
-    }),
+  login: trpcProcedure.input(AuthLoginInput).mutation(async (opts) => {
+    const { username, password } = opts.input;
+    const user = await userDbGet({ username }, opts.ctx.env);
+
+    // Validate user
+    if (!user) {
+      throw utilFailedResponse("User not found", 404);
+    } else if (user.password !== utilHashHmac256(password)) {
+      throw utilFailedResponse("Invalid password", 400);
+    }
+
+    // Generate session token
+    const token = authCreateJsonWebToken(user.id);
+    opts.ctx.resHeaders.append(
+      "Set-Cookie",
+      `token=${token}; Path=/; SameSite=None; Secure; HttpOnly`
+    );
+
+    delete user.password;
+    return user;
+  }),
 
   logout: trpcProcedure.mutation((opts) => {
     opts.ctx.resHeaders.append(

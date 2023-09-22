@@ -1,6 +1,5 @@
 import { Input } from "valibot";
 import { CommonPagination } from "./CommonModel";
-import type { User } from "./UserModel";
 import {
   BookingCancelInputAdmin,
   BookingCompleteInputAdmin,
@@ -25,7 +24,7 @@ export type Booking = {
   status: number;
   createdAt: number;
   updatedAt: number;
-  createdBy: number;
+  createdById: number;
 
   message: string | null;
 

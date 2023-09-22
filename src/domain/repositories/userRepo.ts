@@ -13,10 +13,11 @@ import {
   utilFailedResponse,
   utilQueryAddWhere,
   utilQueryCreate,
+  utilQueryUpdate,
 } from "../services/utilService";
-import { UserDbCreateSchema } from "../schemas/UserSchema";
+import { UserDbCreateSchema, UserDbUpdateSchema } from "../schemas/UserSchema";
 
-export async function userDbCreate(
+export function userDbCreate(
   user: UserDbCreate,
   env: Env,
   createdById: number
@@ -35,7 +36,7 @@ export async function userDbCreate(
   queryParams.push(now, now, createdById);
 
   try {
-    const stmt = await env.DB.prepare(query).bind(...queryParams);
+    const stmt = env.DB.prepare(query).bind(...queryParams);
     return stmt;
   } catch (e) {
     console.log(e);
@@ -162,32 +163,18 @@ export async function userDbGetAllRoleTotal(env: Env) {
 }
 
 export function userDbUpdate(params: User, env: Env) {
-  const { id } = params;
-  const date = new Date().getTime();
-
-  let query = "UPDATE users";
-  let querySet = "";
-  const queryParams = [];
-
-  Object.keys(params).forEach((key) => {
-    const value = params[key as keyof User];
-    if (value !== undefined && typeof value !== "object") {
-      querySet += querySet ? ", " : "";
-      querySet += `${key} = ?`;
-      queryParams.push(params[key as keyof User]);
-    }
-  });
-
-  if (!querySet) {
-    throw utilFailedResponse("No update data for user", 400);
-  } else {
-    querySet += `, updatedAt = ?`;
-    queryParams.push(date);
-
-    query += ` SET ${querySet}`;
-    query += ` WHERE id = ?`;
-    queryParams.push(id);
+  const { id, ...user } = params;
+  const data = safeParse(UserDbUpdateSchema, user);
+  if (!data.success) {
+    throw utilFailedResponse(data.issues[0].message, 400);
   }
+
+  let { querySet, queryParams } = utilQueryUpdate(data.output, "USER");
+  querySet += `, updatedAt = ?`;
+  queryParams.push(Date.now());
+
+  const query = `UPDATE users SET ${querySet} WHERE id = ?`;
+  queryParams.push(id);
 
   try {
     const stmt = env.DB.prepare(query).bind(...queryParams);

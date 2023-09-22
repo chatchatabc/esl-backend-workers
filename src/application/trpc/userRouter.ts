@@ -19,7 +19,6 @@ import {
   userVerifyPhone,
 } from "../../domain/services/userService";
 import { utilFailedResponse } from "../../domain/services/utilService";
-import { userDbGet, userDbUpdate } from "../../domain/repositories/userRepo";
 import { CommonPaginationInput } from "../../domain/schemas/CommonSchema";
 import { studentCreate } from "../../domain/services/studentService";
 import { teacherCreate } from "../../domain/services/teacherService";
@@ -36,13 +35,6 @@ export default trpcRouterCreate({
     .input((input) => parse(CommonPaginationInput, input))
     .query((opts) => {
       return userGetAll(opts.input, opts.ctx.env);
-    }),
-
-  getAllRole: trpcProcedureAdmin
-    .input((input) => parse(CommonPaginationInput, input))
-    .query((opts) => {
-      const { page = 1, size = 10 } = opts.input;
-      return userGetAllRole({ page, size }, opts.ctx.env);
     }),
 
   create: trpcProcedureAdmin
@@ -89,4 +81,9 @@ export default trpcRouterCreate({
 
       return userRevokePhoneVerification({ userId }, opts.ctx.env);
     }),
+
+  userGetProfile: trpcProcedureUser.query(async (opts) => {
+    const { userId, env } = opts.ctx;
+    return await userGet({ userId }, env);
+  }),
 });

@@ -1,10 +1,5 @@
 import { Env } from "../..";
-import {
-  userDbGet,
-  userDbGetByUsername,
-  userDbInsert,
-  userDbUpdate,
-} from "../repositories/userRepo";
+import { userDbGet, userDbUpdate } from "../repositories/userRepo";
 import {
   utilDecodeBase64,
   utilEncodeBase64,
@@ -61,53 +56,6 @@ export function authGetTokenPayload(token: string) {
   }
 
   return data.id;
-}
-
-export async function authRegister(input: UserRegister, env: Env) {
-  let user = await userDbGetByUsername(input, env);
-  if (user) {
-    throw utilFailedResponse("User already exists", 400);
-  }
-
-  // Create user registration
-  input.password = utilHashHmac256(input.password);
-  const register: UserCreate = {
-    ...input,
-    status: 1,
-    roleId: 2,
-    credits: 0,
-    alias: null,
-    phone: null,
-    phoneVerifiedAt: null,
-    firstName: null,
-    lastName: null,
-  };
-
-  // Insert user registration
-  const query = await userDbInsert(register, env);
-  if (!query) {
-    throw utilFailedResponse("Failed to register user", 400);
-  }
-
-  user = await userDbGetByUsername(input, env);
-  if (!user) {
-    throw utilFailedResponse("Failed to register user", 400);
-  }
-
-  delete user.password;
-  return user;
-}
-
-export async function authLogin(params: UserLogin, env: Env) {
-  let user = await userDbGetByUsername(params, env);
-  if (!user) {
-    throw utilFailedResponse("Invalid username or password", 401);
-  } else if (user.password !== utilHashHmac256(params.password)) {
-    throw utilFailedResponse("Invalid username or password", 401);
-  }
-
-  delete user.password;
-  return user;
 }
 
 export async function authGetPhoneToken(params: { userId: number }, env: Env) {

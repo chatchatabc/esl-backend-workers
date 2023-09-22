@@ -32,6 +32,7 @@ import {
   utilFailedResponse,
   utilTimeFormatter,
 } from "./utilService";
+import { v4 as uuidv4 } from "uuid";
 
 export async function bookingGet(params: { bookingId: number }, env: Env) {
   const booking = await bookingDbGet(params, env);
@@ -148,7 +149,7 @@ export async function bookingCreate(
   }
 
   // Create booking
-  const booking = { ...params, amount };
+  const booking = { ...params, amount, uuid: uuidv4() };
 
   // Check if the booked schedule exists
   const validSchedule = await scheduleDbValidateBooking(booking, env);

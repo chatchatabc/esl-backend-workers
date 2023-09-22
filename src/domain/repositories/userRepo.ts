@@ -237,8 +237,9 @@ export async function userDbUpdate(params: User, env: Env) {
   let querySet = "";
   const queryParams = [];
 
-  Object.keys((key: any) => {
-    if (params[key as keyof User] !== undefined) {
+  Object.keys(params).forEach((key) => {
+    const value = params[key as keyof User];
+    if (value !== undefined && typeof value !== "object") {
       querySet += querySet ? ", " : "";
       querySet += `${key} = ?`;
       queryParams.push(params[key as keyof User]);
@@ -246,10 +247,11 @@ export async function userDbUpdate(params: User, env: Env) {
   });
 
   if (!querySet) {
-    throw utilFailedResponse("No update data", 400);
+    throw utilFailedResponse("No update data for user", 400);
   } else {
-    query += `, updatedAt = ?`;
+    querySet += `, updatedAt = ?`;
     queryParams.push(date);
+
     query += ` SET ${querySet}`;
     query += ` WHERE id = ?`;
     queryParams.push(id);

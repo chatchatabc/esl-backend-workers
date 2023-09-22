@@ -82,7 +82,7 @@ export async function logsDbGetMoney(
   env: Env
 ) {}
 
-export async function logsDbCreateCredit(
+export function logsDbCreateCredit(
   params: LogsCreditCreate,
   env: Env,
   createdBy: number

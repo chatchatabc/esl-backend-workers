@@ -229,7 +229,7 @@ export async function userDbGetAllRoleTotal(env: Env) {
   }
 }
 
-export async function userDbUpdate(params: User, env: Env) {
+export function userDbUpdate(params: User, env: Env) {
   const { id } = params;
   const date = new Date().getTime();
 

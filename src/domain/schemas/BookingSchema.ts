@@ -1,17 +1,21 @@
 import {
   array,
   custom,
+  merge,
+  minLength,
   minValue,
   nullish,
   number,
   object,
   optional,
+  partial,
   pick,
   string,
   transform,
 } from "valibot";
 
 const Schema = object({
+  uuid: string("UUID must be a string", [minLength(1, "UUID is required")]),
   teacherId: number("Teacher ID must be a number", [
     minValue(1, "Teacher ID must be greater than 0"),
   ]),
@@ -58,14 +62,33 @@ const Schema = object({
   ),
 });
 
+export const BookingCreateSchema = transform(
+  merge([
+    pick(Schema, [
+      "uuid",
+      "courseId",
+      "teacherId",
+      "studentId",
+      "amount",
+      "start",
+      "end",
+      "status",
+    ]),
+    partial(pick(Schema, ["message"])),
+  ]),
+  (input) => {
+    return { ...input, message: input.message ?? null };
+  }
+);
+
 export const BookingCreateInput = transform(
   pick(Schema, ["teacherId", "start", "end", "courseId"]),
   (input) => {
     return {
       ...input,
       status: 1,
-      amount: null,
       message: null,
+      amount: 0,
     };
   }
 );

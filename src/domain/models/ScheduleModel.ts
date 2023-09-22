@@ -13,7 +13,10 @@ export type Schedule = {
   createdBy: number;
 };
 
-export type ScheduleCreate = Omit<Schedule, "id" | "createdAt" | "updatedAt">;
+export type ScheduleCreate = Omit<
+  Schedule,
+  "id" | "createdAt" | "updatedAt" | "createdBy"
+>;
 export type ScheduleCreateInput = Pick<Schedule, "startTime" | "endTime">;
 
 export type ScheduleUpdateInput = Input<typeof ScheduleUpdateInput>;

@@ -1,5 +1,10 @@
 import { Env } from "../..";
-import type { LogsCredit, LogsMoneyCreate } from "../models/LogsModel";
+import type {
+  LogsCredit,
+  LogsCreditCreate,
+  LogsMoneyCreate,
+} from "../models/LogsModel";
+import { utilFailedResponse } from "../services/utilService";
 
 export async function logsDbGetAllCredit(
   params: { userId: number; page: number; size: number },
@@ -76,3 +81,46 @@ export async function logsDbGetMoney(
   params: { logsMoneyId: number },
   env: Env
 ) {}
+
+export async function logsDbCreateCredit(
+  params: LogsCreditCreate,
+  env: Env,
+  createdBy: number
+) {
+  let query = "INSERT INTO logsCredit";
+  let fields = "";
+  let values = "";
+  const queryParams: (string | null | number)[] = [];
+  const now = Date.now();
+
+  Object.keys(params).forEach((key, index) => {
+    if (index !== 0) {
+      fields += ", ";
+      values += ", ";
+    }
+    fields += key;
+    values += "?";
+    queryParams.push(params[key as keyof LogsCreditCreate]);
+  });
+
+  if (queryParams.length) {
+    fields += ", createdAt, updatedAt, createdBy";
+    values += ", ?, ?, ?";
+    queryParams.push(now, now, createdBy);
+
+    query += ` (${fields}) VALUES (${values})`;
+  } else {
+    throw utilFailedResponse("No data to insert", 400);
+  }
+
+  try {
+    const stmt = env.DB.prepare(query).bind(...queryParams);
+    return stmt;
+  } catch (e) {
+    console.log(e);
+    throw utilFailedResponse(
+      "Unable to generate logsCredit insert statement",
+      500
+    );
+  }
+}

@@ -163,3 +163,28 @@ export function utilQueryAddWhere(query: string, where: string) {
 export function utilGenerateUuid() {
   return v4();
 }
+
+export function utilQueryCreate(
+  data: Record<string, string | null | number>,
+  table: string
+) {
+  let fields = "";
+  let values = "";
+  const queryParams: (string | null | number)[] = [];
+
+  Object.keys(data).forEach((key) => {
+    fields += fields ? ", " : "";
+    fields += key;
+
+    values += values ? ", " : "";
+    values += "?";
+
+    queryParams.push(data[key]);
+  });
+
+  if (!fields) {
+    throw utilFailedResponse(`No data for ${table}`, 400);
+  }
+
+  return { fields, values, queryParams };
+}

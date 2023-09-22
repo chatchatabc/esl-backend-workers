@@ -9,7 +9,7 @@ import { MessageCreate } from "../models/MessageModel";
 import { User } from "../models/UserModel";
 import { utilFailedResponse, utilQueryAddWhere } from "../services/utilService";
 
-export async function bookingDbCreate(
+export function bookingDbCreate(
   params: BookingCreate,
   env: Env,
   createdBy: number

@@ -54,15 +54,17 @@ export default trpcRouterCreate({
     .input(BookingCreateInputAdmin)
     .mutation(async (opts) => {
       const { env, userId } = opts.ctx;
-      const { start, end, advanceBooking } = opts.input;
+      const { start, end, advanceBooking, ...booking } = opts.input;
       if (start >= end) {
         throw utilFailedResponse("Start time must be before end time", 400);
       }
 
       if (advanceBooking) {
         return bookingCreateMany(
-          { ...opts.input, advanceBooking },
-          opts.ctx.env
+          { ...booking, start, end },
+          opts.ctx.env,
+          advanceBooking,
+          userId
         );
       }
 

@@ -194,15 +194,15 @@ export async function bookingCreate(
 export async function bookingCreateMany(
   params: Omit<BookingCreate, "amount"> & {
     amount: number | null;
-    advanceBooking: number;
   },
-  env: Env
+  env: Env,
+  advanceBooking: number,
+  createdBy: number
 ) {
   // Get all the data needed to create a booking
-  const user = await userGet({ userId: params.userId }, env);
+  const student = await studentGet({ studentId: params.studentId }, env);
   const teacher = await teacherGet({ teacherId: params.teacherId }, env);
   const course = await courseGet({ courseId: params.courseId }, env);
-  teacher.user = await userGet({ userId: params.teacherId }, env);
 
   // Check if the course belongs to the teacher
   if (course.teacherId !== teacher.id) {
@@ -213,13 +213,13 @@ export async function bookingCreateMany(
   let start = new Date(params.start).getTime();
   let end = new Date(params.end).getTime();
   const amount = (params.amount ?? course.price) * ((end - start) / 1800000);
-  const totalAmount = amount * params.advanceBooking;
+  const totalAmount = amount * advanceBooking;
 
   // Check if the user has enough credit
-  if (totalAmount > user.credits) {
+  if (totalAmount > student.user.credits) {
     throw utilFailedResponse("Not enough credit", 400);
   } else {
-    user.credits -= totalAmount;
+    student.user.credits -= totalAmount;
   }
 
   // Check if schedule exists
@@ -233,8 +233,14 @@ export async function bookingCreateMany(
 
   // Create bookings
   const bookings: BookingCreate[] = [];
-  while (bookings.length < params.advanceBooking) {
-    const booking = { ...params, amount, start, end };
+  while (bookings.length < advanceBooking) {
+    const booking = {
+      ...params,
+      amount,
+      start,
+      end,
+      uuid: uuidv4(),
+    };
 
     // Check if the booking overlaps with another booking
     const overlap = await bookingDbGetOverlap(booking, env);
@@ -254,26 +260,25 @@ export async function bookingCreateMany(
   const startTimeFormat = utilTimeFormatter("zh-CN", new Date(params.start));
   const endTimeFormat = utilTimeFormatter("zh-CN", new Date(params.end));
   const logsCredit: LogsCreditCreate = {
-    userId: user.id,
+    userId: student.user.id,
     amount: -totalAmount,
     title: `Recurring Class from ${startDateFormat} to ${endDateFormat} @ ${startTimeFormat} - ${endTimeFormat}`,
     details: `Recurring Class from ${startDateFormat} to ${endDateFormat} @ ${startTimeFormat} - ${endTimeFormat}`,
   };
 
-  // Perform transaction query
-  const query = await bookingDbCreateMany(
-    {
-      bookings,
-      user,
-      logsCredit,
-    },
-    env
-  );
-  if (!query) {
-    throw utilFailedResponse("Failed to create Booking", 500);
-  }
+  const bookingStmts = bookings.map((booking) => {
+    return bookingDbCreate({ ...booking }, env, student.userId);
+  });
+  const userStmt = userDbUpdate(student.user, env);
+  const logsCreditStmt = logsDbCreateCredit(logsCredit, env, student.userId);
 
-  return true;
+  try {
+    await env.DB.batch([userStmt, logsCreditStmt, ...bookingStmts]);
+    return true;
+  } catch (e) {
+    console.log(e);
+    throw utilFailedResponse("Failed to create Bookings", 500);
+  }
 }
 
 export async function bookingGetAll(params: BookingPagination, env: Env) {

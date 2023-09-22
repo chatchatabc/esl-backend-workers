@@ -1,3 +1,4 @@
+import { Output } from "valibot";
 import { Env } from "../..";
 import {
   Booking,
@@ -8,16 +9,12 @@ import {
 import { LogsCreditCreate } from "../models/LogsModel";
 import { User } from "../models/UserModel";
 import {
-  bookingDbCancel,
-  bookingDbComplete,
   bookingDbCreate,
-  bookingDbCreateMany,
   bookingDbGet,
   bookingDbGetAll,
   bookingDbGetAllTotal,
   bookingDbGetOverlap,
   bookingDbUpdate,
-  bookingDbUpdateStatusMany,
 } from "../repositories/bookingRepo";
 import { logsDbCreateCredit } from "../repositories/logsRepo";
 import { scheduleDbValidateBooking } from "../repositories/scheduleRepo";
@@ -26,13 +23,13 @@ import { courseGet } from "./courseService";
 import { roleGet } from "./roleService";
 import { studentGet } from "./studentService";
 import { teacherGet } from "./teacherService";
-import { userGet } from "./userService";
 import {
   utilDateFormatter,
   utilFailedResponse,
   utilTimeFormatter,
 } from "./utilService";
 import { v4 as uuidv4 } from "uuid";
+import { BookingCreateSchema } from "../schemas/BookingSchema";
 
 export async function bookingGet(params: { bookingId: number }, env: Env) {
   const booking = await bookingDbGet(params, env);
@@ -122,16 +119,12 @@ export async function bookingUpdate(
     console.log(e);
     throw utilFailedResponse("Failed to update Booking", 500);
   }
-
-  return true;
 }
 
 export async function bookingCreate(
-  params: Omit<BookingCreate, "amount"> & {
-    amount: number | null;
-  },
+  params: Output<typeof BookingCreateSchema>,
   env: Env,
-  createdBy: number
+  createdById: number
 ) {
   // Get all the data needed to create a booking
   const student = await studentGet({ studentId: params.studentId }, env);
@@ -144,43 +137,38 @@ export async function bookingCreate(
   }
 
   // Check if the user has enough credit
-  const start = new Date(params.start).getTime();
-  const end = new Date(params.end).getTime();
-  const amount = (params.amount ?? course.price) * ((end - start) / 1800000);
-  if (amount > student.user.credits) {
+  if (params.amount > student.user.credits) {
     throw utilFailedResponse("Not enough credit", 400);
   } else {
-    student.user.credits -= amount;
+    student.user.credits -= params.amount;
   }
 
-  // Create booking
-  const booking = { ...params, amount, uuid: uuidv4() };
-
   // Check if the booked schedule exists
-  const validSchedule = await scheduleDbValidateBooking(booking, env);
+  const validSchedule = await scheduleDbValidateBooking(params, env);
   if (!validSchedule) {
     throw utilFailedResponse("Schedule does not exist", 400);
   }
 
   // Check if the booking overlaps with another booking
-  const overlap = await bookingDbGetOverlap(booking, env);
+  const overlap = await bookingDbGetOverlap(params, env);
   if (overlap) {
     throw utilFailedResponse("Booking overlaps", 400);
   }
 
   // Create LogsCredit
+  const start = new Date(params.start).getTime();
   const startDateFormat = utilDateFormatter("zh-CN", new Date(start));
   const startTimeFormat = utilTimeFormatter("zh-CN", new Date(start));
   const logsCredit: LogsCreditCreate = {
     userId: student.userId,
-    amount: -amount,
+    amount: -params.amount,
     title: `Class ${startDateFormat} ${startTimeFormat}`,
     details: `Class ${startDateFormat} ${startTimeFormat}`,
   };
 
-  const bookingStmt = await bookingDbCreate(booking, env, createdBy);
+  const bookingStmt = await bookingDbCreate(params, env, createdById);
   const userStmt = await userDbUpdate(student.user, env);
-  const logsCreditStmt = await logsDbCreateCredit(logsCredit, env, createdBy);
+  const logsCreditStmt = await logsDbCreateCredit(logsCredit, env, createdById);
 
   try {
     await env.DB.batch([bookingStmt, userStmt, logsCreditStmt]);
@@ -192,12 +180,10 @@ export async function bookingCreate(
 }
 
 export async function bookingCreateMany(
-  params: Omit<BookingCreate, "amount"> & {
-    amount: number | null;
-  },
+  params: Output<typeof BookingCreateSchema>,
   env: Env,
   advanceBooking: number,
-  createdBy: number
+  createdById: number
 ) {
   // Get all the data needed to create a booking
   const student = await studentGet({ studentId: params.studentId }, env);
@@ -212,21 +198,16 @@ export async function bookingCreateMany(
   // Calculate base amount
   let start = new Date(params.start).getTime();
   let end = new Date(params.end).getTime();
-  const amount = (params.amount ?? course.price) * ((end - start) / 1800000);
-  const totalAmount = amount * advanceBooking;
 
   // Check if the user has enough credit
-  if (totalAmount > student.user.credits) {
+  if (params.amount > student.user.credits) {
     throw utilFailedResponse("Not enough credit", 400);
   } else {
-    student.user.credits -= totalAmount;
+    student.user.credits -= params.amount;
   }
 
   // Check if schedule exists
-  const validSchedule = await scheduleDbValidateBooking(
-    { ...params, amount },
-    env
-  );
+  const validSchedule = await scheduleDbValidateBooking(params, env);
   if (!validSchedule) {
     throw utilFailedResponse("Schedule does not exist", 400);
   }
@@ -236,10 +217,8 @@ export async function bookingCreateMany(
   while (bookings.length < advanceBooking) {
     const booking = {
       ...params,
-      amount,
       start,
       end,
-      uuid: uuidv4(),
     };
 
     // Check if the booking overlaps with another booking
@@ -261,7 +240,7 @@ export async function bookingCreateMany(
   const endTimeFormat = utilTimeFormatter("zh-CN", new Date(params.end));
   const logsCredit: LogsCreditCreate = {
     userId: student.user.id,
-    amount: -totalAmount,
+    amount: -params.amount,
     title: `Recurring Class from ${startDateFormat} to ${endDateFormat} @ ${startTimeFormat} - ${endTimeFormat}`,
     details: `Recurring Class from ${startDateFormat} to ${endDateFormat} @ ${startTimeFormat} - ${endTimeFormat}`,
   };

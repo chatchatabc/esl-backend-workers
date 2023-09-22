@@ -307,97 +307,6 @@ export async function bookingGetAll(params: BookingPagination, env: Env) {
   };
 }
 
-export async function bookingCancel(
-  values: {
-    bookingId: number;
-    userId: number;
-    performedBy: User;
-  },
-  env: Env
-) {
-  const { bookingId, userId } = values;
-  const booking = await bookingGet({ bookingId }, env);
-  const teacher = await teacherGet({ teacherId: booking.teacherId }, env);
-
-  // Check if user is the owner
-  if (booking.userId !== userId) {
-    throw utilFailedResponse("Unauthorized", 403);
-  }
-
-  // Update user credit
-  const user = await userGet({ userId }, env);
-  user.credits += booking.amount;
-
-  // Check if booking is already completed
-  if (booking.status === 3) {
-    // Update teacher credit
-    teacher.user = await userGet({ userId: teacher.userId }, env);
-    teacher.user.credits -= booking.amount;
-  }
-
-  // Create LogsCredit
-  const logsCredit: LogsCreditCreate = {
-    title: "Cancelled Class",
-    details: `Cancelled Class ${utilDateFormatter(
-      "zh-CN",
-      new Date(booking.start)
-    )} ${utilTimeFormatter("zh-CN", new Date(booking.start))}`,
-    userId: user.id,
-    amount: booking.amount,
-  };
-
-  // Perform transaction query
-  const query = await bookingDbCancel(
-    { booking, user, logsCredit, teacher: teacher.user },
-    env
-  );
-  if (!query) {
-    throw utilFailedResponse("Was not able to cancel booking", 500);
-  }
-
-  return true;
-}
-
-export async function bookingComplete(
-  params: { bookingId: number; userId: number },
-  env: Env
-) {
-  const { bookingId, userId } = params;
-  const booking = await bookingGet({ bookingId }, env);
-
-  // Check if user is the owner
-  if (booking.userId !== userId) {
-    throw utilFailedResponse("Unauthorized", 403);
-  }
-
-  // Update teacher credit
-  const teacher = await teacherGet({ teacherId: booking.teacherId }, env);
-  teacher.user = await userGet({ userId: teacher.userId }, env);
-  teacher.user.credits += booking.amount;
-
-  // Create LogsCredit
-  const logsCredit: LogsCreditCreate = {
-    title: "Class Completed",
-    details: `Class ${utilDateFormatter(
-      "zh-CN",
-      new Date(booking.start)
-    )} ${utilTimeFormatter("zh-CN", new Date(booking.start))} Completed`,
-    userId: teacher.user.id,
-    amount: booking.amount,
-  };
-
-  // Perform transaction query
-  const query = await bookingDbComplete(
-    { booking, user: teacher.user, logsCredit },
-    env
-  );
-  if (!query) {
-    throw utilFailedResponse("Was not able to complete booking", 500);
-  }
-
-  return true;
-}
-
 export async function bookingUpdateStatusMany(
   params: { bookingIds: number[]; status: number },
   env: Env,
@@ -414,13 +323,13 @@ export async function bookingUpdateStatusMany(
   const role = await roleGet({ roleId: performedBy.roleId }, env);
 
   for (const booking of bookingsOld) {
-    const user = await userGet({ userId: booking.userId }, env);
+    const student = await studentGet({ studentId: booking.studentId }, env);
     const teacher = await teacherGet({ teacherId: booking.teacherId }, env);
 
     // Check if user is not an admin
     if (performedBy.roleId !== 1) {
       // Check if the user is the owner or the teacher
-      if (user.id !== performedBy.id && teacher.userId !== performedBy.id) {
+      if (student.id !== performedBy.id && teacher.userId !== performedBy.id) {
         throw utilFailedResponse("Unauthorized", 403);
       }
     }
@@ -457,11 +366,11 @@ export async function bookingUpdateStatusMany(
 
     // If booking is cancelled, update user credit
     if (params.status === 4) {
-      user.credits += booking.amount;
+      student.user.credits += booking.amount;
       logsCredits.push({
         title: `Class ${bookingStartDate} ${bookingStartTime} - Cancelled by ${role.name}`,
         details: `Cancelled Class ${bookingStartDate} ${bookingStartTime}`,
-        userId: user.id,
+        userId: student.id,
         amount: booking.amount,
       } as LogsCreditCreate);
     }
@@ -471,17 +380,25 @@ export async function bookingUpdateStatusMany(
 
     // Add to array
     bookings.push(booking);
-    users.push(user);
+    users.push(student.user);
     users.push(teacher.user!);
   }
 
-  const query = await bookingDbUpdateStatusMany(
-    { bookings, users, logsCredits },
-    env
-  );
-  if (!query) {
-    throw utilFailedResponse("Failed to update Booking", 500);
-  }
+  const logsCreditStmts = logsCredits.map((logsCredit) => {
+    return logsDbCreateCredit(logsCredit, env, performedBy.id);
+  });
+  const userStmts = users.map((user) => {
+    return userDbUpdate(user, env);
+  });
+  const bookingStmts = bookings.map((booking) => {
+    return bookingDbUpdate(booking, env);
+  });
 
-  return true;
+  try {
+    await env.DB.batch([...logsCreditStmts, ...userStmts, ...bookingStmts]);
+    return true;
+  } catch (e) {
+    console.log(e);
+    throw utilFailedResponse("Failed to update bookings", 500);
+  }
 }

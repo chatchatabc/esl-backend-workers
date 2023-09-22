@@ -13,7 +13,6 @@ import {
 } from "../../domain/schemas/BookingSchema";
 import { CommonPaginationInput } from "../../domain/schemas/CommonSchema";
 import {
-  bookingComplete,
   bookingCreate,
   bookingCreateMany,
   bookingGetAll,
@@ -74,9 +73,8 @@ export default trpcRouterCreate({
   completeAdmin: trpcProcedureAdmin
     .input(BookingCompleteInputAdmin)
     .mutation((opts) => {
-      const { env } = opts.ctx;
-      const bookingId = opts.input.id;
-      return bookingComplete({ ...opts.input, bookingId }, env);
+      const { env, user } = opts.ctx;
+      return bookingUpdate({ ...opts.input, status: 3 }, env, user);
     }),
 
   cancel: trpcProcedureUser.input(BookingCancelInput).mutation((opts) => {

@@ -1,113 +1,45 @@
+import { safeParse } from "valibot";
 import { Env } from "../..";
 import { CommonPagination } from "../models/CommonModel";
 import { LogsCreditCreate, LogsMoneyCreate } from "../models/LogsModel";
 import {
   User,
   UserCreate,
+  UserDbCreate,
   UserPagination,
   UserRole,
 } from "../models/UserModel";
-import { utilFailedResponse, utilQueryAddWhere } from "../services/utilService";
-
-export async function userDbGetByUsername(
-  params: { username: string },
-  env: Env
-) {
-  const { username } = params;
-
-  const results = (await env.DB.prepare(
-    "SELECT * FROM users WHERE username = ?"
-  )
-    .bind(username)
-    .first()) as User | null;
-
-  return results;
-}
+import {
+  utilFailedResponse,
+  utilQueryAddWhere,
+  utilQueryCreate,
+} from "../services/utilService";
+import { UserDbCreateSchema } from "../schemas/UserSchema";
 
 export async function userDbCreate(
-  user: UserCreate,
+  user: UserDbCreate,
   env: Env,
-  createdBy: number
+  createdById: number
 ) {
-  const {
-    username,
-    password,
-    roleId,
-    firstName,
-    lastName,
-    phone,
-    phoneVerifiedAt,
-    status,
-    credits,
-    alias,
-    email,
-    emailVerifiedAt,
-  } = user;
+  const parse = safeParse(UserDbCreateSchema, user);
+  if (!parse.success) {
+    throw utilFailedResponse("Invalid user data", 400);
+  }
+  user = parse.output;
+
+  let query = "INSERT INTO users";
+  let { fields, values, queryParams } = utilQueryCreate(user, "USER");
   const now = Date.now();
+
+  query += ` (${fields}, createdAt, updatedAt, createdBy) VALUES (${values}, ?, ?, ?)`;
+  queryParams.push(now, now, createdById);
+
   try {
-    const stmt = await env.DB.prepare(
-      "INSERT INTO users (username, password, createdAt, updatedAt, roleId, credits, phone, firstName, lastName, phoneVerifiedAt, status, alias, email, emailVerifiedAt, createdBy) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
-    ).bind(
-      username,
-      password,
-      now,
-      now,
-      roleId,
-      credits,
-      phone,
-      firstName,
-      lastName,
-      phoneVerifiedAt,
-      status,
-      alias,
-      email,
-      emailVerifiedAt,
-      createdBy
-    );
+    const stmt = await env.DB.prepare(query).bind(...queryParams);
     return stmt;
   } catch (e) {
     console.log(e);
     throw utilFailedResponse("Cannot generate user statement", 500);
-  }
-}
-
-export async function userDbInsert(body: UserCreate, env: Env) {
-  const {
-    username,
-    password,
-    roleId,
-    credits,
-    status,
-    phone,
-    firstName,
-    lastName,
-    phoneVerifiedAt,
-    alias,
-  } = body;
-  const date = Date.now();
-  try {
-    await env.DB.prepare(
-      "INSERT INTO users (username, password, createdAt, updatedAt, roleId, credits, phone, firstName, lastName, phoneVerifiedAt, status, alias) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
-    )
-      .bind(
-        username,
-        password,
-        date,
-        date,
-        roleId,
-        credits,
-        phone,
-        firstName,
-        lastName,
-        phoneVerifiedAt,
-        status,
-        alias
-      )
-      .run();
-    return true;
-  } catch (e) {
-    console.log(e);
-    return false;
   }
 }
 

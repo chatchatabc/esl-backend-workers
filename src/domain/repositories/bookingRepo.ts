@@ -7,7 +7,47 @@ import {
 import { LogsCreditCreate } from "../models/LogsModel";
 import { MessageCreate } from "../models/MessageModel";
 import { User } from "../models/UserModel";
-import { utilQueryAddWhere } from "../services/utilService";
+import { utilFailedResponse, utilQueryAddWhere } from "../services/utilService";
+
+export async function bookingDbCreate(
+  params: BookingCreate,
+  env: Env,
+  createdBy: number
+) {
+  let query = "INSERT INTO bookings";
+  let fields = "";
+  let values = "";
+  const queryParams: (string | null | number)[] = [];
+  const now = Date.now();
+
+  Object.keys(params).forEach((key, index) => {
+    if (index !== 0) {
+      fields += ", ";
+      values += ", ";
+    }
+    fields += key;
+    values += "?";
+    queryParams.push(params[key as keyof BookingCreate]);
+  });
+
+  if (queryParams.length) {
+    fields += ", createdAt, updatedAt, createdBy";
+    values += ", ?, ?, ?";
+    queryParams.push(now, now, createdBy);
+
+    query += ` (${fields}) VALUES (${values})`;
+  } else {
+    throw utilFailedResponse("No data to insert", 400);
+  }
+
+  try {
+    const stmt = env.DB.prepare(query).bind(...queryParams);
+    return stmt;
+  } catch (e) {
+    console.log(e);
+    throw utilFailedResponse("Unable to generate user update statement", 500);
+  }
+}
 
 export async function bookingDbGetAll(params: BookingPagination, env: Env) {
   const {
@@ -253,7 +293,7 @@ export async function bookingDbComplete(
   }
 }
 
-export async function bookingDbCreate(
+export async function bookingDbCreate1(
   params: {
     booking: BookingCreate;
     user: User;

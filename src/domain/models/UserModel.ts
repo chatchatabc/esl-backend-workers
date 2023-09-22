@@ -1,10 +1,11 @@
 import { Input } from "valibot";
 import {
   UserCreateInput,
-  UserDbCreateSchema,
+  UserCreateSchema,
   UserGetInput,
   UserRegisterInput,
   UserUpdateInput,
+  UserUpdateSchema,
 } from "../schemas/UserSchema";
 import { CommonPagination } from "./CommonModel";
 
@@ -31,37 +32,9 @@ export type User = {
 
 export type UserCreateInput = Input<typeof UserCreateInput>;
 
-export type UserDbCreate = Input<typeof UserDbCreateSchema>;
+export type UserCreate = Input<typeof UserCreateSchema>;
 
-export type UserCreate = Pick<
-  User,
-  | "roleId"
-  | "credits"
-  | "status"
-  | "username"
-  | "phoneVerifiedAt"
-  | "emailVerifiedAt"
-  | "phone"
-  | "email"
-  | "firstName"
-  | "lastName"
-  | "alias"
-> & {
-  password: string;
-};
-
-export type UserUpdate = Pick<
-  User,
-  | "id"
-  | "alias"
-  | "username"
-  | "credits"
-  | "firstName"
-  | "lastName"
-  | "phone"
-  | "roleId"
-  | "status"
->;
+export type UserUpdate = Input<typeof UserUpdateSchema>;
 
 export type UserUpdateInput = Input<typeof UserUpdateInput>;
 

@@ -5,9 +5,9 @@ import { LogsCreditCreate, LogsMoneyCreate } from "../models/LogsModel";
 import {
   User,
   UserCreate,
-  UserDbCreate,
   UserPagination,
   UserRole,
+  UserUpdate,
 } from "../models/UserModel";
 import {
   utilFailedResponse,
@@ -15,14 +15,10 @@ import {
   utilQueryCreate,
   utilQueryUpdate,
 } from "../services/utilService";
-import { UserDbCreateSchema, UserDbUpdateSchema } from "../schemas/UserSchema";
+import { UserCreateSchema, UserUpdateSchema } from "../schemas/UserSchema";
 
-export function userDbCreate(
-  user: UserDbCreate,
-  env: Env,
-  createdById: number
-) {
-  const parse = safeParse(UserDbCreateSchema, user);
+export function userDbCreate(user: UserCreate, env: Env, createdById: number) {
+  const parse = safeParse(UserCreateSchema, user);
   if (!parse.success) {
     throw utilFailedResponse("Invalid user data", 400);
   }
@@ -162,9 +158,9 @@ export async function userDbGetAllRoleTotal(env: Env) {
   }
 }
 
-export function userDbUpdate(params: User, env: Env) {
+export function userDbUpdate(params: UserUpdate, env: Env) {
   const { id, ...user } = params;
-  const data = safeParse(UserDbUpdateSchema, user);
+  const data = safeParse(UserUpdateSchema, user);
   if (!data.success) {
     throw utilFailedResponse(data.issues[0].message, 400);
   }

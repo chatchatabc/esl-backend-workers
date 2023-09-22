@@ -19,9 +19,12 @@ import {
   bookingDbUpdate,
   bookingDbUpdateStatusMany,
 } from "../repositories/bookingRepo";
+import { logsDbCreateCredit } from "../repositories/logsRepo";
 import { scheduleDbValidateBooking } from "../repositories/scheduleRepo";
+import { userDbUpdate } from "../repositories/userRepo";
 import { courseGet } from "./courseService";
 import { roleGet } from "./roleService";
+import { studentGet } from "./studentService";
 import { teacherGet, teacherValidateCourse } from "./teacherService";
 import { userGet } from "./userService";
 import {
@@ -121,13 +124,13 @@ export async function bookingCreate(
   params: Omit<BookingCreate, "amount"> & {
     amount: number | null;
   },
-  env: Env
+  env: Env,
+  createdBy: number
 ) {
   // Get all the data needed to create a booking
-  const user = await userGet({ userId: params.userId }, env);
+  const student = await studentGet({ studentId: params.studentId }, env);
   const teacher = await teacherGet({ teacherId: params.teacherId }, env);
   const course = await courseGet({ courseId: params.courseId }, env);
-  teacher.user = await userGet({ userId: params.teacherId }, env);
 
   // Check if the course belongs to the teacher
   if (course.teacherId !== teacher.id) {
@@ -138,10 +141,10 @@ export async function bookingCreate(
   const start = new Date(params.start).getTime();
   const end = new Date(params.end).getTime();
   const amount = (params.amount ?? course.price) * ((end - start) / 1800000);
-  if (amount > user.credits) {
+  if (amount > student.user.credits) {
     throw utilFailedResponse("Not enough credit", 400);
   } else {
-    user.credits -= amount;
+    student.user.credits -= amount;
   }
 
   // Create booking
@@ -163,26 +166,23 @@ export async function bookingCreate(
   const startDateFormat = utilDateFormatter("zh-CN", new Date(start));
   const startTimeFormat = utilTimeFormatter("zh-CN", new Date(start));
   const logsCredit: LogsCreditCreate = {
-    userId: user.id,
+    userId: student.userId,
     amount: -amount,
     title: `Class ${startDateFormat} ${startTimeFormat}`,
     details: `Class ${startDateFormat} ${startTimeFormat}`,
   };
 
-  // Perform transaction query
-  const success = await bookingDbCreate(
-    {
-      booking,
-      user,
-      logsCredit,
-    },
-    env
-  );
-  if (!success) {
+  const bookingStmt = await bookingDbCreate(booking, env, createdBy);
+  const userStmt = await userDbUpdate(student.user, env);
+  const logsCreditStmt = await logsDbCreateCredit(logsCredit, env, createdBy);
+
+  try {
+    await env.DB.batch([bookingStmt, userStmt, logsCreditStmt]);
+    return true;
+  } catch (e) {
+    console.log(e);
     throw utilFailedResponse("Failed to create Booking", 500);
   }
-
-  return true;
 }
 
 export async function bookingCreateMany(

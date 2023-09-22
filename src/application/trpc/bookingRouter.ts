@@ -22,6 +22,7 @@ import {
 } from "../../domain/services/bookingService";
 import { studentGetByUser } from "../../domain/services/studentService";
 import { utilFailedResponse } from "../../domain/services/utilService";
+import { courseGet } from "../../domain/services/courseService";
 
 export default trpcRouterCreate({
   getAll: trpcProcedureUser
@@ -45,22 +46,24 @@ export default trpcRouterCreate({
   create: trpcProcedureUser
     .input((input) => parse(BookingCreateInput, input))
     .mutation(async (opts) => {
-      const { start, end } = opts.input;
+      const { start, end, courseId } = opts.input;
       if (start >= end) {
-        throw utilFailedResponse("Invalid time", 400);
+        throw utilFailedResponse("Start time must be before end time", 400);
       }
 
       const { userId, env } = opts.ctx;
       const student = await studentGetByUser({ userId }, opts.ctx.env);
+      const course = await courseGet({ courseId }, opts.ctx.env);
+      const amount = course.price * ((end - start) / (1000 * 60 * 30));
 
       return bookingCreate(
-        { ...opts.input, studentId: student.id },
+        { ...opts.input, studentId: student.id, amount },
         env,
         userId
       );
     }),
 
-  createAdmin: trpcProcedureAdmin
+  createByAdmin: trpcProcedureAdmin
     .input((input) => parse(BookingCreateInputAdmin, input))
     .mutation(async (opts) => {
       const { env, userId } = opts.ctx;
@@ -69,16 +72,20 @@ export default trpcRouterCreate({
         throw utilFailedResponse("Start time must be before end time", 400);
       }
 
+      const course = await courseGet({ courseId: booking.courseId }, env);
+      let amount = course.price * ((end - start) / (1000 * 60 * 30));
+
       if (advanceBooking) {
+        amount = booking.amount ?? amount * advanceBooking;
         return bookingCreateMany(
-          { ...booking, start, end },
+          { ...booking, start, end, amount },
           opts.ctx.env,
           advanceBooking,
           userId
         );
       }
 
-      return bookingCreate(opts.input, env, userId);
+      return bookingCreate({ ...opts.input, amount }, env, userId);
     }),
 
   completeAdmin: trpcProcedureAdmin

@@ -6,11 +6,11 @@ import {
   ScheduleUpdateInput,
 } from "../models/ScheduleModel";
 import {
+  scheduleDbCreate,
   scheduleDbDeleteMany,
   scheduleDbGetAll,
   scheduleDbGetAllTotal,
   scheduleDbGetOverlapMany,
-  scheduleDbInsertMany,
   scheduleDbUpdateMany,
 } from "../repositories/scheduleRepo";
 import {
@@ -35,7 +35,7 @@ export async function scheduleUpdateMany(
   }
 
   // Check if all schedules are owned by user
-  const oldSchedules = query.results;
+  const oldSchedules = query;
   if (
     !schedules.every((schedule) => {
       const oldSchedule = oldSchedules.find((s) => s.id === schedule.id);
@@ -100,7 +100,7 @@ export async function scheduleDeleteMany(
   if (!query) {
     throw utilFailedResponse("Cannot GET Schedules", 500);
   }
-  const schedules = query.results;
+  const schedules = query;
 
   // Check if all schedules are owned by user
   if (
@@ -122,13 +122,14 @@ export async function scheduleDeleteMany(
 
 export async function scheduleCreateMany(
   data: { teacherId: number; schedules: ScheduleCreateInput[] },
-  bindings: Env
+  env: Env,
+  createdBy: number
 ) {
   let { teacherId, schedules } = data;
 
   // Fix day & time format
   const newSchedules = schedules.map((schedule) => {
-    const [startTime, endTime, day] = utilGetScheduleTimeAndDay(
+    const [startTime, endTime, weekDay] = utilGetScheduleTimeAndDay(
       schedule.startTime,
       schedule.endTime
     );
@@ -137,37 +138,36 @@ export async function scheduleCreateMany(
       teacherId,
       startTime,
       endTime,
-      day,
+      weekDay,
     };
   });
 
   let overlapped =
-    (await scheduleDbGetOverlapMany(newSchedules, bindings)) ||
+    (await scheduleDbGetOverlapMany(newSchedules, env)) ||
     utilCheckScheduleOverlap(newSchedules);
   if (overlapped) {
     throw utilFailedResponse("Schedule overlaps", 400);
   }
 
-  const success = await scheduleDbInsertMany(newSchedules, bindings);
-  if (!success) {
+  const stmts = newSchedules.map((schedule) => {
+    return scheduleDbCreate(schedule, env, createdBy);
+  });
+
+  try {
+    await env.DB.batch(stmts);
+    return true;
+  } catch (e) {
+    console.log(e);
     throw utilFailedResponse("Failed to create schedules", 500);
   }
-
-  return true;
 }
 
 export async function scheduleGetAll(params: SchedulePagination, env: Env) {
-  const query = await scheduleDbGetAll(params, env);
-  if (!query) {
-    throw utilFailedResponse("Cannot GET Schedules", 500);
-  }
+  const schedules = await scheduleDbGetAll(params, env);
   const totalElements = await scheduleDbGetAllTotal(params, env);
-  if (totalElements === null) {
-    throw utilFailedResponse("Cannot GET Total Schedules", 500);
-  }
 
   return {
-    content: query.results as Schedule[],
+    content: schedules as Schedule[],
     totalElements: totalElements as number,
     page: params.page,
     size: params.size,

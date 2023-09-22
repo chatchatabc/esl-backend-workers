@@ -18,25 +18,13 @@ export async function studentGet(
   params: Partial<{ studentId: number; uuid: string }>,
   env: Env
 ) {
-  const { studentId, uuid } = params;
-  if (!studentId && !uuid) {
-    throw utilFailedResponse("Student ID or UUID is required", 400);
+  const student: Student | null = await studentDbGet(params, env);
+  if (!student) {
+    throw utilFailedResponse("Student not found", 404);
   }
-  const studentStmt = await studentDbGet(params, env);
 
-  try {
-    const query = await studentStmt.run<Student>();
-    const students = query.results;
-    if (!students.length) {
-      throw utilFailedResponse("Student not found", 404);
-    }
-    const student = students[0];
-    student.user = await userGet({ userId: student.userId }, env);
-    return student;
-  } catch (e) {
-    console.log(e);
-    throw utilFailedResponse("Cannot get student", 500);
-  }
+  student.user = await userGet({ userId: student.userId }, env);
+  return student;
 }
 
 export async function studentGetByUser(

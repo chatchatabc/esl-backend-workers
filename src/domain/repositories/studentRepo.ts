@@ -37,7 +37,7 @@ export async function studentDbGet(
 
   try {
     const stmt = env.DB.prepare(query).bind(...queryParams);
-    return stmt;
+    return await stmt.first<Student>();
   } catch (e) {
     console.log(e);
     throw utilFailedResponse("Cannot generate student statement", 500);

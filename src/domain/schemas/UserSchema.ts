@@ -77,6 +77,35 @@ export const UserSchema = object({
 
 export const User = omit(UserSchema, ["confirmPassword"]);
 
+export const UserDbCreateSchema = transform(
+  merge([
+    pick(UserSchema, ["username", "password", "roleId", "status", "credits"]),
+    partial(
+      pick(UserSchema, [
+        "alias",
+        "firstName",
+        "lastName",
+        "phone",
+        "email",
+        "phoneVerifiedAt",
+        "emailVerifiedAt",
+      ])
+    ),
+  ]),
+  (input) => {
+    return {
+      ...input,
+      alias: input.alias ?? null,
+      firstName: input.firstName ?? null,
+      lastName: input.lastName ?? null,
+      phone: input.phone ?? null,
+      email: input.email ?? null,
+      phoneVerifiedAt: input.phoneVerifiedAt ?? null,
+      emailVerifiedAt: input.emailVerifiedAt ?? null,
+    };
+  }
+);
+
 export const UserUpdateInput = pick(UserSchema, [
   "id",
   "roleId",

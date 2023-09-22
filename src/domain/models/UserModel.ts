@@ -1,6 +1,7 @@
 import { Input } from "valibot";
 import {
   UserCreateInput,
+  UserDbCreateSchema,
   UserGetInput,
   UserRegisterInput,
   UserUpdateInput,
@@ -29,6 +30,8 @@ export type User = {
 };
 
 export type UserCreateInput = Input<typeof UserCreateInput>;
+
+export type UserDbCreate = Input<typeof UserDbCreateSchema>;
 
 export type UserCreate = Pick<
   User,

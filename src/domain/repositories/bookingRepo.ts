@@ -70,7 +70,7 @@ export async function bookingDbGetAll(params: BookingPagination, env: Env) {
 
   if (studentId && teacherId) {
     whereQuery += whereQuery ? " AND " : "";
-    whereQuery += "(userId = ? OR teacherId = ?)";
+    whereQuery += "(studentId = ? OR teacherId = ?)";
     queryParams.push(studentId, teacherId);
   } else if (teacherId) {
     whereQuery += whereQuery ? " AND " : "";
@@ -78,7 +78,7 @@ export async function bookingDbGetAll(params: BookingPagination, env: Env) {
     queryParams.push(teacherId);
   } else if (studentId) {
     whereQuery += whereQuery ? " AND " : "";
-    whereQuery += "userId = ?";
+    whereQuery += "studentId = ?";
     queryParams.push(studentId);
   }
 
@@ -156,7 +156,7 @@ export async function bookingDbGetAllTotal(
 
   if (studentId && teacherId) {
     whereQuery += whereQuery ? " AND " : "";
-    whereQuery += "(userId = ? OR teacherId = ?)";
+    whereQuery += "(studentId = ? OR teacherId = ?)";
     queryParams.push(studentId, teacherId);
   } else if (teacherId) {
     whereQuery += whereQuery ? " AND " : "";
@@ -164,7 +164,7 @@ export async function bookingDbGetAllTotal(
     queryParams.push(teacherId);
   } else if (studentId) {
     whereQuery += whereQuery ? " AND " : "";
-    whereQuery += "userId = ?";
+    whereQuery += "studentId = ?";
     queryParams.push(studentId);
   }
 

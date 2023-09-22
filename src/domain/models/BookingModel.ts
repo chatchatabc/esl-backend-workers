@@ -11,6 +11,7 @@ import {
 } from "../schemas/BookingSchema";
 import { Course } from "./CourseModel";
 import { Teacher } from "./TeacherModel";
+import { Student } from "./StudentModel";
 
 export type Booking = {
   id: number;
@@ -28,7 +29,7 @@ export type Booking = {
 
   message: string | null;
 
-  student: User;
+  student: Student;
   teacher: Teacher;
   course: Course;
 };

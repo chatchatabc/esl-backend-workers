@@ -314,56 +314,6 @@ export async function bookingDbComplete(
   }
 }
 
-export async function bookingDbCreate1(
-  params: {
-    booking: BookingCreate;
-    user: User;
-    logsCredit: LogsCreditCreate;
-  },
-  bindings: Env
-) {
-  const { booking, user, logsCredit } = params;
-  const { start, end, teacherId, userId, status, courseId, message, amount } =
-    booking;
-  const date = Date.now();
-
-  try {
-    const userStmt = bindings.DB.prepare(
-      "UPDATE users SET credits = ?, updatedAt = ? WHERE id = ?"
-    ).bind(user.credits, date, user.id);
-    const bookingStmt = bindings.DB.prepare(
-      "INSERT INTO bookings (courseId, teacherId, userId, amount, start, end, status, message, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
-    ).bind(
-      courseId,
-      teacherId,
-      userId,
-      amount,
-      start,
-      end,
-      status,
-      message,
-      date,
-      date
-    );
-    const logsStmt = bindings.DB.prepare(
-      "INSERT INTO logsCredit (title, userId, amount, details, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?)"
-    ).bind(
-      logsCredit.title,
-      userId,
-      logsCredit.amount,
-      logsCredit.details,
-      date,
-      date
-    );
-
-    await bindings.DB.batch([bookingStmt, userStmt, logsStmt]);
-    return true;
-  } catch (e) {
-    console.log(e);
-    return false;
-  }
-}
-
 /**
  * Get all bookings by date range based on start date
  * @param params { start: number, end: number } - timestamp in milliseconds
@@ -445,48 +395,6 @@ export async function bookingDbGetTotalByUser(
   }
 }
 
-export async function bookingDbUpdateMany(bookings: Booking[], bindings: Env) {
-  try {
-    const stmt = bindings.DB.prepare(
-      "UPDATE bookings SET courseId = ?, teacherId = ?, userId = ?, amount = ?, start = ?, end = ?, status = ?, message = ?, updatedAt = ? WHERE id = ?"
-    );
-
-    await bindings.DB.batch(
-      bookings.map((b) => {
-        const {
-          id,
-          courseId,
-          teacherId,
-          userId,
-          amount,
-          start,
-          end,
-          status,
-          message,
-        } = b;
-        const date = Date.now();
-        return stmt.bind(
-          courseId,
-          teacherId,
-          userId,
-          amount,
-          start,
-          end,
-          status,
-          message,
-          date,
-          id
-        );
-      })
-    );
-
-    return true;
-  } catch (e) {
-    console.log(e);
-    return false;
-  }
-}
-
 export async function bookingDbConfirmMany(
   params: {
     bookings: Booking[];
@@ -553,61 +461,6 @@ export async function bookingDbConfirmMany(
   }
 }
 
-export async function bookingDbCreateMany(
-  params: {
-    bookings: BookingCreate[];
-    user: User;
-    logsCredit: LogsCreditCreate;
-  },
-  env: Env
-) {
-  const { bookings, user, logsCredit } = params;
-  const date = Date.now();
-  try {
-    const bookingStmt = env.DB.prepare(
-      "INSERT INTO bookings (courseId, teacherId, userId, amount, start, end, status, message, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
-    );
-    const logsCreditStmt = env.DB.prepare(
-      "INSERT INTO logsCredit (title, userId, amount, details, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?)"
-    );
-    const userStmt = env.DB.prepare(
-      "UPDATE users SET credits = ?, updatedAt = ? WHERE id = ?"
-    );
-
-    await env.DB.batch([
-      ...bookings.map((booking) => {
-        const dateBooking = Date.now();
-        return bookingStmt.bind(
-          booking.courseId,
-          booking.teacherId,
-          booking.userId,
-          booking.amount,
-          booking.start,
-          booking.end,
-          booking.status,
-          booking.message,
-          dateBooking,
-          dateBooking
-        );
-      }),
-      logsCreditStmt.bind(
-        logsCredit.title,
-        logsCredit.userId,
-        logsCredit.amount,
-        logsCredit.details,
-        date,
-        date
-      ),
-      userStmt.bind(user.credits, Date.now(), user.id),
-    ]);
-
-    return true;
-  } catch (e) {
-    console.log(e);
-    return null;
-  }
-}
-
 export function bookingDbUpdate(params: Booking, env: Env) {
   const { id } = params;
   const date = new Date().getTime();
@@ -645,63 +498,6 @@ export function bookingDbUpdate(params: Booking, env: Env) {
       "Unable to generate booking update statement",
       500
     );
-  }
-}
-
-export async function bookingDbUpdate1(
-  params: {
-    teacher: User;
-    user: User;
-    booking: Booking;
-    logsCredits: LogsCreditCreate[];
-  },
-  env: Env
-) {
-  const { user, booking, logsCredits, teacher } = params;
-  const date = Date.now();
-
-  try {
-    const userStmt = env.DB.prepare(
-      "UPDATE users SET credits = ?, updatedAt = ? WHERE id = ?"
-    );
-    const bookingStmt = env.DB.prepare(
-      "UPDATE bookings SET courseId = ?, teacherId = ?, userId = ?, amount = ?, start = ?, end = ?, status = ?, message = ?, updatedAt = ? WHERE id = ?"
-    );
-    const logsCreditStmt = env.DB.prepare(
-      "INSERT INTO logsCredit (title, userId, amount, details, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?)"
-    );
-
-    await env.DB.batch([
-      userStmt.bind(teacher.credits, date, teacher.id),
-      userStmt.bind(user.credits, date, user.id),
-      bookingStmt.bind(
-        booking.courseId,
-        booking.teacherId,
-        booking.userId,
-        booking.amount,
-        booking.start,
-        booking.end,
-        booking.status,
-        booking.message,
-        date,
-        booking.id
-      ),
-      ...logsCredits.map((logsCredit) => {
-        return logsCreditStmt.bind(
-          logsCredit.title,
-          logsCredit.userId,
-          logsCredit.amount,
-          logsCredit.details,
-          date,
-          date
-        );
-      }),
-    ]);
-
-    return true;
-  } catch (e) {
-    console.log(e);
-    return null;
   }
 }
 

@@ -25,7 +25,7 @@ import { userDbUpdate } from "../repositories/userRepo";
 import { courseGet } from "./courseService";
 import { roleGet } from "./roleService";
 import { studentGet } from "./studentService";
-import { teacherGet, teacherValidateCourse } from "./teacherService";
+import { teacherGet } from "./teacherService";
 import { userGet } from "./userService";
 import {
   utilDateFormatter,
@@ -53,8 +53,7 @@ export async function bookingUpdate(
 ) {
   const booking = await bookingGet({ bookingId: params.id }, env);
   const teacher = await teacherGet({ teacherId: booking.teacherId }, env);
-  teacher.user = await userGet({ userId: teacher.userId }, env);
-  const user = await userGet({ userId: booking.userId }, env);
+  const student = await studentGet({ studentId: booking.studentId }, env);
 
   const bookingStart = new Date(booking.start);
   const bookingStartDate = utilDateFormatter("zh-CN", bookingStart);
@@ -92,11 +91,11 @@ export async function bookingUpdate(
 
   // Update user's credits if booking is cancelled
   if (params.status === 4) {
-    user.credits += booking.amount;
+    student.user.credits += booking.amount;
     logsCredits.push({
       title: `Class ${bookingStartDate} ${bookingStartTime} - Cancelled by ${role.name}`,
       details: `Cancelled Class ${bookingStartDate} ${bookingStartTime}`,
-      userId: user.id,
+      userId: student.user.id,
       amount: booking.amount,
     });
   }
@@ -104,17 +103,23 @@ export async function bookingUpdate(
   // Update booking status
   booking.status = params.status;
 
-  // Perform transaction query
-  const query = await bookingDbUpdate(
-    {
-      booking,
-      user,
-      teacher: teacher.user,
-      logsCredits,
-    },
-    env
-  );
-  if (!query) {
+  const logsCreditStmts = logsCredits.map((logsCredit) => {
+    return logsDbCreateCredit(logsCredit, env, performedBy.id);
+  });
+  const studentStmt = userDbUpdate(student.user, env);
+  const teacherStmt = userDbUpdate(teacher.user, env);
+  const bookingStmt = bookingDbUpdate(booking, env);
+
+  try {
+    await env.DB.batch([
+      ...logsCreditStmts,
+      studentStmt,
+      teacherStmt,
+      bookingStmt,
+    ]);
+    return true;
+  } catch (e) {
+    console.log(e);
     throw utilFailedResponse("Failed to update Booking", 500);
   }
 

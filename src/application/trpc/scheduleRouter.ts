@@ -73,13 +73,17 @@ export default trpcRouterCreate({
 
       const teacher = await teacherGet({ userId }, env);
 
-      return scheduleCreateMany({ teacherId: teacher.id, schedules }, env);
+      return scheduleCreateMany(
+        { teacherId: teacher.id, schedules },
+        env,
+        userId
+      );
     }),
 
   createManyAdmin: trpcProcedureAdmin
     .input(ScheduleCreateManyInputAdmin)
     .mutation((opts) => {
-      const { env } = opts.ctx;
+      const { env, userId } = opts.ctx;
       const { schedules } = opts.input;
 
       if (
@@ -90,7 +94,7 @@ export default trpcRouterCreate({
         throw utilFailedResponse("Invalid time range");
       }
 
-      return scheduleCreateMany(opts.input, env);
+      return scheduleCreateMany(opts.input, env, userId);
     }),
 
   deleteMany: trpcProcedureUser

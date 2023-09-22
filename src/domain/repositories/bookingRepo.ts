@@ -21,13 +21,18 @@ export async function bookingDbCreate(
   const now = Date.now();
 
   Object.keys(params).forEach((key, index) => {
-    if (index !== 0) {
-      fields += ", ";
-      values += ", ";
+    const value = params[key as keyof BookingCreate];
+    if (value !== undefined) {
+      if (index !== 0) {
+        fields += ", ";
+        values += ", ";
+      }
+      fields += key;
+      values += "?";
+      queryParams.push(value);
+    } else {
+      console.log(value);
     }
-    fields += key;
-    values += "?";
-    queryParams.push(params[key as keyof BookingCreate]);
   });
 
   if (queryParams.length) {

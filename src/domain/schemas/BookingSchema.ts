@@ -13,6 +13,7 @@ import {
   string,
   transform,
 } from "valibot";
+import { v4 as uuidv4 } from "uuid";
 
 const Schema = object({
   uuid: string("UUID must be a string", [minLength(1, "UUID is required")]),
@@ -43,11 +44,9 @@ const Schema = object({
   status: number("Status must be a number", [
     minValue(1, "Status must be greater than 0"),
   ]),
-  amount: optional(
-    number("Amount must be a number", [
-      minValue(0, "Amount must be greater than 0"),
-    ])
-  ),
+  amount: number("Amount must be a number", [
+    minValue(0, "Amount must be greater than 0"),
+  ]),
   id: number("ID must be a number", [minValue(1, "ID must be greater than 0")]),
   message: nullish(string("Message must be a string")),
   advanceBooking: optional(
@@ -89,25 +88,23 @@ export const BookingCreateInput = transform(
       status: 1,
       message: null,
       amount: 0,
+      uuid: uuidv4(),
     };
   }
 );
 
 export const BookingCreateInputAdmin = transform(
-  pick(Schema, [
-    "teacherId",
-    "start",
-    "end",
-    "studentId",
-    "courseId",
-    "message",
-    "status",
-    "amount",
-    "advanceBooking",
+  merge([
+    pick(Schema, ["teacherId", "start", "end", "studentId", "courseId"]),
+    partial(pick(Schema, ["amount", "advanceBooking", "status", "message"])),
   ]),
   (input) => {
-    const { message = null, status = 1, amount = null } = input;
-    return { ...input, status, message, amount };
+    return {
+      ...input,
+      status: input.status ?? 1,
+      message: input.message ?? null,
+      uuid: uuidv4(),
+    };
   }
 );
 

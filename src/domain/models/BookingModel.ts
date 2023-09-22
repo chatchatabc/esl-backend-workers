@@ -52,7 +52,7 @@ export type BookingCreateInput = Input<typeof BookingCreateInput>;
 export type BookingCreateInputAdmin = Input<typeof BookingCreateInputAdmin>;
 
 export type BookingPagination = {
-  userId?: number;
+  studentId?: number;
   status?: number[];
   day?: number;
   teacherId?: number;

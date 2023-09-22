@@ -8,8 +8,10 @@ export type LogsCredit = {
   amount: number;
   createdAt: number;
   updatedAt: number;
+  createdBy: number;
 
-  user?: User;
+  user: User;
+  createdByUser: User;
 };
 
 export type LogsCreditCreate = Pick<

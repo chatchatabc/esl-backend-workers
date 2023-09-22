@@ -608,7 +608,47 @@ export async function bookingDbCreateMany(
   }
 }
 
-export async function bookingDbUpdate(
+export function bookingDbUpdate(params: Booking, env: Env) {
+  const { id } = params;
+  const date = new Date().getTime();
+
+  let query = "UPDATE bookings";
+  let querySet = "";
+  const queryParams = [];
+
+  Object.keys(params).forEach((key) => {
+    const value = params[key as keyof Booking];
+    if (value !== undefined && typeof value !== "object") {
+      querySet += querySet ? ", " : "";
+      querySet += `${key} = ?`;
+      queryParams.push(params[key as keyof Booking]);
+    }
+  });
+
+  if (!querySet) {
+    throw utilFailedResponse("No update data for booking", 400);
+  } else {
+    querySet += `, updatedAt = ?`;
+    queryParams.push(date);
+
+    query += ` SET ${querySet}`;
+    query += ` WHERE id = ?`;
+    queryParams.push(id);
+  }
+
+  try {
+    const stmt = env.DB.prepare(query).bind(...queryParams);
+    return stmt;
+  } catch (e) {
+    console.log(e);
+    throw utilFailedResponse(
+      "Unable to generate booking update statement",
+      500
+    );
+  }
+}
+
+export async function bookingDbUpdate1(
   params: {
     teacher: User;
     user: User;

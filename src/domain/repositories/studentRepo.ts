@@ -113,7 +113,7 @@ export async function studentDbGetAllTotal(env: Env) {
   }
 }
 
-export async function studentDbCreate(
+export function studentDbCreate(
   params: StudentCreate,
   env: Env,
   createdBy: number
@@ -123,11 +123,7 @@ export async function studentDbCreate(
   const uuid = uuidv4();
 
   try {
-    const userStmt = await userDbCreate(
-      { ...user, status, alias },
-      env,
-      createdBy
-    );
+    const userStmt = userDbCreate({ ...user, status, alias }, env, createdBy);
     const studentStmt = env.DB.prepare(
       "INSERT INTO students (uuid, bio, status, userId, alias, createdBy, createdAt, updatedAt) VALUES (?, ?, ?, last_insert_rowid(), ?, ?, ?, ?)"
     ).bind(uuid, bio, status, alias, createdBy, now, now);

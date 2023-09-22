@@ -3,6 +3,7 @@ import type { TRPC_ERROR_CODE_KEY } from "@trpc/server/dist/rpc";
 import { enc, HmacSHA256 } from "crypto-js";
 import { ScheduleCreate } from "../models/ScheduleModel";
 import { v4 } from "uuid";
+import { ObjectSchema, safeParse } from "valibot";
 
 export function utilFailedResponse(message: string, status: number = 500) {
   let code: TRPC_ERROR_CODE_KEY = "INTERNAL_SERVER_ERROR";
@@ -187,4 +188,28 @@ export function utilQueryCreate(
   }
 
   return { fields, values, queryParams };
+}
+
+export function utilQueryUpdate(
+  data: Record<string, string | number | null>,
+  table: string
+) {
+  let querySet = "";
+  const queryParams: (string | null | number)[] = [];
+
+  Object.keys(data).forEach((key) => {
+    const value = data[key];
+    if (value !== undefined) {
+      querySet += querySet ? ", " : "";
+      querySet += `${key} = ?`;
+
+      queryParams.push(value);
+    }
+  });
+
+  if (!querySet) {
+    throw utilFailedResponse(`No data for ${table}`, 400);
+  }
+
+  return { querySet, queryParams };
 }

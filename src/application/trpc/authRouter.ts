@@ -1,43 +1,38 @@
-import { minLength, object, string } from "valibot";
-import {
-  trpcProcedure,
-  trpcProcedureUser,
-  trpcRouterCreate,
-} from "../../domain/infra/trpc";
-import { UserRegister } from "../../domain/models/UserModel";
-import { UserRegisterProfile } from "../../domain/schemas/UserSchema";
-import {
-  authCreateJsonWebToken,
-  authGetPhoneToken,
-  authValidatePhoneToken,
-} from "../../domain/services/authService";
-import { userGet, userUpdateProfile } from "../../domain/services/userService";
+import { parse } from "valibot";
+import { trpcProcedure, trpcRouterCreate } from "../../domain/infra/trpc";
+import { authCreateJsonWebToken } from "../../domain/services/authService";
+import { userGet } from "../../domain/services/userService";
 import {
   utilFailedResponse,
   utilHashHmac256,
 } from "../../domain/services/utilService";
-import { AuthLoginInput } from "../../domain/schemas/AuthSchema";
-import { userDbGet } from "../../domain/repositories/userRepo";
+import {
+  AuthLoginInput,
+  AuthRegisterInput,
+} from "../../domain/schemas/AuthSchema";
+import { userDbCreate, userDbGet } from "../../domain/repositories/userRepo";
+import { UserDbCreate } from "../../domain/models/UserModel";
 
 export default trpcRouterCreate({
   register: trpcProcedure
-    .input((values: any = {}) => {
-      const { username, password, confirmPassword, ...other } = values;
-      if (!username || !password || !confirmPassword) {
-        throw utilFailedResponse("Missing fields for register", 400);
-      } else if (password !== confirmPassword) {
-        throw utilFailedResponse("Password not match", 400);
-      } else if (other && Object.keys(other).length > 0) {
-        throw utilFailedResponse("Unknown fields present", 400);
+    .input((input) => parse(AuthRegisterInput, input))
+    .mutation(async (opts) => {
+      const { username, password, confirmPassword } = opts.input;
+
+      if (password !== confirmPassword) {
+        throw utilFailedResponse("Password does not match", 400);
       }
 
-      return values as UserRegister;
-    })
-    .mutation(async (opts) => {
-      const user = await authRegister(opts.input, opts.ctx.env);
-      if (!user) {
-        throw utilFailedResponse("Failed to register user", 400);
-      }
+      const userCreate: UserDbCreate = {
+        username,
+        password: utilHashHmac256(password),
+        roleId: 2,
+        status: 1,
+        credits: 0,
+      };
+
+      await userDbCreate(userCreate, opts.ctx.env, 1);
+      const user = await userGet(opts.input, opts.ctx.env);
 
       const token = authCreateJsonWebToken(user.id);
       opts.ctx.resHeaders.append(
@@ -48,27 +43,29 @@ export default trpcRouterCreate({
       return user;
     }),
 
-  login: trpcProcedure.input(AuthLoginInput).mutation(async (opts) => {
-    const { username, password } = opts.input;
-    const user = await userDbGet({ username }, opts.ctx.env);
+  login: trpcProcedure
+    .input((input) => parse(AuthLoginInput, input))
+    .mutation(async (opts) => {
+      const { username, password } = opts.input;
+      const user = await userDbGet({ username }, opts.ctx.env);
 
-    // Validate user
-    if (!user) {
-      throw utilFailedResponse("User not found", 404);
-    } else if (user.password !== utilHashHmac256(password)) {
-      throw utilFailedResponse("Invalid password", 400);
-    }
+      // Validate user
+      if (!user) {
+        throw utilFailedResponse("User not found", 404);
+      } else if (user.password !== utilHashHmac256(password)) {
+        throw utilFailedResponse("Invalid password", 400);
+      }
 
-    // Generate session token
-    const token = authCreateJsonWebToken(user.id);
-    opts.ctx.resHeaders.append(
-      "Set-Cookie",
-      `token=${token}; Path=/; SameSite=None; Secure; HttpOnly`
-    );
+      // Generate session token
+      const token = authCreateJsonWebToken(user.id);
+      opts.ctx.resHeaders.append(
+        "Set-Cookie",
+        `token=${token}; Path=/; SameSite=None; Secure; HttpOnly`
+      );
 
-    delete user.password;
-    return user;
-  }),
+      delete user.password;
+      return user;
+    }),
 
   logout: trpcProcedure.mutation((opts) => {
     opts.ctx.resHeaders.append(
@@ -77,46 +74,4 @@ export default trpcRouterCreate({
     );
     return true;
   }),
-
-  getProfile: trpcProcedureUser.query((opts) => {
-    const { userId = 0, env } = opts.ctx;
-    return userGet({ userId }, env);
-  }),
-
-  updateProfile: trpcProcedureUser
-    .input(UserRegisterProfile)
-    .mutation(async (opts) => {
-      const { userId, env } = opts.ctx;
-
-      const user = await userGet({ userId }, env);
-      if (!user) {
-        throw utilFailedResponse("User not found", 400);
-      }
-
-      const newData = {
-        ...user,
-        ...opts.input,
-      };
-
-      return userUpdateProfile(newData, env);
-    }),
-
-  getPhoneToken: trpcProcedureUser.query((opts) => {
-    const { userId, env } = opts.ctx;
-    return authGetPhoneToken({ userId }, env);
-  }),
-
-  validatePhoneToken: trpcProcedureUser
-    .input(
-      object({
-        token: string("Token must be a string", [
-          minLength(1, "Token is required"),
-        ]),
-      })
-    )
-    .mutation((opts) => {
-      const { userId = 0, env } = opts.ctx;
-      const { token } = opts.input;
-      return authValidatePhoneToken({ userId, token }, env);
-    }),
 });

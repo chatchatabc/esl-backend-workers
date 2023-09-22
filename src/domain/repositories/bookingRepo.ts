@@ -410,16 +410,16 @@ export async function bookingDbGetAllByDateEnd(
 }
 
 export async function bookingDbGetOverlap(values: BookingCreate, env: Env) {
-  const { start, end, teacherId, userId } = values;
+  const { start, end, teacherId, studentId } = values;
   try {
     const stmt = env.DB.prepare(
-      "SELECT COUNT(*) AS total FROM bookings WHERE ((start <= ? AND end > ?) OR (start < ? AND end >= ?)) AND (teacherId = ? OR userId = ?) AND status = 1"
-    ).bind(start, start, end, end, teacherId, userId);
+      "SELECT COUNT(*) AS total FROM bookings WHERE ((start <= ? AND end > ?) OR (start < ? AND end >= ?)) AND (teacherId = ? OR studentId = ?) AND status = 1"
+    ).bind(start, start, end, end, teacherId, studentId);
     const total = await stmt.first("total");
-    return total as number;
+    return total ?? 0;
   } catch (e) {
     console.log(e);
-    return null;
+    throw utilFailedResponse("Cannot get overlap bookings", 500);
   }
 }
 

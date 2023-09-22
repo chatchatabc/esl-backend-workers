@@ -15,7 +15,7 @@ import {
   AuthRegisterInput,
 } from "../../domain/schemas/AuthSchema";
 import { userDbCreate, userDbGet } from "../../domain/repositories/userRepo";
-import { UserDbCreate } from "../../domain/models/UserModel";
+import { UserCreate } from "../../domain/models/UserModel";
 
 export default trpcRouterCreate({
   register: trpcProcedure
@@ -27,7 +27,7 @@ export default trpcRouterCreate({
         throw utilFailedResponse("Password does not match", 400);
       }
 
-      const userCreate: UserDbCreate = {
+      const userCreate: UserCreate = {
         username,
         password: utilHashHmac256(password),
         roleId: 2,

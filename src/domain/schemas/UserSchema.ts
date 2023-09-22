@@ -106,6 +106,26 @@ export const UserDbCreateSchema = transform(
   }
 );
 
+export const UserDbUpdateSchema = merge([
+  pick(UserSchema, ["id"]),
+  partial(
+    pick(UserSchema, [
+      "alias",
+      "username",
+      "password",
+      "firstName",
+      "lastName",
+      "phone",
+      "email",
+      "roleId",
+      "status",
+      "credits",
+      "phoneVerifiedAt",
+      "emailVerifiedAt",
+    ])
+  ),
+]);
+
 export const UserUpdateInput = pick(UserSchema, [
   "id",
   "roleId",

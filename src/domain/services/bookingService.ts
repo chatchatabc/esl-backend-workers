@@ -36,10 +36,10 @@ import {
 export async function bookingGet(params: { bookingId: number }, env: Env) {
   const booking = await bookingDbGet(params, env);
   if (!booking) {
-    throw utilFailedResponse("Cannot GET", 500);
+    throw utilFailedResponse("Booking not found", 404);
   }
 
-  return booking;
+  return booking as Booking;
 }
 
 /*

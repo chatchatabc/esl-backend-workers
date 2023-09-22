@@ -198,15 +198,28 @@ export async function bookingDbGetAllTotal(
 export async function bookingDbGet(params: { bookingId: number }, env: Env) {
   const { bookingId } = params;
 
-  try {
-    const results = await env.DB.prepare("SELECT * FROM bookings WHERE id = ?")
-      .bind(bookingId)
-      .first<Booking>();
+  let query = "SELECT * FROM bookings";
+  let whereQuery = "";
+  const queryParams = [];
 
+  if (bookingId) {
+    whereQuery += whereQuery ? " AND " : "";
+    whereQuery += "id = ?";
+    queryParams.push(bookingId);
+  }
+
+  if (whereQuery) {
+    query += " WHERE " + whereQuery;
+    query += " LIMIT 1";
+  }
+
+  try {
+    const stmt = env.DB.prepare(query).bind(...queryParams);
+    const results = await stmt.first<Booking>();
     return results;
   } catch (e) {
     console.log(e);
-    return null;
+    throw utilFailedResponse("Cannot get booking", 500);
   }
 }
 

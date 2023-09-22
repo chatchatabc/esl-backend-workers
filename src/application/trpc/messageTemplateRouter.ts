@@ -1,4 +1,4 @@
-import { number, object } from "valibot";
+import { number, object, parse } from "valibot";
 import { trpcProcedureAdmin, trpcRouterCreate } from "../../domain/infra/trpc";
 import { CommonPaginationInput } from "../../domain/models/CommonModel";
 import {
@@ -14,22 +14,25 @@ import {
 
 export default trpcRouterCreate({
   create: trpcProcedureAdmin
-    .input(MessageTemplateCreateInput)
+    .input((input) => parse(MessageTemplateCreateInput, input))
     .mutation((opts) => {
       return messageTemplateCreate(opts.input, opts.ctx.env);
     }),
 
   update: trpcProcedureAdmin
-    .input(MessageTemplateUpdateInput)
+    .input((input) => parse(MessageTemplateUpdateInput, input))
     .mutation((opts) => {
       return messageTemplateUpdate(opts.input, opts.ctx.env);
     }),
 
   get: trpcProcedureAdmin
-    .input(
-      object({
-        messageTemplateId: number("Message Template ID must be a number"),
-      })
+    .input((input) =>
+      parse(
+        object({
+          messageTemplateId: number("Message Template ID must be a number"),
+        }),
+        input
+      )
     )
     .query((opts) => {
       return messageTemplateGet(opts.input, opts.ctx.env);

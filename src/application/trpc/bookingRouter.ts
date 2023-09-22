@@ -1,3 +1,4 @@
+import { parse } from "valibot";
 import {
   trpcProcedureAdmin,
   trpcProcedureUser,
@@ -23,34 +24,44 @@ import { studentGetByUser } from "../../domain/services/studentService";
 import { utilFailedResponse } from "../../domain/services/utilService";
 
 export default trpcRouterCreate({
-  getAll: trpcProcedureUser.input(CommonPaginationInput).query((opts) => {
-    const { input, ctx } = opts;
-    const { userId, env } = ctx;
-    input.userId = userId;
+  getAll: trpcProcedureUser
+    .input((input) => parse(CommonPaginationInput, input))
+    .query((opts) => {
+      const { input, ctx } = opts;
+      const { userId, env } = ctx;
+      input.userId = userId;
 
-    return bookingGetAll(input, env);
-  }),
+      return bookingGetAll(input, env);
+    }),
 
-  getAllAdmin: trpcProcedureAdmin.input(CommonPaginationInput).query((opts) => {
-    const { env } = opts.ctx;
+  getAllAdmin: trpcProcedureAdmin
+    .input((input) => parse(CommonPaginationInput, input))
+    .query((opts) => {
+      const { env } = opts.ctx;
 
-    return bookingGetAll(opts.input, env);
-  }),
+      return bookingGetAll(opts.input, env);
+    }),
 
-  create: trpcProcedureUser.input(BookingCreateInput).mutation(async (opts) => {
-    const { start, end } = opts.input;
-    if (start >= end) {
-      throw utilFailedResponse("Invalid time", 400);
-    }
+  create: trpcProcedureUser
+    .input((input) => parse(BookingCreateInput, input))
+    .mutation(async (opts) => {
+      const { start, end } = opts.input;
+      if (start >= end) {
+        throw utilFailedResponse("Invalid time", 400);
+      }
 
-    const { userId, env } = opts.ctx;
-    const student = await studentGetByUser({ userId }, opts.ctx.env);
+      const { userId, env } = opts.ctx;
+      const student = await studentGetByUser({ userId }, opts.ctx.env);
 
-    return bookingCreate({ ...opts.input, studentId: student.id }, env, userId);
-  }),
+      return bookingCreate(
+        { ...opts.input, studentId: student.id },
+        env,
+        userId
+      );
+    }),
 
   createAdmin: trpcProcedureAdmin
-    .input(BookingCreateInputAdmin)
+    .input((input) => parse(BookingCreateInputAdmin, input))
     .mutation(async (opts) => {
       const { env, userId } = opts.ctx;
       const { start, end, advanceBooking, ...booking } = opts.input;
@@ -71,27 +82,31 @@ export default trpcRouterCreate({
     }),
 
   completeAdmin: trpcProcedureAdmin
-    .input(BookingCompleteInputAdmin)
+    .input((input) => parse(BookingCompleteInputAdmin, input))
     .mutation((opts) => {
       const { env, user } = opts.ctx;
       return bookingUpdate({ ...opts.input, status: 3 }, env, user);
     }),
 
-  cancel: trpcProcedureUser.input(BookingCancelInput).mutation((opts) => {
-    const { env, user } = opts.ctx;
-    const { id } = opts.input;
-    return bookingUpdate({ id, status: 4 }, env, user);
-  }),
+  cancel: trpcProcedureUser
+    .input((input) => parse(BookingCancelInput, input))
+    .mutation((opts) => {
+      const { env, user } = opts.ctx;
+      const { id } = opts.input;
+      return bookingUpdate({ id, status: 4 }, env, user);
+    }),
 
   updateStatusMany: trpcProcedureUser
-    .input(BookingUpdateStatusManyInput)
+    .input((input) => parse(BookingUpdateStatusManyInput, input))
     .mutation((opts) => {
       const { env, user } = opts.ctx;
       return bookingUpdateStatusMany(opts.input, env, user);
     }),
 
-  update: trpcProcedureAdmin.input(BookingUpdateInput).mutation((opts) => {
-    const { env, user } = opts.ctx;
-    return bookingUpdate(opts.input, env, user);
-  }),
+  update: trpcProcedureAdmin
+    .input((input) => parse(BookingUpdateInput, input))
+    .mutation((opts) => {
+      const { env, user } = opts.ctx;
+      return bookingUpdate(opts.input, env, user);
+    }),
 });

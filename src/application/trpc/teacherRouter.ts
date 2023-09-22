@@ -1,4 +1,4 @@
-import { number, object, optional, string } from "valibot";
+import { number, object, optional, parse, string } from "valibot";
 import {
   trpcProcedureAdmin,
   trpcProcedureUser,
@@ -18,28 +18,37 @@ import {
 
 export default trpcRouterCreate({
   get: trpcProcedureUser
-    .input(
-      object({
-        teacherId: optional(number("Teacher ID must be a number")),
-        userId: optional(number("User ID must be a number")),
-        userUsername: optional(string("Username must be a string")),
-      })
+    .input((input) =>
+      parse(
+        object({
+          teacherId: optional(number("Teacher ID must be a number")),
+          userId: optional(number("User ID must be a number")),
+          userUsername: optional(string("Username must be a string")),
+        }),
+        input
+      )
     )
     .query((opts) => {
       return teacherGet(opts.input, opts.ctx.env);
     }),
 
-  getAll: trpcProcedureUser.input(CommonPaginationInput).query((opts) => {
-    return teacherGetAll(opts.input, opts.ctx.env);
-  }),
+  getAll: trpcProcedureUser
+    .input((input) => parse(CommonPaginationInput, input))
+    .query((opts) => {
+      return teacherGetAll(opts.input, opts.ctx.env);
+    }),
 
-  create: trpcProcedureAdmin.input(TeacherCreateInput).query((opts) => {
-    const { userId, env } = opts.ctx;
+  create: trpcProcedureAdmin
+    .input((input) => parse(TeacherCreateInput, input))
+    .query((opts) => {
+      const { userId, env } = opts.ctx;
 
-    return teacherCreate(opts.input, env, userId);
-  }),
+      return teacherCreate(opts.input, env, userId);
+    }),
 
-  update: trpcProcedureAdmin.input(TeacherUpdateInput).mutation((opts) => {
-    return teacherUpdate(opts.input, opts.ctx.env);
-  }),
+  update: trpcProcedureAdmin
+    .input((input) => parse(TeacherUpdateInput, input))
+    .mutation((opts) => {
+      return teacherUpdate(opts.input, opts.ctx.env);
+    }),
 });

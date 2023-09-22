@@ -1,3 +1,4 @@
+import { parse } from "valibot";
 import {
   trpcProcedureAdmin,
   trpcProcedureUser,
@@ -24,7 +25,7 @@ export default trpcRouterCreate({
     }),
 
   getCreditAllByUser: trpcProcedureAdmin
-    .input(CommonPaginationInput)
+    .input((input) => parse(CommonPaginationInput, input))
     .query((opts) => {
       const { userId } = opts.input;
       if (!userId) {

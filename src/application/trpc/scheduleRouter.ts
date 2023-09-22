@@ -1,3 +1,4 @@
+import { parse } from "valibot";
 import {
   trpcProcedureAdmin,
   trpcProcedureUser,
@@ -26,12 +27,14 @@ export default trpcRouterCreate({
     return "Get Schedule";
   }),
 
-  getAll: trpcProcedureUser.input(CommonPaginationInput).query((opts) => {
-    return scheduleGetAll(opts.input, opts.ctx.env);
-  }),
+  getAll: trpcProcedureUser
+    .input((input) => parse(CommonPaginationInput, input))
+    .query((opts) => {
+      return scheduleGetAll(opts.input, opts.ctx.env);
+    }),
 
   updateMany: trpcProcedureUser
-    .input(ScheduleUpdateManyInput)
+    .input((input) => parse(ScheduleUpdateManyInput, input))
     .mutation(async (opts) => {
       const { userId, env } = opts.ctx;
       const { schedules } = opts.input;
@@ -49,7 +52,7 @@ export default trpcRouterCreate({
     }),
 
   updateManyAdmin: trpcProcedureAdmin
-    .input(ScheduleUpdateManyInputAdmin)
+    .input((input) => parse(ScheduleUpdateManyInputAdmin, input))
     .mutation((opts) => {
       const { env } = opts.ctx;
       const { schedules } = opts.input;
@@ -66,7 +69,7 @@ export default trpcRouterCreate({
     }),
 
   createMany: trpcProcedureUser
-    .input(ScheduleCreateManyInput)
+    .input((input) => parse(ScheduleCreateManyInput, input))
     .mutation(async (opts) => {
       const { userId, env } = opts.ctx;
       const { schedules } = opts.input;
@@ -81,7 +84,7 @@ export default trpcRouterCreate({
     }),
 
   createManyAdmin: trpcProcedureAdmin
-    .input(ScheduleCreateManyInputAdmin)
+    .input((input) => parse(ScheduleCreateManyInputAdmin, input))
     .mutation((opts) => {
       const { env, userId } = opts.ctx;
       const { schedules } = opts.input;
@@ -98,7 +101,7 @@ export default trpcRouterCreate({
     }),
 
   deleteMany: trpcProcedureUser
-    .input(ScheduleDeleteManyInput)
+    .input((input) => parse(ScheduleDeleteManyInput, input))
     .mutation(async (opts) => {
       const { userId, env } = opts.ctx;
       const { scheduleIds } = opts.input;
@@ -109,7 +112,7 @@ export default trpcRouterCreate({
     }),
 
   deleteManyAdmin: trpcProcedureAdmin
-    .input(ScheduleDeleteManyInputAdmin)
+    .input((input) => parse(ScheduleDeleteManyInputAdmin, input))
     .mutation((opts) => {
       const { env } = opts.ctx;
 

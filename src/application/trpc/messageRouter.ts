@@ -1,3 +1,4 @@
+import { parse } from "valibot";
 import { trpcProcedureAdmin, trpcRouterCreate } from "../../domain/infra/trpc";
 import {
   MessageCreateInput,
@@ -12,15 +13,17 @@ import {
 } from "../../domain/services/messageService";
 
 export default trpcRouterCreate({
-  create: trpcProcedureAdmin.input(MessageCreateInput).mutation((opts) => {
-    const { userId, env } = opts.ctx;
-    const data = {
-      ...opts.input,
-      senderId: userId,
-      status: 1,
-    };
-    return messageCreate(data, env);
-  }),
+  create: trpcProcedureAdmin
+    .input((input) => parse(MessageCreateInput, input))
+    .mutation((opts) => {
+      const { userId, env } = opts.ctx;
+      const data = {
+        ...opts.input,
+        senderId: userId,
+        status: 1,
+      };
+      return messageCreate(data, env);
+    }),
 
   getAll: trpcProcedureAdmin
     .input((values: any = {}) => {
@@ -37,13 +40,17 @@ export default trpcRouterCreate({
       return messageGetAll({ page, size }, opts.ctx.env);
     }),
 
-  send: trpcProcedureAdmin.input(MessageSendInput).mutation((opts) => {
-    const { env } = opts.ctx;
+  send: trpcProcedureAdmin
+    .input((input) => parse(MessageSendInput, input))
+    .mutation((opts) => {
+      const { env } = opts.ctx;
 
-    return messageSend(opts.input, env);
-  }),
+      return messageSend(opts.input, env);
+    }),
 
-  update: trpcProcedureAdmin.input(MessageUpdateInput).mutation((opts) => {
-    return messageUpdate(opts.input, opts.ctx.env);
-  }),
+  update: trpcProcedureAdmin
+    .input((input) => parse(MessageUpdateInput, input))
+    .mutation((opts) => {
+      return messageUpdate(opts.input, opts.ctx.env);
+    }),
 });

@@ -6,6 +6,7 @@ import type {
 import type { BookingCreate } from "../models/BookingModel";
 import { Env } from "../..";
 import {
+  utilFailedResponse,
   utilGetScheduleTimeAndDay,
   utilQueryAddWhere,
 } from "../services/utilService";
@@ -16,10 +17,15 @@ export async function scheduleDbGetAll(params: SchedulePagination, env: Env) {
 
   const queryParams = [];
   let query = "SELECT * FROM schedules";
+  let queryWhere = "";
 
   if (teacherId) {
-    query = utilQueryAddWhere(query, "teacherId = ?");
+    queryWhere += `teacherId = ?`;
     queryParams.push(teacherId);
+  }
+
+  if (queryWhere) {
+    query += ` WHERE ${queryWhere}`;
   }
 
   query += " ORDER BY createdAt DESC";
@@ -30,10 +36,10 @@ export async function scheduleDbGetAll(params: SchedulePagination, env: Env) {
     const results = await env.DB.prepare(query)
       .bind(...queryParams)
       .all<Schedule>();
-    return results;
+    return results.results;
   } catch (e) {
     console.log(e);
-    return null;
+    throw utilFailedResponse("Cannot get schedules", 500);
   }
 }
 
@@ -58,7 +64,7 @@ export async function scheduleDbGetAllTotal(
     return total;
   } catch (e) {
     console.log(e);
-    return null;
+    throw utilFailedResponse("Cannot get total schedules", 500);
   }
 }
 
@@ -74,7 +80,7 @@ export async function scheduleDbUpdateMany(schedules: Schedule[], env: Env) {
           schedule.endTime,
           Date.now(),
           schedule.teacherId,
-          schedule.day,
+          schedule.weekDay,
           schedule.id
         );
       })
@@ -156,6 +162,49 @@ export async function scheduleDbGetOverlapMany(
   }
 }
 
+export function scheduleDbCreate(
+  params: ScheduleCreate,
+  env: Env,
+  createdBy: number
+) {
+  let query = "INSERT INTO schedules";
+  let fields = "";
+  let values = "";
+  const queryParams: (string | null | number)[] = [];
+  const now = Date.now();
+
+  Object.keys(params).forEach((key, index) => {
+    if (index !== 0) {
+      fields += ", ";
+      values += ", ";
+    }
+    fields += key;
+    values += "?";
+    queryParams.push(params[key as keyof ScheduleCreate]);
+  });
+
+  if (queryParams.length) {
+    fields += ", createdAt, updatedAt, createdBy";
+    values += ", ?, ?, ?";
+    queryParams.push(now, now, createdBy);
+
+    query += ` (${fields}) VALUES (${values})`;
+  } else {
+    throw utilFailedResponse("No data to insert", 400);
+  }
+
+  try {
+    const stmt = env.DB.prepare(query).bind(...queryParams);
+    return stmt;
+  } catch (e) {
+    console.log(e);
+    throw utilFailedResponse(
+      "Unable to generate schedule create statement",
+      500
+    );
+  }
+}
+
 export async function scheduleDbInsertMany(
   schedules: ScheduleCreate[],
   env: Env
@@ -171,7 +220,7 @@ export async function scheduleDbInsertMany(
           schedule.teacherId,
           schedule.startTime,
           schedule.endTime,
-          schedule.day,
+          schedule.weekDay,
           date,
           date
         );

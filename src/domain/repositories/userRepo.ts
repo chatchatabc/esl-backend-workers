@@ -230,87 +230,26 @@ export async function userDbGetAllRoleTotal(env: Env) {
 }
 
 export async function userDbUpdate(params: User, env: Env) {
-  const {
-    id,
-    username,
-    password,
-    roleId,
-    firstName,
-    lastName,
-    phone,
-    phoneVerifiedAt,
-    status,
-    credits,
-    alias,
-  } = params;
+  const { id } = params;
   const date = new Date().getTime();
 
   let query = "UPDATE users";
   let querySet = "";
   const queryParams = [];
 
-  if (username !== undefined) {
-    querySet += `username = ?`;
-    queryParams.push(username);
-  }
-
-  if (password !== undefined) {
-    querySet += querySet ? ", " : "";
-    querySet += `password = ?`;
-    queryParams.push(password);
-  }
-
-  if (roleId !== undefined) {
-    querySet += querySet ? ", " : "";
-    querySet += `roleId = ?`;
-    queryParams.push(roleId);
-  }
-
-  if (firstName !== undefined) {
-    querySet += querySet ? ", " : "";
-    querySet += `firstName = ?`;
-    queryParams.push(firstName);
-  }
-
-  if (lastName !== undefined) {
-    querySet += querySet ? ", " : "";
-    querySet += `lastName = ?`;
-    queryParams.push(lastName);
-  }
-
-  if (phone !== undefined) {
-    querySet += querySet ? ", " : "";
-    querySet += `phone = ?`;
-    queryParams.push(phone);
-  }
-
-  if (phoneVerifiedAt !== undefined) {
-    querySet += querySet ? ", " : "";
-    querySet += `phoneVerifiedAt = ?`;
-    queryParams.push(phoneVerifiedAt);
-  }
-
-  if (status !== undefined) {
-    querySet += querySet ? ", " : "";
-    querySet += `status = ?`;
-    queryParams.push(status);
-  }
-
-  if (credits !== undefined) {
-    querySet += querySet ? ", " : "";
-    querySet += `credits = ?`;
-    queryParams.push(credits);
-  }
-
-  if (alias !== undefined) {
-    querySet += querySet ? ", " : "";
-    querySet += `alias = ?`;
-    queryParams.push(alias);
-  }
+  Object.keys((key: any) => {
+    if (params[key as keyof User] !== undefined) {
+      querySet += querySet ? ", " : "";
+      querySet += `${key} = ?`;
+      queryParams.push(params[key as keyof User]);
+    }
+  });
 
   if (!querySet) {
     throw utilFailedResponse("No update data", 400);
   } else {
+    query += `, updatedAt = ?`;
+    queryParams.push(date);
     query += ` SET ${querySet}`;
     query += ` WHERE id = ?`;
     queryParams.push(id);

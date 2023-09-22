@@ -1,5 +1,9 @@
 import { parse } from "valibot";
-import { trpcProcedure, trpcRouterCreate } from "../../domain/infra/trpc";
+import {
+  trpcProcedure,
+  trpcProcedureUser,
+  trpcRouterCreate,
+} from "../../domain/infra/trpc";
 import { authCreateJsonWebToken } from "../../domain/services/authService";
 import { userGet } from "../../domain/services/userService";
 import {
@@ -67,7 +71,7 @@ export default trpcRouterCreate({
       return user;
     }),
 
-  logout: trpcProcedure.mutation((opts) => {
+  logout: trpcProcedureUser.mutation((opts) => {
     opts.ctx.resHeaders.append(
       "Set-Cookie",
       `token=; Path=/; SameSite=None; Secure; HttpOnly; Max-Age=0`

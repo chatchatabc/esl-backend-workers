@@ -51,7 +51,7 @@ export async function bookingDbCreate(
 
 export async function bookingDbGetAll(params: BookingPagination, env: Env) {
   const {
-    userId,
+    studentId,
     page,
     size,
     status,
@@ -68,18 +68,18 @@ export async function bookingDbGetAll(params: BookingPagination, env: Env) {
   let whereQuery = "";
   let endQuery = " ORDER BY createdAt DESC";
 
-  if (userId && teacherId) {
+  if (studentId && teacherId) {
     whereQuery += whereQuery ? " AND " : "";
     whereQuery += "(userId = ? OR teacherId = ?)";
-    queryParams.push(userId, teacherId);
+    queryParams.push(studentId, teacherId);
   } else if (teacherId) {
     whereQuery += whereQuery ? " AND " : "";
     whereQuery += "teacherId = ?";
     queryParams.push(teacherId);
-  } else if (userId) {
+  } else if (studentId) {
     whereQuery += whereQuery ? " AND " : "";
     whereQuery += "userId = ?";
-    queryParams.push(userId);
+    queryParams.push(studentId);
   }
 
   if (status) {
@@ -137,10 +137,10 @@ export async function bookingDbGetAll(params: BookingPagination, env: Env) {
       .bind(...queryParams)
       .all<Booking>();
 
-    return results;
+    return results.results;
   } catch (e) {
     console.log(e);
-    return null;
+    throw utilFailedResponse("Cannot get bookings", 500);
   }
 }
 
@@ -148,21 +148,24 @@ export async function bookingDbGetAllTotal(
   params: BookingPagination,
   env: Env
 ) {
-  const { userId, status, teacherId, day } = params;
+  const { studentId, status, teacherId, day } = params;
 
   const queryParams = [];
   let query = "SELECT COUNT(*) AS total FROM bookings";
   let whereQuery = "";
 
-  if (userId) {
-    whereQuery += "userId = ?";
-    queryParams.push(userId);
-  }
-
-  if (teacherId) {
+  if (studentId && teacherId) {
+    whereQuery += whereQuery ? " AND " : "";
+    whereQuery += "(userId = ? OR teacherId = ?)";
+    queryParams.push(studentId, teacherId);
+  } else if (teacherId) {
     whereQuery += whereQuery ? " AND " : "";
     whereQuery += "teacherId = ?";
     queryParams.push(teacherId);
+  } else if (studentId) {
+    whereQuery += whereQuery ? " AND " : "";
+    whereQuery += "userId = ?";
+    queryParams.push(studentId);
   }
 
   if (status) {
@@ -188,10 +191,10 @@ export async function bookingDbGetAllTotal(
     const results = await env.DB.prepare(query)
       .bind(...queryParams)
       .first<number>("total");
-    return results;
+    return results ?? 0;
   } catch (e) {
     console.log(e);
-    return null;
+    throw utilFailedResponse("Cannot get total bookings", 500);
   }
 }
 

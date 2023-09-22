@@ -272,17 +272,10 @@ export async function bookingCreateMany(
 
 export async function bookingGetAll(params: BookingPagination, env: Env) {
   const bookings = await bookingDbGetAll(params, env);
-  if (!bookings) {
-    throw utilFailedResponse("Cannot GET", 500);
-  }
-
-  const totalElements: null | number = await bookingDbGetAllTotal(params, env);
-  if (totalElements === null) {
-    throw utilFailedResponse("Cannot GET total", 500);
-  }
+  const totalElements: number = await bookingDbGetAllTotal(params, env);
 
   return {
-    content: bookings.results as Booking[],
+    content: bookings as Booking[],
     totalElements,
     page: params.page,
     size: params.size,

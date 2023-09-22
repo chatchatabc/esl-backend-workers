@@ -20,6 +20,7 @@ import {
   bookingUpdate,
   bookingUpdateStatusMany,
 } from "../../domain/services/bookingService";
+import { studentGetByUser } from "../../domain/services/studentService";
 import { utilFailedResponse } from "../../domain/services/utilService";
 
 export default trpcRouterCreate({
@@ -44,12 +45,15 @@ export default trpcRouterCreate({
     }
 
     const { userId, env } = opts.ctx;
-    return bookingCreate({ ...opts.input, userId }, env);
+    const student = await studentGetByUser({ userId }, opts.ctx.env);
+
+    return bookingCreate({ ...opts.input, studentId: student.id }, env, userId);
   }),
 
   createAdmin: trpcProcedureAdmin
     .input(BookingCreateInputAdmin)
     .mutation(async (opts) => {
+      const { env, userId } = opts.ctx;
       const { start, end, advanceBooking } = opts.input;
       if (start >= end) {
         throw utilFailedResponse("Start time must be before end time", 400);
@@ -62,7 +66,7 @@ export default trpcRouterCreate({
         );
       }
 
-      return bookingCreate(opts.input, opts.ctx.env);
+      return bookingCreate(opts.input, env, userId);
     }),
 
   completeAdmin: trpcProcedureAdmin

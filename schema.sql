@@ -22,7 +22,7 @@ CREATE TABLE
     emailVerifiedAt TIMESTAMP,
     credits INTEGER NOT NULL,
     status INTEGER NOT NULL, -- 0: inactive, 1: active
-    createdBy INTEGER NOT NULL, -- Foreign key from users table
+    createdById INTEGER NOT NULL, -- Foreign key from users table
     createdAt TIMESTAMP NOT NULL,
     updatedAt TIMESTAMP NOT NULL
   );
@@ -107,7 +107,7 @@ CREATE TABLE
     alias TEXT,
     bio TEXT,
     status INTEGER NOT NULL, -- 0: inactive, 1: active
-    createdBy INTEGER NOT NULL, -- Foreign key from users table
+    createdById INTEGER NOT NULL, -- Foreign key from users table
     createdAt TIMESTAMP NOT NULL,
     updatedAt TIMESTAMP NOT NULL
   );
@@ -149,7 +149,7 @@ CREATE TABLE
     alias TEXT,
     bio TEXT,
     status INTEGER NOT NULL, -- 0: inactive, 1: active
-    createdBy INTEGER NOT NULL, -- Foreign key from users table
+    createdById INTEGER NOT NULL, -- Foreign key from users table
     createdAt TIMESTAMP NOT NULL,
     updatedAt TIMESTAMP NOT NULL
   );
@@ -192,7 +192,7 @@ CREATE TABLE
     name TEXT NOT NULL,
     description TEXT,
     status INTEGER NOT NULL, -- 0: inactive, 1: active
-    createdBy INTEGER NOT NULL, -- Foreign key from users table
+    createdById INTEGER NOT NULL, -- Foreign key from users table
     createdAt TIMESTAMP NOT NULL,
     updatedAt TIMESTAMP NOT NULL
   );
@@ -232,7 +232,7 @@ CREATE TABLE
   IF NOT EXISTS roles (
     id INTEGER PRIMARY KEY,
     name TEXT NOT NULL UNIQUE,
-    createdBy INTEGER NOT NULL, -- Foreign key from users table
+    createdById INTEGER NOT NULL, -- Foreign key from users table
     createdAt TIMESTAMP NOT NULL,
     updatedAt TIMESTAMP NOT NULL
   );
@@ -257,7 +257,7 @@ CREATE TABLE
     startTime INTEGER NOT NULL,
     endTime INTEGER NOT NULL,
     weekDay INTEGER NOT NULL,
-    createdBy INTEGER NOT NULL, -- Foreign key from users table
+    createdById INTEGER NOT NULL, -- Foreign key from users table
     createdAt TIMESTAMP NOT NULL,
     updatedAt TIMESTAMP NOT NULL
   );
@@ -282,7 +282,7 @@ CREATE TABLE
     end TIMESTAMP NOT NULL,
     status INTEGER NOT NULL, -- 1: pending, 2: confirmed, 3: completed, 4: cancelled, 5: absent, 6: expired, -1: deleted
     message TEXT,
-    createdBy INTEGER NOT NULL, -- Foreign key from users table
+    createdById INTEGER NOT NULL, -- Foreign key from users table
     createdAt TIMESTAMP NOT NULL,
     updatedAt TIMESTAMP NOT NULL
   );
@@ -300,7 +300,7 @@ CREATE TABLE
     title TEXT NOT NULL,
     details TEXT NOT NULL,
     amount INTEGER NOT NULL,
-    createdBy INTEGER NOT NULL, -- Foreign key from users table
+    createdById INTEGER NOT NULL, -- Foreign key from users table
     createdAt TIMESTAMP NOT NULL,
     updatedAt TIMESTAMP NOT NULL
   );
@@ -322,7 +322,7 @@ CREATE TABLE
     amount INTEGER NOT NULL,
     currency TEXT NOT NULL,
     status INTEGER NOT NULL, -- 1: pending, 2: confirmed, 3: completed, 4: cancelled
-    createdBy INTEGER NOT NULL, -- Foreign key from users table
+    createdById INTEGER NOT NULL, -- Foreign key from users table
     createdAt TIMESTAMP NOT NULL,
     updatedAt TIMESTAMP NOT NULL
   );
@@ -344,7 +344,7 @@ CREATE TABLE
     cron TEXT NOT NULL,
     sendAt TIMESTAMP,
     status INTEGER NOT NULL, -- 0: inactive, 1: scheduled, 2: successful, 3: failed, 4: recurring -1: deleted
-    createdBy INTEGER NOT NULL, -- Foreign key from users table
+    createdById INTEGER NOT NULL, -- Foreign key from users table
     createdAt TIMESTAMP NOT NULL,
     updatedAt TIMESTAMP NOT NULL
   );
@@ -364,7 +364,7 @@ CREATE TABLE
     message TEXT NOT NULL,
     variables TEXT, -- Separated by comma
     status INTEGER NOT NULL, -- 0: inactive, 1: active
-    createdBy INTEGER NOT NULL, -- Foreign key from users table
+    createdById INTEGER NOT NULL, -- Foreign key from users table
     createdAt TIMESTAMP NOT NULL,
     updatedAt TIMESTAMP NOT NULL
   );

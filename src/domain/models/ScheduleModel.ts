@@ -7,9 +7,10 @@ export type Schedule = {
   teacherId: number;
   startTime: number;
   endTime: number;
-  day: number;
+  weekDay: number;
   createdAt: number;
   updatedAt: number;
+  createdBy: number;
 };
 
 export type ScheduleCreate = Omit<Schedule, "id" | "createdAt" | "updatedAt">;

@@ -7,7 +7,6 @@ import {
   utilGenerateRandomCode,
   utilHashHmac256,
 } from "./utilService";
-import { UserCreate, UserLogin, UserRegister } from "../models/UserModel";
 import { userGet } from "./userService";
 import { messageSend } from "./messageService";
 import { MessageSend } from "../models/MessageModel";

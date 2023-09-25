@@ -3,7 +3,6 @@ import type { TRPC_ERROR_CODE_KEY } from "@trpc/server/dist/rpc";
 import { enc, HmacSHA256 } from "crypto-js";
 import { ScheduleCreate } from "../models/ScheduleModel";
 import { v4 } from "uuid";
-import { ObjectSchema, safeParse } from "valibot";
 
 export function utilFailedResponse(message: string, status: number = 500) {
   let code: TRPC_ERROR_CODE_KEY = "INTERNAL_SERVER_ERROR";

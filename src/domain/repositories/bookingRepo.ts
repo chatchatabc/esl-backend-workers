@@ -1,3 +1,4 @@
+import { safeParse } from "valibot";
 import { Env } from "../..";
 import {
   Booking,
@@ -7,43 +8,28 @@ import {
 import { LogsCreditCreate } from "../models/LogsModel";
 import { MessageCreate } from "../models/MessageModel";
 import { User } from "../models/UserModel";
-import { utilFailedResponse, utilQueryAddWhere } from "../services/utilService";
+import {
+  utilFailedResponse,
+  utilQueryAddWhere,
+  utilQueryCreate,
+} from "../services/utilService";
+import { BookingCreateSchema } from "../schemas/BookingSchema";
 
 export function bookingDbCreate(
   params: BookingCreate,
   env: Env,
   createdBy: number
 ) {
-  let query = "INSERT INTO bookings";
-  let fields = "";
-  let values = "";
-  const queryParams: (string | null | number)[] = [];
-  const now = Date.now();
-
-  Object.keys(params).forEach((key, index) => {
-    const value = params[key as keyof BookingCreate];
-    if (value !== undefined) {
-      if (index !== 0) {
-        fields += ", ";
-        values += ", ";
-      }
-      fields += key;
-      values += "?";
-      queryParams.push(value);
-    } else {
-      console.log(value);
-    }
-  });
-
-  if (queryParams.length) {
-    fields += ", createdAt, updatedAt, createdBy";
-    values += ", ?, ?, ?";
-    queryParams.push(now, now, createdBy);
-
-    query += ` (${fields}) VALUES (${values})`;
-  } else {
-    throw utilFailedResponse("No data to insert", 400);
+  const data = safeParse(BookingCreateSchema, params);
+  if (!data.success) {
+    throw utilFailedResponse("Invalid booking data", 400);
   }
+
+  const { fields, values, queryParams } = utilQueryCreate(data.data, "BOOKING");
+  let query = "INSERT INTO bookings";
+  const now = Date.now();
+  query += ` (${fields}, createdAt, updatedAt, createdBy) VALUES (${values}, ?, ?, ?)`;
+  queryParams.push(now, now, createdBy);
 
   try {
     const stmt = env.DB.prepare(query).bind(...queryParams);

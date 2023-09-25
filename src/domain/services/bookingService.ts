@@ -1,4 +1,3 @@
-import { Input, Output } from "valibot";
 import { Env } from "../..";
 import {
   Booking,
@@ -122,7 +121,7 @@ export async function bookingUpdate(
 }
 
 export async function bookingCreate(
-  params: Output<typeof BookingCreateSchema>,
+  params: BookingCreate,
   env: Env,
   createdById: number
 ) {
@@ -180,7 +179,7 @@ export async function bookingCreate(
 }
 
 export async function bookingCreateMany(
-  params: Output<typeof BookingCreateSchema>,
+  params: BookingCreate,
   env: Env,
   advanceBooking: number,
   createdById: number
@@ -213,7 +212,7 @@ export async function bookingCreateMany(
   }
 
   // Create bookings
-  const bookings: Output<typeof BookingCreateSchema>[] = [];
+  const bookings: BookingCreate[] = [];
   while (bookings.length < advanceBooking) {
     const booking = {
       ...params,

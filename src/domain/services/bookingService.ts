@@ -1,4 +1,4 @@
-import { Output } from "valibot";
+import { Input, Output } from "valibot";
 import { Env } from "../..";
 import {
   Booking,
@@ -213,12 +213,13 @@ export async function bookingCreateMany(
   }
 
   // Create bookings
-  const bookings: BookingCreate[] = [];
+  const bookings: Output<typeof BookingCreateSchema>[] = [];
   while (bookings.length < advanceBooking) {
     const booking = {
       ...params,
       start,
       end,
+      uuid: uuidv4(),
     };
 
     // Check if the booking overlaps with another booking
@@ -246,10 +247,10 @@ export async function bookingCreateMany(
   };
 
   const bookingStmts = bookings.map((booking) => {
-    return bookingDbCreate({ ...booking }, env, student.userId);
+    return bookingDbCreate({ ...booking }, env, createdById);
   });
   const userStmt = userDbUpdate(student.user, env);
-  const logsCreditStmt = logsDbCreateCredit(logsCredit, env, student.userId);
+  const logsCreditStmt = logsDbCreateCredit(logsCredit, env, createdById);
 
   try {
     await env.DB.batch([userStmt, logsCreditStmt, ...bookingStmts]);

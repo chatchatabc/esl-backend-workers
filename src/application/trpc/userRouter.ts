@@ -1,4 +1,4 @@
-import { number, object, parse } from "valibot";
+import { number, object, parse, pick } from "valibot";
 import {
   trpcProcedureAdmin,
   trpcProcedureUser,
@@ -8,15 +8,13 @@ import {
   UserCreateInput,
   UserGetInput,
   UserUpdateInput,
+  UserUpdateSchema,
 } from "../../domain/schemas/UserSchema";
 import {
   userCreate,
   userGet,
   userGetAll,
-  userGetAllRole,
-  userRevokePhoneVerification,
   userUpdate,
-  userVerifyPhone,
 } from "../../domain/services/userService";
 import { utilFailedResponse } from "../../domain/services/utilService";
 import { CommonPaginationInput } from "../../domain/schemas/CommonSchema";
@@ -27,8 +25,8 @@ export default trpcRouterCreate({
   get: trpcProcedureUser
     .input((input) => parse(UserGetInput, input))
     .query((opts) => {
-      const { id: userId, username } = opts.input;
-      return userGet({ userId, username }, opts.ctx.env);
+      const { id: userId } = opts.input;
+      return userGet({ userId }, opts.ctx.env);
     }),
 
   getAll: trpcProcedureAdmin
@@ -63,13 +61,10 @@ export default trpcRouterCreate({
     }),
 
   verifyPhone: trpcProcedureAdmin
-    .input((input) =>
-      parse(object({ id: number("ID must be a number") }), input)
-    )
+    .input(pick(UserUpdateSchema, ["id", "phoneVerifiedAt"]))
     .mutation((opts) => {
-      const { id: userId } = opts.input;
-
-      return userVerifyPhone({ userId }, opts.ctx.env);
+      const { id } = opts.input;
+      return userUpdate({ id, phoneVerifiedAt: Date.now() }, opts.ctx.env);
     }),
 
   revokePhoneVerification: trpcProcedureAdmin
@@ -78,12 +73,11 @@ export default trpcRouterCreate({
     )
     .mutation(async (opts) => {
       const { id: userId } = opts.input;
-
-      return userRevokePhoneVerification({ userId }, opts.ctx.env);
+      return userUpdate({ id: userId, phoneVerifiedAt: null }, opts.ctx.env);
     }),
 
-  userGetProfile: trpcProcedureUser.query(async (opts) => {
-    const { userId, env } = opts.ctx;
-    return await userGet({ userId }, env);
+  userGetProfile: trpcProcedureUser.query((opts) => {
+    const { user } = opts.ctx;
+    return user;
   }),
 });

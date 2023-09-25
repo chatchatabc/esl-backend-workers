@@ -1,4 +1,3 @@
-import { parse } from "valibot";
 import {
   trpcProcedureAdmin,
   trpcProcedureUser,
@@ -25,46 +24,40 @@ import { utilFailedResponse } from "../../domain/services/utilService";
 import { courseGet } from "../../domain/services/courseService";
 
 export default trpcRouterCreate({
-  getAll: trpcProcedureUser
-    .input((input) => parse(CommonPaginationInput, input))
-    .query((opts) => {
-      const { input, ctx } = opts;
-      const { userId, env } = ctx;
-      input.userId = userId;
+  getAll: trpcProcedureUser.input(CommonPaginationInput).query((opts) => {
+    const { input, ctx } = opts;
+    const { userId, env } = ctx;
+    input.userId = userId;
 
-      return bookingGetAll(input, env);
-    }),
+    return bookingGetAll(input, env);
+  }),
 
-  getAllAdmin: trpcProcedureAdmin
-    .input((input) => parse(CommonPaginationInput, input))
-    .query((opts) => {
-      const { env } = opts.ctx;
+  getAllAdmin: trpcProcedureAdmin.input(CommonPaginationInput).query((opts) => {
+    const { env } = opts.ctx;
 
-      return bookingGetAll(opts.input, env);
-    }),
+    return bookingGetAll(opts.input, env);
+  }),
 
-  create: trpcProcedureUser
-    .input((input) => parse(BookingCreateInput, input))
-    .mutation(async (opts) => {
-      const { start, end, courseId } = opts.input;
-      if (start >= end) {
-        throw utilFailedResponse("Start time must be before end time", 400);
-      }
+  create: trpcProcedureUser.input(BookingCreateInput).mutation(async (opts) => {
+    const { start, end, courseId } = opts.input;
+    if (start >= end) {
+      throw utilFailedResponse("Start time must be before end time", 400);
+    }
 
-      const { userId, env } = opts.ctx;
-      const student = await studentGetByUser({ userId }, opts.ctx.env);
-      const course = await courseGet({ courseId }, opts.ctx.env);
-      const amount = course.price * ((end - start) / (1000 * 60 * 30));
+    const { userId, env } = opts.ctx;
+    const student = await studentGetByUser({ userId }, opts.ctx.env);
+    const course = await courseGet({ courseId }, opts.ctx.env);
+    const amount = course.price * ((end - start) / (1000 * 60 * 30));
 
-      return bookingCreate(
-        { ...opts.input, studentId: student.id, amount },
-        env,
-        userId
-      );
-    }),
+    return bookingCreate(
+      { ...opts.input, studentId: student.id, amount },
+      env,
+      userId
+    );
+  }),
 
   createByAdmin: trpcProcedureAdmin
-    .input((input) => parse(BookingCreateInputAdmin, input))
+    .input(BookingCreateInputAdmin)
     .mutation(async (opts) => {
       const { env, userId } = opts.ctx;
       const { start, end, advanceBooking, ...booking } = opts.input;
@@ -89,31 +82,27 @@ export default trpcRouterCreate({
     }),
 
   completeAdmin: trpcProcedureAdmin
-    .input((input) => parse(BookingCompleteInputAdmin, input))
+    .input(BookingCompleteInputAdmin)
     .mutation((opts) => {
       const { env, user } = opts.ctx;
       return bookingUpdate({ ...opts.input, status: 3 }, env, user);
     }),
 
-  cancel: trpcProcedureUser
-    .input((input) => parse(BookingCancelInput, input))
-    .mutation((opts) => {
-      const { env, user } = opts.ctx;
-      const { id } = opts.input;
-      return bookingUpdate({ id, status: 4 }, env, user);
-    }),
+  cancel: trpcProcedureUser.input(BookingCancelInput).mutation((opts) => {
+    const { env, user } = opts.ctx;
+    const { id } = opts.input;
+    return bookingUpdate({ id, status: 4 }, env, user);
+  }),
 
   updateStatusMany: trpcProcedureUser
-    .input((input) => parse(BookingUpdateStatusManyInput, input))
+    .input(BookingUpdateStatusManyInput)
     .mutation((opts) => {
       const { env, user } = opts.ctx;
       return bookingUpdateStatusMany(opts.input, env, user);
     }),
 
-  update: trpcProcedureAdmin
-    .input((input) => parse(BookingUpdateInput, input))
-    .mutation((opts) => {
-      const { env, user } = opts.ctx;
-      return bookingUpdate(opts.input, env, user);
-    }),
+  update: trpcProcedureAdmin.input(BookingUpdateInput).mutation((opts) => {
+    const { env, user } = opts.ctx;
+    return bookingUpdate(opts.input, env, user);
+  }),
 });

@@ -85,7 +85,7 @@ export async function logsDbGetMoney(
 export function logsDbCreateCredit(
   params: LogsCreditCreate,
   env: Env,
-  createdBy: number
+  createdById: number
 ) {
   let query = "INSERT INTO logsCredit";
   let fields = "";
@@ -104,9 +104,9 @@ export function logsDbCreateCredit(
   });
 
   if (queryParams.length) {
-    fields += ", createdAt, updatedAt, createdBy";
+    fields += ", createdAt, updatedAt, createdById";
     values += ", ?, ?, ?";
-    queryParams.push(now, now, createdBy);
+    queryParams.push(now, now, createdById);
 
     query += ` (${fields}) VALUES (${values})`;
   } else {

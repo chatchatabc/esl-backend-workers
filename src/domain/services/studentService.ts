@@ -64,9 +64,9 @@ export async function studentGetAll(params: StudentPagination, env: Env) {
 export async function studentCreate(
   params: StudentCreate,
   env: Env,
-  createdBy: number
+  createdById: number
 ) {
-  const studentStmt = await studentDbCreate(params, env, createdBy);
+  const studentStmt = await studentDbCreate(params, env, createdById);
   try {
     await env.DB.batch(studentStmt);
     return true;

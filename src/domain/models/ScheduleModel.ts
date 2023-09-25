@@ -10,12 +10,12 @@ export type Schedule = {
   weekDay: number;
   createdAt: number;
   updatedAt: number;
-  createdBy: number;
+  createdById: number;
 };
 
 export type ScheduleCreate = Omit<
   Schedule,
-  "id" | "createdAt" | "updatedAt" | "createdBy"
+  "id" | "createdAt" | "updatedAt" | "createdById"
 >;
 export type ScheduleCreateInput = Pick<Schedule, "startTime" | "endTime">;
 

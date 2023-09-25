@@ -116,17 +116,17 @@ export async function studentDbGetAllTotal(env: Env) {
 export function studentDbCreate(
   params: StudentCreate,
   env: Env,
-  createdBy: number
+  createdById: number
 ) {
   const { bio, status, alias, ...user } = params;
   const now = Date.now();
   const uuid = uuidv4();
 
   try {
-    const userStmt = userDbCreate({ ...user, status, alias }, env, createdBy);
+    const userStmt = userDbCreate({ ...user, status, alias }, env, createdById);
     const studentStmt = env.DB.prepare(
-      "INSERT INTO students (uuid, bio, status, userId, alias, createdBy, createdAt, updatedAt) VALUES (?, ?, ?, last_insert_rowid(), ?, ?, ?, ?)"
-    ).bind(uuid, bio, status, alias, createdBy, now, now);
+      "INSERT INTO students (uuid, bio, status, userId, alias, createdById, createdAt, updatedAt) VALUES (?, ?, ?, last_insert_rowid(), ?, ?, ?, ?)"
+    ).bind(uuid, bio, status, alias, createdById, now, now);
     return [userStmt, studentStmt];
   } catch (e) {
     console.log(e);

@@ -8,7 +8,7 @@ export type LogsCredit = {
   amount: number;
   createdAt: number;
   updatedAt: number;
-  createdBy: number;
+  createdById: number;
 
   user: User;
   createdByUser: User;

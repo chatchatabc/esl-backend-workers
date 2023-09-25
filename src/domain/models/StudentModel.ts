@@ -10,7 +10,7 @@ export type Student = {
   alias: string | null;
   bio: string | null;
   status: number;
-  createdBy: number;
+  createdById: number;
   createdAt: string;
   updatedAt: string;
 

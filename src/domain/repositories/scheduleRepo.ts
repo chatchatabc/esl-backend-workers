@@ -165,7 +165,7 @@ export async function scheduleDbGetOverlapMany(
 export function scheduleDbCreate(
   params: ScheduleCreate,
   env: Env,
-  createdBy: number
+  createdById: number
 ) {
   let query = "INSERT INTO schedules";
   let fields = "";
@@ -184,9 +184,9 @@ export function scheduleDbCreate(
   });
 
   if (queryParams.length) {
-    fields += ", createdAt, updatedAt, createdBy";
+    fields += ", createdAt, updatedAt, createdById";
     values += ", ?, ?, ?";
-    queryParams.push(now, now, createdBy);
+    queryParams.push(now, now, createdById);
 
     query += ` (${fields}) VALUES (${values})`;
   } else {

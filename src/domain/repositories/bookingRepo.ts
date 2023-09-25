@@ -18,7 +18,7 @@ import { BookingCreateSchema } from "../schemas/BookingSchema";
 export function bookingDbCreate(
   params: BookingCreate,
   env: Env,
-  createdBy: number
+  createdById: number
 ) {
   const data = safeParse(BookingCreateSchema, params);
   if (!data.success) {
@@ -28,8 +28,8 @@ export function bookingDbCreate(
   const { fields, values, queryParams } = utilQueryCreate(data.data, "BOOKING");
   let query = "INSERT INTO bookings";
   const now = Date.now();
-  query += ` (${fields}, createdAt, updatedAt, createdBy) VALUES (${values}, ?, ?, ?)`;
-  queryParams.push(now, now, createdBy);
+  query += ` (${fields}, createdAt, updatedAt, createdById) VALUES (${values}, ?, ?, ?)`;
+  queryParams.push(now, now, createdById);
 
   try {
     const stmt = env.DB.prepare(query).bind(...queryParams);

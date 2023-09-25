@@ -67,9 +67,9 @@ export async function teacherValidateCourse(
 export async function teacherCreate(
   params: TeacherCreate,
   env: Env,
-  createdBy: number
+  createdById: number
 ) {
-  const stmts = await teacherDBCreate(params, env, createdBy);
+  const stmts = await teacherDBCreate(params, env, createdById);
   try {
     await env.DB.batch(stmts);
     return true;

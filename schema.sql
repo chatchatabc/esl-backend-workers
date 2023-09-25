@@ -39,7 +39,7 @@ INSERT INTO
     phoneVerifiedAt,
     credits,
     status,
-    createdBy,
+    createdById,
     createdAt,
     updatedAt
   )
@@ -119,7 +119,7 @@ INSERT INTO
     alias,
     bio,
     status,
-    createdBy,
+    createdById,
     createdAt,
     updatedAt
   )
@@ -161,7 +161,7 @@ INSERT INTO
     alias,
     bio,
     status,
-    createdBy,
+    createdById,
     createdAt,
     updatedAt
   )
@@ -205,7 +205,7 @@ INSERT INTO
     name,
     description,
     status,
-    createdBy,
+    createdById,
     createdAt,
     updatedAt
   )
@@ -238,7 +238,7 @@ CREATE TABLE
   );
 
 INSERT INTO
-  roles (name, createdBy, createdAt, updatedAt)
+  roles (name, createdById, createdAt, updatedAt)
 VALUES
   ('admin', 1, 0, 0),
   ('student', 1, 0, 0),
@@ -377,7 +377,7 @@ INSERT INTO
     message,
     variables,
     status,
-    createdBy,
+    createdById,
     createdAt,
     updatedAt
   )

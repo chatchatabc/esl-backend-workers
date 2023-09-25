@@ -123,7 +123,7 @@ export async function scheduleDeleteMany(
 export async function scheduleCreateMany(
   data: { teacherId: number; schedules: ScheduleCreateInput[] },
   env: Env,
-  createdBy: number
+  createdById: number
 ) {
   let { teacherId, schedules } = data;
 
@@ -150,7 +150,7 @@ export async function scheduleCreateMany(
   }
 
   const stmts = newSchedules.map((schedule) => {
-    return scheduleDbCreate(schedule, env, createdBy);
+    return scheduleDbCreate(schedule, env, createdById);
   });
 
   try {

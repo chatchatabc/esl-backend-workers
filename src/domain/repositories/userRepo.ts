@@ -28,7 +28,7 @@ export function userDbCreate(user: UserCreate, env: Env, createdById: number) {
   let { fields, values, queryParams } = utilQueryCreate(user, "USER");
   const now = Date.now();
 
-  query += ` (${fields}, createdAt, updatedAt, createdBy) VALUES (${values}, ?, ?, ?)`;
+  query += ` (${fields}, createdAt, updatedAt, createdById) VALUES (${values}, ?, ?, ?)`;
   queryParams.push(now, now, createdById);
 
   try {

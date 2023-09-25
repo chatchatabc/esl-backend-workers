@@ -111,16 +111,24 @@ export async function teacherDbValidateCourse(
 export async function teacherDBCreate(
   params: TeacherCreate,
   env: Env,
-  createdBy: number
+  createdById: number
 ) {
   const { bio, ...user } = params;
   const date = Date.now();
 
   try {
-    const userStmt = await userDbCreate(user, env, createdBy);
+    const userStmt = await userDbCreate(user, env, createdById);
     const teacherStmt = env.DB.prepare(
-      "INSERT INTO teachers (bio, alias, uuid, userId, status, createdAt, updatedAt, createdBy) VALUES (?, ?, ?, last_insert_rowid(), ?, ?, ?, ?)"
-    ).bind(bio, user.alias, user.username, user.status, date, date, createdBy);
+      "INSERT INTO teachers (bio, alias, uuid, userId, status, createdAt, updatedAt, createdById) VALUES (?, ?, ?, last_insert_rowid(), ?, ?, ?, ?)"
+    ).bind(
+      bio,
+      user.alias,
+      user.username,
+      user.status,
+      date,
+      date,
+      createdById
+    );
 
     return [userStmt, teacherStmt];
   } catch (e) {

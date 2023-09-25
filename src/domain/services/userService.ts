@@ -76,10 +76,10 @@ export async function userUpdate(params: UserUpdate, env: Env) {
 export async function userCreate(
   params: UserCreate,
   env: Env,
-  createdBy: number
+  createdById: number
 ) {
   params.password = utilHashHmac256(params.password);
-  const create = await userDbCreate(params, env, createdBy);
+  const create = await userDbCreate(params, env, createdById);
 
   try {
     await env.DB.batch([create]);

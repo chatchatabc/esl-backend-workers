@@ -6,8 +6,8 @@ import {
 import {
   BookingCancelInput,
   BookingCompleteInputAdmin,
+  BookingCreateByAdminInput,
   BookingCreateInput,
-  BookingCreateInputAdmin,
   BookingUpdateInput,
   BookingUpdateStatusManyInput,
 } from "../../domain/schemas/BookingSchema";
@@ -57,7 +57,7 @@ export default trpcRouterCreate({
   }),
 
   createByAdmin: trpcProcedureAdmin
-    .input(BookingCreateInputAdmin)
+    .input(BookingCreateByAdminInput)
     .mutation(async (opts) => {
       const { env, userId } = opts.ctx;
       const { start, end, advanceBooking, ...booking } = opts.input;

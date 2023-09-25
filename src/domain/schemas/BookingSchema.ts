@@ -93,7 +93,7 @@ export const BookingCreateInput = transform(
   }
 );
 
-export const BookingCreateInputAdmin = transform(
+export const BookingCreateByAdminInput = transform(
   merge([
     pick(Schema, ["teacherId", "start", "end", "studentId", "courseId"]),
     partial(pick(Schema, ["amount", "advanceBooking", "status", "message"])),

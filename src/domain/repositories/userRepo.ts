@@ -159,13 +159,13 @@ export async function userDbGetAllRoleTotal(env: Env) {
 }
 
 export function userDbUpdate(params: UserUpdate, env: Env) {
-  const { id, ...user } = params;
-  const data = safeParse(UserUpdateSchema, user);
+  const data = safeParse(UserUpdateSchema, params);
   if (!data.success) {
-    throw utilFailedResponse(data.error.issues[0].message, 400);
+    throw utilFailedResponse("Invalid user data", 400);
   }
+  const { id, ...user } = data.data;
 
-  let { querySet, queryParams } = utilQueryUpdate(data.data, "USER");
+  let { querySet, queryParams } = utilQueryUpdate(user, "USER");
   querySet += `, updatedAt = ?`;
   queryParams.push(Date.now());
 

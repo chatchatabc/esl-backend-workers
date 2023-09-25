@@ -66,7 +66,7 @@ export default trpcRouterCreate({
       return userUpdate({ id: userId, phoneVerifiedAt: null }, opts.ctx.env);
     }),
 
-  userGetProfile: trpcProcedureUser.query((opts) => {
+  getProfile: trpcProcedureUser.query((opts) => {
     const { user } = opts.ctx;
     return user;
   }),

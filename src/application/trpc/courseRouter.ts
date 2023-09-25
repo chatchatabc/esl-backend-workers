@@ -16,21 +16,15 @@ import {
 } from "../../domain/services/courseService";
 
 export default trpcRouterCreate({
-  getAll: trpcProcedureUser
-    .input((input) => parse(CommonPaginationInput, input))
-    .query((opts) => {
-      return courseGetAll(opts.input, opts.ctx.env);
-    }),
+  getAll: trpcProcedureUser.input(CommonPaginationInput).query((opts) => {
+    return courseGetAll(opts.input, opts.ctx.env);
+  }),
 
-  create: trpcProcedureAdmin
-    .input((input) => parse(CourseCreateInput, input))
-    .mutation((opts) => {
-      return courseCreate(opts.input, opts.ctx.env);
-    }),
+  create: trpcProcedureAdmin.input(CourseCreateInput).mutation((opts) => {
+    return courseCreate(opts.input, opts.ctx.env);
+  }),
 
-  update: trpcProcedureAdmin
-    .input((input) => parse(CourseUpdateInput, input))
-    .mutation((opts) => {
-      return courseUpdate(opts.input, opts.ctx.env);
-    }),
+  update: trpcProcedureAdmin.input(CourseUpdateInput).mutation((opts) => {
+    return courseUpdate(opts.input, opts.ctx.env);
+  }),
 });

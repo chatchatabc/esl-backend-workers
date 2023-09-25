@@ -305,66 +305,90 @@ export async function bookingUpdateStatusMany(
   const role = await roleGet({ roleId: performedBy.roleId }, env);
 
   for (const booking of bookingsOld) {
-    const student = await studentGet({ studentId: booking.studentId }, env);
-    const teacher = await teacherGet({ teacherId: booking.teacherId }, env);
-
-    // Check if user is not an admin
-    if (performedBy.roleId !== 1) {
-      // Check if the user is the owner or the teacher
-      if (student.id !== performedBy.id && teacher.userId !== performedBy.id) {
-        throw utilFailedResponse("Unauthorized", 403);
-      }
-    }
-
-    const bookingStart = new Date(booking.start);
-    const bookingStartDate = utilDateFormatter("zh-CN", bookingStart);
-    const bookingStartTime = utilTimeFormatter("zh-CN", bookingStart);
-
     if (booking.status === 4) {
       throw utilFailedResponse("Cannot update a cancelled booking", 400);
     }
 
-    // Check if booking is already completed
-    if (booking.status === 3 && params.status !== 3) {
-      teacher.user.credits -= booking.amount;
-      logsCredits.push({
-        title: `Class ${bookingStartDate} ${bookingStartTime} - Cancelled by ${role.name}`,
-        details: `Cancelled Class ${bookingStartDate} ${bookingStartTime}`,
-        userId: teacher.user.id,
-        amount: -booking.amount,
-      } as LogsCreditCreate);
+    if (booking.status !== params.status) {
+      const student = await studentGet({ studentId: booking.studentId }, env);
+      const teacher = await teacherGet({ teacherId: booking.teacherId }, env);
+
+      // Check if user is not an admin
+      if (performedBy.roleId !== 1) {
+        // Check if the user is the owner or the teacher
+        if (
+          student.userId !== performedBy.id &&
+          teacher.userId !== performedBy.id
+        ) {
+          throw utilFailedResponse("Unauthorized", 403);
+        }
+      }
+
+      const studentIndex = users.findIndex(
+        (user) => user.id === student.user.id
+      );
+      const teacherIndex = users.findIndex(
+        (user) => user.id === teacher.user.id
+      );
+      student.user = studentIndex === -1 ? student.user : users[studentIndex];
+      teacher.user = teacherIndex === -1 ? teacher.user : users[teacherIndex];
+
+      const bookingStart = new Date(booking.start);
+      const bookingStartDate = utilDateFormatter("zh-CN", bookingStart);
+      const bookingStartTime = utilTimeFormatter("zh-CN", bookingStart);
+
+      // Check if booking is already completed and is not completed
+      if (booking.status === 3 && params.status !== 3) {
+        teacher.user.credits -= booking.amount;
+        logsCredits.push({
+          title: `Class ${bookingStartDate} ${bookingStartTime} - Cancelled by ${role.name}`,
+          details: `Cancelled Class ${bookingStartDate} ${bookingStartTime}`,
+          userId: teacher.user.id,
+          amount: -booking.amount,
+        } as LogsCreditCreate);
+      }
+      // Check if booking is not completed and is completed
+      else if (booking.status !== 3 && params.status === 3) {
+        teacher.user.credits += booking.amount;
+        logsCredits.push({
+          title: `Class ${bookingStartDate} ${bookingStartTime} Completed`,
+          details: `Class ${bookingStartDate} ${bookingStartTime} Completed`,
+          userId: teacher.user.id,
+          amount: booking.amount,
+        } as LogsCreditCreate);
+      }
+
+      // Update user's credits if booking is cancelled
+      if (params.status === 4) {
+        student.user.credits += booking.amount;
+        logsCredits.push({
+          title: `Class ${bookingStartDate} ${bookingStartTime} - Cancelled by ${role.name}`,
+          details: `Cancelled Class ${bookingStartDate} ${bookingStartTime}`,
+          userId: student.user.id,
+          amount: booking.amount,
+        } as LogsCreditCreate);
+      }
+
+      // Add updated booking to array
+      booking.status = params.status;
+      bookings.push(booking);
+
+      // Update user array
+      if (studentIndex !== -1) {
+        users[studentIndex] = student.user;
+      } else {
+        users.push(student.user);
+      }
+      if (teacherIndex !== -1) {
+        users[teacherIndex] = teacher.user;
+      } else {
+        users.push(teacher.user);
+      }
     }
-
-    // Check if booking will be completed
-    else if (params.status === 3) {
-      teacher.user.credits += booking.amount;
-      logsCredits.push({
-        title: `Class ${bookingStartDate} ${bookingStartTime} Completed`,
-        details: `Class ${bookingStartDate} ${bookingStartTime} Completed`,
-        userId: teacher.user.id,
-        amount: booking.amount,
-      } as LogsCreditCreate);
-    }
-
-    // If booking is cancelled, update user credit
-    if (params.status === 4) {
-      student.user.credits += booking.amount;
-      logsCredits.push({
-        title: `Class ${bookingStartDate} ${bookingStartTime} - Cancelled by ${role.name}`,
-        details: `Cancelled Class ${bookingStartDate} ${bookingStartTime}`,
-        userId: student.id,
-        amount: booking.amount,
-      } as LogsCreditCreate);
-    }
-
-    // Update booking status
-    booking.status = params.status;
-
-    // Add to array
-    bookings.push(booking);
-    users.push(student.user);
-    users.push(teacher.user!);
   }
+
+  console.log(users);
+  console.log(users[0]);
 
   const logsCreditStmts = logsCredits.map((logsCredit) => {
     return logsDbCreateCredit(logsCredit, env, performedBy.id);

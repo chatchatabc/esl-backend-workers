@@ -69,7 +69,6 @@ export default trpcRouterCreate({
       let amount = course.price * ((end - start) / (1000 * 60 * 30));
 
       if (advanceBooking) {
-        amount = booking.amount ?? amount * advanceBooking;
         return bookingCreateMany(
           { ...booking, start, end, amount },
           opts.ctx.env,

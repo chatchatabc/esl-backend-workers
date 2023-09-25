@@ -199,10 +199,8 @@ export async function bookingCreateMany(
   let end = new Date(params.end).getTime();
 
   // Check if the user has enough credit
-  if (params.amount > student.user.credits) {
+  if (params.amount * advanceBooking > student.user.credits) {
     throw utilFailedResponse("Not enough credit", 400);
-  } else {
-    student.user.credits -= params.amount;
   }
 
   // Check if schedule exists
@@ -211,8 +209,9 @@ export async function bookingCreateMany(
     throw utilFailedResponse("Schedule does not exist", 400);
   }
 
-  // Create bookings
+  const logsCredits: LogsCreditCreate[] = [];
   const bookings: BookingCreate[] = [];
+
   while (bookings.length < advanceBooking) {
     const booking = {
       ...params,
@@ -226,6 +225,20 @@ export async function bookingCreateMany(
     if (!overlap) {
       // Add booking to array
       bookings.push(booking);
+
+      // Create LogsCredit
+      const startDateFormat = utilDateFormatter("zh-CN", new Date(start));
+      const startTimeFormat = utilTimeFormatter("zh-CN", new Date(start));
+      const logsCredit: LogsCreditCreate = {
+        userId: student.userId,
+        amount: -params.amount,
+        title: `Class ${startDateFormat} ${startTimeFormat}`,
+        details: `Class ${startDateFormat} ${startTimeFormat}`,
+      };
+      logsCredits.push(logsCredit);
+
+      // update student's credits
+      student.user.credits -= params.amount;
     }
 
     // Increment start and end time by 7 days
@@ -233,26 +246,16 @@ export async function bookingCreateMany(
     end += 604800000;
   }
 
-  // Create LogsCredit
-  const startDateFormat = utilDateFormatter("zh-CN", new Date(params.start));
-  const endDateFormat = utilDateFormatter("zh-CN", new Date(end));
-  const startTimeFormat = utilTimeFormatter("zh-CN", new Date(params.start));
-  const endTimeFormat = utilTimeFormatter("zh-CN", new Date(params.end));
-  const logsCredit: LogsCreditCreate = {
-    userId: student.user.id,
-    amount: -params.amount,
-    title: `Recurring Class from ${startDateFormat} to ${endDateFormat} @ ${startTimeFormat} - ${endTimeFormat}`,
-    details: `Recurring Class from ${startDateFormat} to ${endDateFormat} @ ${startTimeFormat} - ${endTimeFormat}`,
-  };
-
   const bookingStmts = bookings.map((booking) => {
     return bookingDbCreate({ ...booking }, env, createdById);
   });
   const userStmt = userDbUpdate(student.user, env);
-  const logsCreditStmt = logsDbCreateCredit(logsCredit, env, createdById);
+  const logsCreditStmts = logsCredits.map((logsCredit) => {
+    return logsDbCreateCredit(logsCredit, env, createdById);
+  });
 
   try {
-    await env.DB.batch([userStmt, logsCreditStmt, ...bookingStmts]);
+    await env.DB.batch([userStmt, ...logsCreditStmts, ...bookingStmts]);
     return true;
   } catch (e) {
     console.log(e);

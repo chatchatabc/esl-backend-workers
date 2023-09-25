@@ -1,4 +1,4 @@
-import { number, object, parse } from "valibot";
+import { number, object } from "valibot";
 import {
   trpcProcedureAdmin,
   trpcProcedureUser,
@@ -8,15 +8,11 @@ import { roleGet, roleGetAll } from "../../domain/services/roleService";
 import { CommonPaginationInput } from "../../domain/schemas/CommonSchema";
 
 export default trpcRouterCreate({
-  get: trpcProcedureUser
-    .input((input) => parse(object({ roleId: number() }), input))
-    .query((opts) => {
-      return roleGet(opts.input, opts.ctx.env);
-    }),
+  get: trpcProcedureUser.input(object({ roleId: number() })).query((opts) => {
+    return roleGet(opts.input, opts.ctx.env);
+  }),
 
-  getAll: trpcProcedureAdmin
-    .input((input) => parse(CommonPaginationInput, input))
-    .query((opts) => {
-      return roleGetAll(opts.input, opts.ctx.env);
-    }),
+  getAll: trpcProcedureAdmin.input(CommonPaginationInput).query((opts) => {
+    return roleGetAll(opts.input, opts.ctx.env);
+  }),
 });

@@ -3,8 +3,9 @@ import { CommonPagination } from "./CommonModel";
 import {
   BookingCancelInputAdmin,
   BookingCompleteInputAdmin,
+  BookingCreateByAdminInput,
   BookingCreateInput,
-  BookingCreateInputAdmin,
+  BookingCreateSchema,
   BookingUpdateInput,
   BookingUpdateStatusManyInput,
 } from "../schemas/BookingSchema";
@@ -35,21 +36,11 @@ export type Booking = {
 
 export type BookingUpdate = Pick<Booking, "id" | "status">;
 
-export type BookingCreate = Pick<
-  Booking,
-  | "teacherId"
-  | "courseId"
-  | "studentId"
-  | "start"
-  | "end"
-  | "status"
-  | "message"
-  | "amount"
->;
+export type BookingCreate = Input<typeof BookingCreateSchema>;
 
 export type BookingCreateInput = Input<typeof BookingCreateInput>;
 
-export type BookingCreateInputAdmin = Input<typeof BookingCreateInputAdmin>;
+export type BookingCreateByAdminInput = Input<typeof BookingCreateByAdminInput>;
 
 export type BookingPagination = {
   studentId?: number;

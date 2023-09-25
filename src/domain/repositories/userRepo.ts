@@ -22,7 +22,7 @@ export function userDbCreate(user: UserCreate, env: Env, createdById: number) {
   if (!parse.success) {
     throw utilFailedResponse("Invalid user data", 400);
   }
-  user = parse.output;
+  user = parse.data;
 
   let query = "INSERT INTO users";
   let { fields, values, queryParams } = utilQueryCreate(user, "USER");
@@ -162,10 +162,10 @@ export function userDbUpdate(params: UserUpdate, env: Env) {
   const { id, ...user } = params;
   const data = safeParse(UserUpdateSchema, user);
   if (!data.success) {
-    throw utilFailedResponse(data.issues[0].message, 400);
+    throw utilFailedResponse(data.error.issues[0].message, 400);
   }
 
-  let { querySet, queryParams } = utilQueryUpdate(data.output, "USER");
+  let { querySet, queryParams } = utilQueryUpdate(data.data, "USER");
   querySet += `, updatedAt = ?`;
   queryParams.push(Date.now());
 

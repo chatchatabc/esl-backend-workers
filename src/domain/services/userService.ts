@@ -15,8 +15,6 @@ import {
   userDbGetAll,
   userDbGetAllRole,
   userDbGetAllTotal,
-  userDbGetByUsername,
-  userDbInsert,
   userDbUpdate,
 } from "../repositories/userRepo";
 import { roleGet } from "./roleService";
@@ -63,47 +61,8 @@ export async function userGetAll(params: UserPagination, env: Env) {
   };
 }
 
-export async function userGetAllRole(params: UserPagination, env: Env) {
-  const roles = await userDbGetAllRole(params, env);
-  if (!roles) {
-    throw utilFailedResponse("Unable to get roles", 500);
-  }
-
-  const totalElements = await userDbGetAllTotal(params, env);
-  if (!totalElements && totalElements !== 0) {
-    throw utilFailedResponse("Unable to get roles total", 500);
-  }
-
-  return {
-    ...params,
-    content: roles.results as UserRole[],
-    totalElements,
-  };
-}
-
-export async function userUpdateProfile(params: UserUpdateInput, env: Env) {
-  let user = await userDbGet({ userId: params.id ?? 0 }, env);
-  if (!user) {
-    throw utilFailedResponse("Unable to get user", 500);
-  }
-  user = { ...user, ...params };
-
-  const query = await userDbUpdate(user, env);
-  if (!query) {
-    throw utilFailedResponse("Error", 500);
-  }
-
-  delete user.password;
-  return user;
-}
-
 export async function userUpdate(params: UserUpdate, env: Env) {
-  let user = await userDbGet({ userId: params.id }, env);
-  if (!user) {
-    throw utilFailedResponse("User not found", 404);
-  }
-  user = { ...user, ...params };
-  const query = await userDbUpdate(user, env);
+  const query = await userDbUpdate(params, env);
 
   try {
     await env.DB.batch([query]);
@@ -129,23 +88,6 @@ export async function userCreate(
     console.log(e);
     throw utilFailedResponse("Unable to create user", 500);
   }
-}
-
-export async function userVerifyPhone(params: { userId: number }, env: Env) {
-  const user = await userGet(params, env);
-  user.phoneVerifiedAt = Date.now();
-  await userUpdate(user, env);
-  return true;
-}
-
-export async function userRevokePhoneVerification(
-  params: { userId: number },
-  env: Env
-) {
-  const user = await userGet(params, env);
-  user.phoneVerifiedAt = null;
-  await userUpdate(user, env);
-  return true;
 }
 
 export async function userAddCredit(

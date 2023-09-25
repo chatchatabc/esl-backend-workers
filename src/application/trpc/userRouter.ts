@@ -23,8 +23,8 @@ import { teacherCreate } from "../../domain/services/teacherService";
 
 export default trpcRouterCreate({
   get: trpcProcedureUser.input(UserGetInput).query((opts) => {
-    const { id: userId } = opts.input;
-    return userGet({ userId }, opts.ctx.env);
+    const { id: userId, username } = opts.input;
+    return userGet({ userId, username }, opts.ctx.env);
   }),
 
   getAll: trpcProcedureAdmin.input(CommonPaginationInput).query((opts) => {

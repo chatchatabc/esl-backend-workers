@@ -1,3 +1,4 @@
+import { Input } from "valibot";
 import { Env } from "../..";
 import {
   Schedule,
@@ -11,6 +12,7 @@ import {
   scheduleDbGetAll,
   scheduleDbGetAllTotal,
   scheduleDbGetOverlapMany,
+  scheduleDbUpdate,
   scheduleDbUpdateMany,
 } from "../repositories/scheduleRepo";
 import {
@@ -18,51 +20,51 @@ import {
   utilFailedResponse,
   utilGetScheduleTimeAndDay,
 } from "./utilService";
+import { ScheduleUpdateSchema } from "../schemas/ScheduleSchema";
 
 export async function scheduleUpdateMany(
-  params: { teacherId: number; schedules: ScheduleUpdateInput[] },
+  params: {
+    teacherId: number;
+    schedules: Input<typeof ScheduleUpdateSchema>[];
+  },
   env: Env
 ) {
   let { teacherId, schedules } = params;
 
   // Get old schedules
-  const query = await scheduleDbGetAll(
+  const oldSchedules = await scheduleDbGetAll(
     { teacherId, page: 1, size: 10000 },
     env
   );
-  if (!query) {
-    throw utilFailedResponse("Cannot GET Schedules", 500);
-  }
-
-  // Check if all schedules are owned by user
-  const oldSchedules = query;
-  if (
-    !schedules.every((schedule) => {
-      const oldSchedule = oldSchedules.find((s) => s.id === schedule.id);
-      return oldSchedule ? true : false;
-    })
-  ) {
-    throw utilFailedResponse("Unauthorized", 401);
-  }
 
   // Fix ScheduleUpdateInput
   const newSchedules = schedules.map((schedule) => {
     const oldSchedule = oldSchedules.find((s) => s.id === schedule.id);
     if (!oldSchedule) {
-      throw utilFailedResponse("Individual schedule not found", 404);
+      throw utilFailedResponse("Schedule not found", 404);
+    } else if (oldSchedule.teacherId !== teacherId) {
+      throw utilFailedResponse("Unauthorized", 401);
     }
 
-    const [startTime, endTime, day] = utilGetScheduleTimeAndDay(
-      schedule.startTime,
-      schedule.endTime
-    );
+    let startTime = oldSchedule.startTime,
+      endTime = oldSchedule.endTime,
+      weekDay = oldSchedule.weekDay;
+
+    if (schedule.startTime) {
+      const date = new Date(schedule.startTime);
+      startTime = date.getTime() % 86400000;
+      weekDay = date.getUTCDay();
+    }
+
+    if (schedule.endTime) {
+      endTime = new Date(schedule.endTime).getTime() % 86400000;
+    }
 
     return {
       ...oldSchedule,
-      teacherId,
       startTime,
       endTime,
-      day,
+      weekDay,
     };
   });
 
@@ -78,13 +80,17 @@ export async function scheduleUpdateMany(
     throw utilFailedResponse("Schedule overlaps", 400);
   }
 
-  // Update schedules
-  const transaction = await scheduleDbUpdateMany(newSchedules, env);
-  if (!transaction) {
+  const stmts = newSchedules.map((schedule) => {
+    return scheduleDbUpdate(schedule, env);
+  });
+
+  try {
+    await env.DB.batch(stmts);
+    return true;
+  } catch (e) {
+    console.log(e);
     throw utilFailedResponse("Failed to update schedules", 500);
   }
-
-  return true;
 }
 
 export async function scheduleDeleteMany(

@@ -1,3 +1,4 @@
+import { safeParse } from "valibot";
 import { Env } from "../..";
 import { CommonPagination } from "../models/CommonModel";
 import {
@@ -5,24 +6,36 @@ import {
   MessageTemplateCreate,
   MessageTemplateUpdate,
 } from "../models/MessageModel";
+import { MessageTemplateCreateSchema } from "../schemas/MessageTemplateSchema";
+import { utilFailedResponse, utilQueryCreate } from "../services/utilService";
 
-export async function messageTemplateDbCreate(
+export function messageTemplateDbCreate(
   params: MessageTemplateCreate,
-  env: Env
+  env: Env,
+  createdById: number
 ) {
+  const parse = safeParse(MessageTemplateCreateSchema, params);
+  if (!parse.success) {
+    throw utilFailedResponse("Invalid message template repo params", 500);
+  }
+
+  const dateNow = Date.now();
+  let query = "INSERT INTO messageTemplates";
+  let { fields, values, queryParams } = utilQueryCreate(
+    parse.data,
+    "MessageTemplate"
+  );
+  fields += ", createdAt, updatedAt, createdById";
+  values += ", ?, ?, ?";
+  queryParams.push(dateNow, dateNow, createdById);
+  query += ` (${fields}) VALUES (${values})`;
+
   try {
-    const { title, message, status, signature, smsId, variables } = params;
-    const date = Date.now();
-
-    const stmt = env.DB.prepare(
-      "INSERT INTO messageTemplates (title, message, signature, status, smsId, variables, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
-    ).bind(title, message, signature, status, smsId, variables, date, date);
-
-    await stmt.run();
-    return true;
+    const stmt = env.DB.prepare(query).bind(...queryParams);
+    return stmt;
   } catch (e) {
     console.log(e);
-    return false;
+    throw utilFailedResponse("Failed to create message template", 500);
   }
 }
 

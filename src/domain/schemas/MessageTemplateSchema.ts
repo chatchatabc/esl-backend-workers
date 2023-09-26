@@ -1,6 +1,6 @@
 import { nullish, number, object, pick, string, transform } from "valibot";
 
-const Schema = object({
+export const MessageTemplateSchema = object({
   id: number("ID must be a number"),
   smsId: string("SMS ID must be a string"),
   signature: string("Signature must be a string"),
@@ -10,8 +10,17 @@ const Schema = object({
   status: number("Status must be a number"),
 });
 
+export const MessageTemplateCreateSchema = pick(MessageTemplateSchema, [
+  "message",
+  "signature",
+  "smsId",
+  "status",
+  "title",
+  "variables",
+]);
+
 export const MessageTemplateCreateInput = transform(
-  pick(Schema, [
+  pick(MessageTemplateSchema, [
     "message",
     "signature",
     "smsId",
@@ -28,7 +37,7 @@ export const MessageTemplateCreateInput = transform(
 );
 
 export const MessageTemplateUpdateInput = transform(
-  pick(Schema, [
+  pick(MessageTemplateSchema, [
     "message",
     "signature",
     "smsId",

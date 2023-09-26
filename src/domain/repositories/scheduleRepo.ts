@@ -9,8 +9,11 @@ import {
   utilFailedResponse,
   utilGetScheduleTimeAndDay,
   utilQueryAddWhere,
+  utilQueryUpdate,
 } from "../services/utilService";
 import { CommonPaginationInput } from "../models/CommonModel";
+import { Input, safeParse } from "valibot";
+import { ScheduleUpdateSchema } from "../schemas/ScheduleSchema";
 
 export async function scheduleDbGetAll(params: SchedulePagination, env: Env) {
   const { teacherId, page, size } = params;
@@ -65,6 +68,37 @@ export async function scheduleDbGetAllTotal(
   } catch (e) {
     console.log(e);
     throw utilFailedResponse("Cannot get total schedules", 500);
+  }
+}
+
+export function scheduleDbUpdate(
+  params: Input<typeof ScheduleUpdateSchema>,
+  env: Env
+) {
+  const parse = safeParse(ScheduleUpdateSchema, params);
+  if (!parse.success) {
+    throw utilFailedResponse("Invalid schedule update params", 400);
+  }
+
+  const data = parse.data;
+  const { id, ...schedule } = data;
+  let query = "UPDATE schedules";
+
+  let { queryParams, querySet } = utilQueryUpdate(schedule, "schedules");
+
+  query += ` SET ${querySet}`;
+  query += " WHERE id = ?";
+  queryParams.push(id);
+
+  try {
+    const stmt = env.DB.prepare(query).bind(...queryParams);
+    return stmt;
+  } catch (e) {
+    console.log(e);
+    throw utilFailedResponse(
+      "Unable to generate schedule update statement",
+      500
+    );
   }
 }
 

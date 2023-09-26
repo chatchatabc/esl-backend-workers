@@ -7,6 +7,7 @@ import {
 } from "../schemas/MessageSchema";
 import {
   MessageTemplateCreateInput,
+  MessageTemplateCreateSchema,
   MessageTemplateUpdateInput,
 } from "../schemas/MessageTemplateSchema";
 
@@ -55,10 +56,7 @@ export type MessageTemplate = {
   variables: string | null; // Separated by comma
 };
 
-export type MessageTemplateCreate = Omit<
-  MessageTemplate,
-  "id" | "createdAt" | "updatedAt"
->;
+export type MessageTemplateCreate = Input<typeof MessageTemplateCreateSchema>;
 
 export type MessageTemplateCreateInput = Input<
   typeof MessageTemplateCreateInput

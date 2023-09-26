@@ -16,13 +16,17 @@ import {
   bookingDbUpdate,
 } from "../repositories/bookingRepo";
 import { logsDbCreateCredit } from "../repositories/logsRepo";
-import { scheduleDbValidateBooking } from "../repositories/scheduleRepo";
+import {
+  scheduleDbGetAll,
+  scheduleDbValidateBooking,
+} from "../repositories/scheduleRepo";
 import { userDbUpdate } from "../repositories/userRepo";
 import { courseGet } from "./courseService";
 import { roleGet } from "./roleService";
 import { studentGet } from "./studentService";
 import { teacherGet } from "./teacherService";
 import {
+  utilCheckBookingTimeValid,
   utilDateFormatter,
   utilFailedResponse,
   utilTimeFormatter,
@@ -142,8 +146,16 @@ export async function bookingCreate(
     student.user.credits -= params.amount;
   }
 
+  const teacherSchedules = await scheduleDbGetAll(
+    { teacherId: teacher.id, page: 1, size: 10000 },
+    env
+  );
+
   // Check if the booked schedule exists
-  const validSchedule = await scheduleDbValidateBooking(params, env);
+  const validSchedule = await utilCheckBookingTimeValid(
+    teacherSchedules,
+    params
+  );
   if (!validSchedule) {
     throw utilFailedResponse("Schedule does not exist", 400);
   }

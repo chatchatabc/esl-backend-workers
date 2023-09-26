@@ -1,8 +1,9 @@
 import { TRPCError } from "@trpc/server";
 import type { TRPC_ERROR_CODE_KEY } from "@trpc/server/dist/rpc";
 import { enc, HmacSHA256 } from "crypto-js";
-import { ScheduleCreate } from "../models/ScheduleModel";
+import { Schedule, ScheduleCreate } from "../models/ScheduleModel";
 import { v4 } from "uuid";
+import { BookingCreate } from "../models/BookingModel";
 
 export function utilFailedResponse(message: string, status: number = 500) {
   let code: TRPC_ERROR_CODE_KEY = "INTERNAL_SERVER_ERROR";
@@ -78,6 +79,45 @@ export function utilGetTimestampDateOnly(timestamp: number) {
   date.setUTCDate(day + 1);
 
   return date.getTime();
+}
+
+export function utilCheckBookingTimeValid(
+  schedules: Schedule[],
+  booking: BookingCreate
+) {
+  const bookingStart = new Date(booking.start);
+  const bookingEnd = new Date(booking.end);
+  const bookingWeekDay = bookingStart.getUTCDay();
+
+  let validAcrossSchedule = false;
+
+  for (const schedule of schedules) {
+    const bookingStartTime = bookingStart.getTime() % (24 * 60 * 60 * 1000);
+    const bookingEndTime = bookingEnd.getTime() % (24 * 60 * 60 * 1000);
+
+    if (schedule.weekDay === bookingWeekDay) {
+      if (
+        schedule.startTime <= bookingStartTime &&
+        bookingStartTime < schedule.endTime
+      ) {
+        if (
+          schedule.startTime < bookingEndTime &&
+          bookingEndTime <= schedule.endTime
+        ) {
+          return true;
+        } else {
+          validAcrossSchedule = true;
+        }
+      } else if (
+        schedule.startTime < bookingEndTime &&
+        bookingEndTime <= schedule.endTime
+      ) {
+        validAcrossSchedule = true;
+      }
+    }
+  }
+
+  return validAcrossSchedule;
 }
 
 export function utilCheckScheduleOverlap(schedules: ScheduleCreate[]) {

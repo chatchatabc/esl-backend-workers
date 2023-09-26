@@ -16,7 +16,8 @@ export default trpcRouterCreate({
   create: trpcProcedureAdmin
     .input(MessageTemplateCreateInput)
     .mutation((opts) => {
-      return messageTemplateCreate(opts.input, opts.ctx.env);
+      const { userId, env } = opts.ctx;
+      return messageTemplateCreate(opts.input, env, userId);
     }),
 
   update: trpcProcedureAdmin

@@ -9,8 +9,8 @@ import {
   ScheduleCreateManyInputAdmin,
   ScheduleDeleteManyInput,
   ScheduleDeleteManyInputAdmin,
+  ScheduleUpdateManyByAdminInput,
   ScheduleUpdateManyInput,
-  ScheduleUpdateManyInputAdmin,
 } from "../../domain/schemas/ScheduleSchema";
 import {
   scheduleCreateMany,
@@ -49,7 +49,7 @@ export default trpcRouterCreate({
     }),
 
   updateManyAdmin: trpcProcedureAdmin
-    .input(ScheduleUpdateManyInputAdmin)
+    .input(ScheduleUpdateManyByAdminInput)
     .mutation((opts) => {
       const { env } = opts.ctx;
       const { schedules } = opts.input;

@@ -1,6 +1,15 @@
-import { array, coerce, merge, minValue, number, object, pick } from "valibot";
+import {
+  array,
+  coerce,
+  merge,
+  minValue,
+  number,
+  object,
+  partial,
+  pick,
+} from "valibot";
 
-export const Schedule = object({
+export const ScheduleSchema = object({
   id: coerce(
     number("Invalid schedule id", [minValue(1, "ID must be greater than 0")]),
     Number
@@ -20,17 +29,22 @@ export const Schedule = object({
 });
 
 export const ScheduleCreateManyInput = object({
-  schedules: array(pick(Schedule, ["startTime", "endTime"])),
+  schedules: array(pick(ScheduleSchema, ["startTime", "endTime"])),
 });
+
+export const ScheduleUpdateSchema = merge([
+  pick(ScheduleSchema, ["id"]),
+  partial(pick(ScheduleSchema, ["startTime", "endTime", "teacherId"])),
+]);
 
 export const ScheduleCreateManyInputAdmin = merge([
   object({
-    schedules: array(pick(Schedule, ["startTime", "endTime"])),
+    schedules: array(pick(ScheduleSchema, ["startTime", "endTime"])),
   }),
-  pick(Schedule, ["teacherId"]),
+  pick(ScheduleSchema, ["teacherId"]),
 ]);
 
-export const ScheduleUpdateInput = pick(Schedule, [
+export const ScheduleUpdateInput = pick(ScheduleSchema, [
   "startTime",
   "endTime",
   "id",
@@ -38,14 +52,14 @@ export const ScheduleUpdateInput = pick(Schedule, [
 ]);
 
 export const ScheduleUpdateManyInput = object({
-  schedules: array(Schedule),
+  schedules: array(ScheduleSchema),
 });
 
 export const ScheduleUpdateManyInputAdmin = merge([
   object({
-    schedules: array(Schedule),
+    schedules: array(ScheduleSchema),
   }),
-  pick(Schedule, ["teacherId"]),
+  pick(ScheduleSchema, ["teacherId"]),
 ]);
 
 export const ScheduleDeleteManyInput = object({ scheduleIds: array(number()) });
@@ -54,5 +68,5 @@ export const ScheduleDeleteManyInputAdmin = merge([
   object({
     scheduleIds: array(number()),
   }),
-  pick(Schedule, ["teacherId"]),
+  pick(ScheduleSchema, ["teacherId"]),
 ]);

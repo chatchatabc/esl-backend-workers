@@ -17,14 +17,18 @@ import { utilFailedResponse } from "./utilService";
 
 export async function messageTemplateCreate(
   params: MessageTemplateCreate,
-  env: Env
+  env: Env,
+  createdById: number
 ) {
-  const query = await messageTemplateDbCreate(params, env);
-  if (!query) {
-    throw utilFailedResponse("Cannot create message template", 500);
-  }
+  const stmt = messageTemplateDbCreate(params, env, createdById);
 
-  return true;
+  try {
+    await env.DB.batch([stmt]);
+    return true;
+  } catch (e) {
+    console.log(e);
+    throw utilFailedResponse("Failed to create message template", 500);
+  }
 }
 
 export async function messageTemplateUpdate(

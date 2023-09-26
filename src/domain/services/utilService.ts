@@ -90,20 +90,22 @@ export function utilCheckScheduleOverlap(schedules: ScheduleCreate[]) {
     };
   });
 
-  newSchedules.forEach((old) => {
-    const overlap = newSchedules.find((schedule) => {
+  let loops = 0;
+  while (loops < newSchedules.length && !overlapped) {
+    const schedule = newSchedules[loops];
+    const overlappedSchedule = newSchedules.find((s) => {
       return (
-        schedule.id !== old.id &&
-        ((schedule.startTime >= old.startTime &&
-          schedule.startTime < old.endTime) ||
-          (schedule.endTime > old.startTime && schedule.endTime <= old.endTime))
+        s.id !== schedule.id &&
+        s.weekDay === schedule.weekDay &&
+        ((s.startTime >= schedule.startTime &&
+          s.startTime < schedule.endTime) ||
+          (s.endTime > schedule.startTime && s.endTime <= schedule.endTime))
       );
     });
 
-    if (overlap) {
-      overlapped = true;
-    }
-  });
+    loops++;
+    overlapped = overlappedSchedule ? true : false;
+  }
 
   return overlapped;
 }

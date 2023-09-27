@@ -120,3 +120,14 @@ export const BookingUpdateStatusManyInput = pick(Schema, [
 ]);
 
 export const BookingUpdateInput = pick(Schema, ["status", "id"]);
+
+export const BookingStatisticsTeacherSchema = transform(
+  merge([pick(Schema, ["teacherId"]), partial(pick(Schema, ["start", "end"]))]),
+  (input) => {
+    return {
+      ...input,
+      start: input.start ?? Date.now() - 1000 * 60 * 60 * 24 * 30,
+      end: input.end ?? Date.now(),
+    };
+  }
+);

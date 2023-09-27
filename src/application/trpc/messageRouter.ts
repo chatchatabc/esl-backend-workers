@@ -15,12 +15,8 @@ import {
 export default trpcRouterCreate({
   create: trpcProcedureAdmin.input(MessageCreateInput).mutation((opts) => {
     const { userId, env } = opts.ctx;
-    const data = {
-      ...opts.input,
-      senderId: userId,
-      status: 1,
-    };
-    return messageCreate(data, env);
+
+    return messageCreate(opts.input, env, userId);
   }),
 
   getAll: trpcProcedureAdmin.input(CommonPaginationInput).query((opts) => {
@@ -29,9 +25,9 @@ export default trpcRouterCreate({
   }),
 
   send: trpcProcedureAdmin.input(MessageSendInput).mutation((opts) => {
-    const { env } = opts.ctx;
+    const { env, userId } = opts.ctx;
 
-    return messageSend(opts.input, env);
+    return messageSend(opts.input, env, userId);
   }),
 
   update: trpcProcedureAdmin.input(MessageUpdateInput).mutation((opts) => {

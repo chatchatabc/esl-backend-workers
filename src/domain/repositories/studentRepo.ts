@@ -7,16 +7,36 @@ import {
 import { utilFailedResponse } from "../services/utilService";
 import { v4 as uuidv4 } from "uuid";
 import { userDbCreate } from "./userRepo";
+import { User } from "../models/UserModel";
 
 export async function studentDbGet(
-  params: Partial<{ studentId: number; uuid: string }>,
-  env: Env
+  params: Partial<{
+    studentId: number;
+    uuid: string;
+    userUsername: string;
+    userId: number;
+  }>,
+  env: Env,
+  users?: (keyof User)[]
 ) {
-  const { studentId, uuid } = params;
+  const { studentId, uuid, userUsername, userId } = params;
+
+  const select = {
+    users: users ?? ["id", "username", "alias"],
+  };
 
   const queryParams = [];
-  let query = "SELECT * FROM students";
+  let querySelect = "students.*";
   let queryWhere = "";
+
+  Object.keys(select).forEach((table) => {
+    select[table as keyof typeof select].forEach((column) => {
+      querySelect += querySelect ? ", " : "";
+      querySelect += `${table}.${column} AS ${table}_${column}`;
+    });
+  });
+
+  let query = `SELECT ${querySelect} FROM students JOIN users ON students.userId = users.id`;
 
   if (studentId) {
     queryWhere += `id = ?`;
@@ -29,6 +49,18 @@ export async function studentDbGet(
     queryParams.push(uuid);
   }
 
+  if (userId) {
+    queryWhere += queryWhere ? " AND " : "";
+    queryWhere += `userId = ?`;
+    queryParams.push(userId);
+  }
+
+  if (userUsername) {
+    queryWhere += queryWhere ? " AND " : "";
+    queryWhere += `userId = (SELECT id FROM users WHERE username = ?)`;
+    queryParams.push(userUsername);
+  }
+
   if (queryWhere) {
     query += ` WHERE ${queryWhere}`;
   }
@@ -38,43 +70,6 @@ export async function studentDbGet(
   try {
     const stmt = env.DB.prepare(query).bind(...queryParams);
     return await stmt.first<Student>();
-  } catch (e) {
-    console.log(e);
-    throw utilFailedResponse("Cannot generate student statement", 500);
-  }
-}
-
-export async function studentDbGetByUser(
-  params: Partial<{ userId: number; username: string }>,
-  env: Env
-) {
-  const { userId, username } = params;
-
-  const queryParams = [];
-  let query = "SELECT * FROM students";
-  let queryWhere = "";
-
-  if (userId) {
-    queryWhere += `userId = ?`;
-    queryParams.push(userId);
-  }
-
-  if (username) {
-    queryWhere += queryWhere ? " AND " : "";
-    queryWhere += `userId = (SELECT id FROM users WHERE username = ?)`;
-    queryParams.push(username);
-  }
-
-  if (queryWhere) {
-    query += ` WHERE ${queryWhere}`;
-  }
-
-  query += " LIMIT 1";
-
-  try {
-    const stmt = env.DB.prepare(query).bind(...queryParams);
-    const results = await stmt.first<Student>();
-    return results;
   } catch (e) {
     console.log(e);
     throw utilFailedResponse("Cannot generate student statement", 500);

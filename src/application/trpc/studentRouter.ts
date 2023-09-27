@@ -10,7 +10,6 @@ import {
   studentCreate,
   studentGet,
   studentGetAll,
-  studentGetByUser,
 } from "../../domain/services/studentService";
 
 export default trpcRouterCreate({
@@ -19,7 +18,7 @@ export default trpcRouterCreate({
   }),
 
   getByUser: trpcProcedureAdmin.input(StudentGetByUserInput).query((opts) => {
-    return studentGetByUser(opts.input, opts.ctx.env);
+    return studentGet(opts.input, opts.ctx.env);
   }),
 
   getAll: trpcProcedureAdmin.input(CommonPaginationInput).query((opts) => {

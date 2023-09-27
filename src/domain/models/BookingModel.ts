@@ -6,6 +6,7 @@ import {
   BookingCreateByAdminInput,
   BookingCreateInput,
   BookingCreateSchema,
+  BookingStatisticsTeacherSchema,
   BookingUpdateInput,
   BookingUpdateStatusManyInput,
 } from "../schemas/BookingSchema";
@@ -61,4 +62,8 @@ export type BookingUpdateInput = Input<typeof BookingUpdateInput>;
 
 export type BookingUpdateStatusManyInput = Input<
   typeof BookingUpdateStatusManyInput
+>;
+
+export type BookingStatisticsTeacher = Input<
+  typeof BookingStatisticsTeacherSchema
 >;

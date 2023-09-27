@@ -99,14 +99,10 @@ export async function scheduleDeleteMany(
 ) {
   const { teacherId, scheduleIds } = params;
 
-  const query = await scheduleDbGetAll(
+  const schedules = await scheduleDbGetAll(
     { teacherId, page: 1, size: 10000 },
     env
   );
-  if (!query) {
-    throw utilFailedResponse("Cannot GET Schedules", 500);
-  }
-  const schedules = query;
 
   // Check if all schedules are owned by user
   if (

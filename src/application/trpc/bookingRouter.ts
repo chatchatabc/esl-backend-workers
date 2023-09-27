@@ -8,6 +8,7 @@ import {
   BookingCompleteInputAdmin,
   BookingCreateByAdminInput,
   BookingCreateInput,
+  BookingStatisticsTeacherSchema,
   BookingUpdateInput,
   BookingUpdateStatusManyInput,
 } from "../../domain/schemas/BookingSchema";
@@ -16,6 +17,7 @@ import {
   bookingCreate,
   bookingCreateMany,
   bookingGetAll,
+  bookingStatisticsTeacher,
   bookingUpdate,
   bookingUpdateStatusMany,
 } from "../../domain/services/bookingService";
@@ -104,4 +106,11 @@ export default trpcRouterCreate({
     const { env, user } = opts.ctx;
     return bookingUpdate(opts.input, env, user);
   }),
+
+  statisticsTeacher: trpcProcedureAdmin
+    .input(BookingStatisticsTeacherSchema)
+    .query(async (opts) => {
+      const { env } = opts.ctx;
+      return bookingStatisticsTeacher(opts.input, env);
+    }),
 });

@@ -15,6 +15,7 @@ import {
   messageDbUpdate,
 } from "../repositories/messageRepo";
 import { messageTemplateGet } from "./messageTemplate";
+import { userGet } from "./userService";
 import { utilFailedResponse } from "./utilService";
 
 export async function messageCreate(
@@ -37,20 +38,27 @@ export async function messageGetAll(
   params: { page: number; size: number },
   env: Env
 ) {
-  const query = await messageDbGetAll(params, env);
-  if (!query) {
-    throw utilFailedResponse("Unable to get messages", 500);
-  }
+  const messages: Message[] = await messageDbGetAll(params, env);
+  const totalElements: number = await messageDbGetAllTotal(env);
 
-  const total = await messageDbGetAllTotal(env);
-  if (!total && total !== 0) {
-    throw utilFailedResponse("Unable to get total messages", 500);
-  }
+  const messagesComplete = await Promise.all(
+    messages.map(async (message) => {
+      message.messageTemplate = await messageTemplateGet(
+        { messageTemplateId: message.messageTemplateId },
+        env
+      );
+      if (message.userId) {
+        message.user = await userGet({ userId: message.userId }, env);
+      }
+      return message;
+    })
+  );
 
   return {
-    ...params,
-    content: query.results as Message[],
-    totalElements: total as number,
+    page: params.page,
+    size: params.size,
+    content: messagesComplete,
+    totalElements,
   };
 }
 

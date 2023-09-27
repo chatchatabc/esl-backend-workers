@@ -1,4 +1,14 @@
-import { minLength, number, object, string } from "valibot";
+import {
+  merge,
+  minLength,
+  number,
+  object,
+  partial,
+  pick,
+  string,
+  transform,
+} from "valibot";
+import { v4 as uuidv4 } from "uuid";
 
 export const FundSchema = object({
   uuid: string("UUID must be a string", [minLength(1, "UUID is required")]),
@@ -14,3 +24,18 @@ export const FundSchema = object({
   amount: number("Amount must be a number"),
   status: number("Status must be a number"),
 });
+
+export const FundCreateSchema = transform(
+  merge([
+    pick(FundSchema, ["amount", "credits", "details", "title", "userId"]),
+    partial(pick(FundSchema, ["currency", "status", "uuid"])),
+  ]),
+  (input) => {
+    return {
+      ...input,
+      currency: input.currency ?? "CNY",
+      status: input.status ?? 1,
+      uuid: input.uuid ?? uuidv4(),
+    };
+  }
+);

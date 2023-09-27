@@ -18,10 +18,7 @@ import {
   bookingDbUpdate,
 } from "../repositories/bookingRepo";
 import { logsDbCreateCredit } from "../repositories/logsRepo";
-import {
-  scheduleDbGetAll,
-  scheduleDbValidateBooking,
-} from "../repositories/scheduleRepo";
+import { scheduleDbGetAll } from "../repositories/scheduleRepo";
 import { userDbUpdate } from "../repositories/userRepo";
 import { courseGet } from "./courseService";
 import { roleGet } from "./roleService";
@@ -201,6 +198,14 @@ export async function bookingCreateMany(
   const student = await studentGet({ studentId: params.studentId }, env);
   const teacher = await teacherGet({ teacherId: params.teacherId }, env);
   const course = await courseGet({ courseId: params.courseId }, env);
+  const schedules = await scheduleDbGetAll(
+    {
+      teacherId: teacher.id,
+      page: 1,
+      size: 10000,
+    },
+    env
+  );
 
   // Check if the course belongs to the teacher
   if (course.teacherId !== teacher.id) {
@@ -216,12 +221,6 @@ export async function bookingCreateMany(
     throw utilFailedResponse("Not enough credit", 400);
   }
 
-  // Check if schedule exists
-  const validSchedule = await scheduleDbValidateBooking(params, env);
-  if (!validSchedule) {
-    throw utilFailedResponse("Schedule does not exist", 400);
-  }
-
   const logsCredits: LogsCreditCreate[] = [];
   const bookings: BookingCreate[] = [];
 
@@ -235,7 +234,8 @@ export async function bookingCreateMany(
 
     // Check if the booking overlaps with another booking
     const overlap = await bookingDbGetOverlap(booking, env);
-    if (!overlap) {
+    const validSchedule = utilCheckBookingTimeValid(schedules, booking);
+    if (!overlap && validSchedule) {
       // Add booking to array
       bookings.push(booking);
 

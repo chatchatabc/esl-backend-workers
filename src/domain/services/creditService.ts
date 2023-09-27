@@ -1,11 +1,19 @@
 import { Env } from "../..";
 import { CreditAdd } from "../models/CreditModel";
+import { FundCreate } from "../models/FundModel";
 import { LogsCreditCreate, LogsMoneyCreate } from "../models/LogsModel";
 import { CreditDbAdd } from "../repositories/creditRepo";
+import { fundDbCreate } from "../repositories/fundRepo";
+import { logsDbCreateCredit } from "../repositories/logsRepo";
+import { userDbUpdate } from "../repositories/userRepo";
 import { userGet } from "./userService";
 import { utilFailedResponse } from "./utilService";
 
-export async function creditAdd(params: CreditAdd, env: Env) {
+export async function creditAdd(
+  params: CreditAdd,
+  env: Env,
+  createdById: number
+) {
   const user = await userGet({ userId: params.userId }, env);
   user.credits += params.credits;
 
@@ -16,7 +24,7 @@ export async function creditAdd(params: CreditAdd, env: Env) {
     details: `Credit Add ${params.credits}`,
   };
 
-  const logsMoney: LogsMoneyCreate = {
+  const fundCreate: FundCreate = {
     userId: params.userId,
     amount: params.amount,
     title: "Credit Add",
@@ -25,17 +33,15 @@ export async function creditAdd(params: CreditAdd, env: Env) {
     credits: params.credits,
   };
 
-  const query = await CreditDbAdd(
-    {
-      user,
-      logsCredit,
-      logsMoney,
-    },
-    env
-  );
-  if (!query) {
-    throw utilFailedResponse("Credit add failed", 400);
-  }
+  const userStmt = userDbUpdate(user, env);
+  const logsCreditStmt = logsDbCreateCredit(logsCredit, env, createdById);
+  const fundStmt = fundDbCreate(fundCreate, env, createdById);
 
-  return true;
+  try {
+    await env.DB.batch([userStmt, logsCreditStmt, fundStmt]);
+    return true;
+  } catch (e) {
+    console.log(e);
+    throw utilFailedResponse("Unable to add credit", 500);
+  }
 }

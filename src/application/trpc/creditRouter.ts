@@ -4,7 +4,8 @@ import { creditAdd } from "../../domain/services/creditService";
 
 export default trpcRouterCreate({
   add: trpcProcedureAdmin.input(CreditAddInput).mutation((opts) => {
-    const currency = "CNY";
-    return creditAdd({ ...opts.input, currency }, opts.ctx.env);
+    const { userId, env } = opts.ctx;
+
+    return creditAdd(opts.input, env, userId);
   }),
 });

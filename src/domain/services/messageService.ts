@@ -17,13 +17,20 @@ import {
 import { messageTemplateGet } from "./messageTemplate";
 import { utilFailedResponse } from "./utilService";
 
-export async function messageCreate(params: MessageCreate, env: Env) {
-  const query = messageDbCreate(params, env);
-  if (!query) {
-    throw utilFailedResponse("Unable to save message", 500);
-  }
+export async function messageCreate(
+  params: MessageCreate,
+  env: Env,
+  createdById: number
+) {
+  const stmt = messageDbCreate(params, env, createdById);
 
-  return true;
+  try {
+    await env.DB.batch([stmt]);
+    return true;
+  } catch (e) {
+    console.log(e);
+    throw utilFailedResponse("Unable to create message", 500);
+  }
 }
 
 export async function messageGetAll(
@@ -77,7 +84,11 @@ export async function messageUpdate(params: MessageUpdate, env: Env) {
   return true;
 }
 
-export async function messageSend(params: MessageSend, env: Env) {
+export async function messageSend(
+  params: MessageSend,
+  env: Env,
+  createdById: number
+) {
   const messageTemplate = await messageTemplateGet(params, env);
 
   const sms = await smsSend(
@@ -100,10 +111,6 @@ export async function messageSend(params: MessageSend, env: Env) {
     status: 2,
     cron: "0 0 1 1 1",
   };
-  const query = await messageDbCreate(message, env);
-  if (!query) {
-    throw utilFailedResponse("Unable save the message", 500);
-  }
 
-  return true;
+  return await messageCreate(message, env, createdById);
 }

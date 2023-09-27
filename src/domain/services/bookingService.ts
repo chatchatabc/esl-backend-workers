@@ -1,8 +1,10 @@
+import { Input } from "valibot";
 import { Env } from "../..";
 import {
   Booking,
   BookingCreate,
   BookingPagination,
+  BookingStatisticsTeacher,
   BookingUpdate,
 } from "../models/BookingModel";
 import { LogsCreditCreate } from "../models/LogsModel";
@@ -32,7 +34,6 @@ import {
   utilTimeFormatter,
 } from "./utilService";
 import { v4 as uuidv4 } from "uuid";
-import { BookingCreateSchema } from "../schemas/BookingSchema";
 
 export async function bookingGet(params: { bookingId: number }, env: Env) {
   const booking = await bookingDbGet(params, env);
@@ -419,4 +420,59 @@ export async function bookingUpdateStatusMany(
     console.log(e);
     throw utilFailedResponse("Failed to update bookings", 500);
   }
+}
+
+export async function bookingStatisticsTeacher(
+  params: BookingStatisticsTeacher,
+  env: Env
+) {
+  const bookings = await bookingDbGetAll(
+    { ...params, page: 1, size: 10000 },
+    env
+  );
+  const studentsRecord: Record<number, number> = {};
+
+  const statistics = {
+    total: 0,
+    completed: 0,
+    canceled: 0,
+    confirmed: 0,
+    cancellable: 0,
+    start: params.start,
+    end: params.end,
+  };
+
+  bookings.forEach((booking) => {
+    statistics.total++;
+    if (booking.status === 3) {
+      statistics.completed++;
+    } else if (booking.status === 4) {
+      statistics.canceled++;
+    } else if (booking.status === 2) {
+      statistics.confirmed++;
+    } else if (booking.status === 1) {
+      statistics.cancellable++;
+    }
+
+    if (studentsRecord[booking.studentId]) {
+      studentsRecord[booking.studentId]++;
+    } else {
+      studentsRecord[booking.studentId] = 1;
+    }
+  });
+
+  const students = await Promise.all(
+    Object.keys(studentsRecord).map(async (studentId) => {
+      const student = await studentGet({ studentId: Number(studentId) }, env);
+      return {
+        student,
+        total: studentsRecord[Number(studentId)],
+      };
+    })
+  );
+
+  return {
+    students,
+    ...statistics,
+  };
 }

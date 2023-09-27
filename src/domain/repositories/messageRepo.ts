@@ -41,15 +41,21 @@ export async function messageDbGetAll(
   env: Env
 ) {
   const { page, size } = params;
+
+  let query = "SELECT * FROM messages";
+  const queryParams = [];
+
+  query += " ORDER BY updatedAt DESC";
+  query += " LIMIT ?, ?";
+  queryParams.push((page - 1) * size, size);
+
   try {
-    const stmt = env.DB.prepare(
-      "SELECT * FROM messages ORDER BY updatedAt DESC LIMIT ? OFFSET ?"
-    ).bind(size, (page - 1) * size);
+    const stmt = env.DB.prepare(query).bind(...queryParams);
     const results = await stmt.all<Message>();
-    return results;
+    return results.results;
   } catch (e) {
     console.log(e);
-    return undefined;
+    throw utilFailedResponse("Unable to get messages", 500);
   }
 }
 
@@ -86,11 +92,11 @@ export async function messageDbGetAllWithCron(env: Env) {
 export async function messageDbGetAllTotal(env: Env) {
   try {
     const stmt = env.DB.prepare("SELECT COUNT(*) AS total FROM messages");
-    const total = await stmt.first("total");
-    return total;
+    const total = await stmt.first<number>("total");
+    return total ?? 0;
   } catch (e) {
     console.log(e);
-    return undefined;
+    throw utilFailedResponse("Unable to get total messages", 500);
   }
 }
 

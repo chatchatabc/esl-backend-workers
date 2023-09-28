@@ -254,3 +254,17 @@ export function utilQueryUpdate(
 
   return { querySet, queryParams };
 }
+
+export function utilQuerySelect(
+  tables: Record<string, string[]>,
+  mainTable: string
+) {
+  let querySelect = `${mainTable}.*`;
+  Object.keys(tables).forEach((table) => {
+    tables[table as keyof typeof tables].forEach((column) => {
+      querySelect += `, ${table}.${column} AS ${table}_${column}`;
+    });
+  });
+
+  return querySelect;
+}

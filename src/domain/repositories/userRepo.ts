@@ -51,7 +51,7 @@ export async function userDbGet(
 
   const queryParams = [];
   let querySelect = utilQuerySelect({
-    users: userColumns(),
+    users: [...userColumns(), "password"],
     roles: roleColumns(),
   });
   let queryFrom = "users JOIN roles ON users.roleId = roles.id";

@@ -115,7 +115,6 @@ export function userColumns() {
   return [
     "id",
     "username",
-    "password",
     "alias",
     "createdAt",
     "credits",

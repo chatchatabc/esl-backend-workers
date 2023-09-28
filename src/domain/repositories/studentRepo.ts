@@ -54,25 +54,25 @@ export async function studentDbGet(
   let query = `SELECT ${querySelect} FROM students JOIN users ON students.userId = users.id JOIN roles ON users.roleId = roles.id`;
 
   if (studentId) {
-    queryWhere += `id = ?`;
+    queryWhere += `students.id = ?`;
     queryParams.push(studentId);
   }
 
   if (uuid) {
     queryWhere += queryWhere ? " AND " : "";
-    queryWhere += `uuid = ?`;
+    queryWhere += `students.uuid = ?`;
     queryParams.push(uuid);
   }
 
   if (userId) {
     queryWhere += queryWhere ? " AND " : "";
-    queryWhere += `userId = ?`;
+    queryWhere += `students.userId = ?`;
     queryParams.push(userId);
   }
 
   if (userUsername) {
     queryWhere += queryWhere ? " AND " : "";
-    queryWhere += `userId = (SELECT id FROM users WHERE username = ?)`;
+    queryWhere += `students.userId = (SELECT id FROM users WHERE username = ?)`;
     queryParams.push(userUsername);
   }
 

@@ -1,67 +1,20 @@
 import { Env } from "../..";
-import {
-  bookingDbGetAllByDateStart,
-  bookingDbConfirmMany,
-} from "../repositories/bookingRepo";
+import { bookingDbGetAll, bookingDbUpdate } from "../repositories/bookingRepo";
 import { messageGetAllByDate, messageGetAllWithCron } from "./messageService";
 import cron from "cron-parser";
-import { userGet } from "./userService";
-import { LogsCreditCreate } from "../models/LogsModel";
-import { User } from "../models/UserModel";
-import { teacherGet } from "./teacherService";
 import { utilDateFormatter, utilTimeFormatter } from "./utilService";
-import { MessageCreate, MessageSend } from "../models/MessageModel";
+import { MessageCreate } from "../models/MessageModel";
 import { smsSend } from "../infra/sms";
 import { SmsSend } from "../models/SmsModel";
 import { messageTemplateGet } from "./messageTemplate";
-import { messageDbUpdateMany } from "../repositories/messageRepo";
-
-export async function cronRemindClass(env: Env) {
-  const start = Date.now();
-  const end = start + 20 * 60 * 1000;
-
-  const bookings = await bookingDbGetAllByDateStart({ start, end }, env);
-  if (!bookings) {
-    throw new Error("Failed to get bookings");
-  }
-
-  // Chinese time
-  const timeFormatter = new Intl.DateTimeFormat("zh-CN", {
-    timeStyle: "short",
-  });
-  const dateFormatter = new Intl.DateTimeFormat("zh-CN", {
-    timeStyle: "short",
-    dateStyle: "medium",
-  });
-  const userIds: number[] = [];
-
-  for (const booking of bookings) {
-    const userId = booking.userId ?? 0;
-    const student = await userGet({ userId }, env);
-    const teacher = await userGet({ userId: booking.teacherId }, env);
-
-    if (!userIds.includes(userId) && student && teacher && student.phone) {
-      const startTime = dateFormatter.format(new Date(booking.start));
-      const endTime = timeFormatter.format(new Date(booking.end));
-      const message = `你好，${student.firstName} ${student.lastName}，提醒您：您与${teacher.firstName} ${teacher.lastName}的课程安排在${startTime}-${endTime}。`;
-
-      console.log(message);
-      await env.KV.put("message", message);
-
-      // await messageSend({
-      //   content: message,
-      //   mobile: student.phone,
-      // });
-      userIds.push(userId);
-    }
-  }
-
-  return true;
-}
+import {
+  messageDbCreate,
+  messageDbUpdateMany,
+} from "../repositories/messageRepo";
 
 export async function cronService(timestamp: number, env: Env) {
   await cronConfirmBooking(timestamp, env);
-  await cronSendScheduledMessages(timestamp, env);
+  // await cronSendScheduledMessages(timestamp, env);
 
   return true;
 }
@@ -157,65 +110,19 @@ export async function cronConfirmBooking(timestsamp: number, bindings: Env) {
   const end = timestsamp + 30 * 60 * 1000;
 
   // Get all bookings with pending status
-  const bookings = await bookingDbGetAllByDateStart(
-    { start, end, status: 1 },
+  const bookings = await bookingDbGetAll(
+    { start, end, status: [1], page: 1, size: 10000 },
     bindings
   );
-  if (!bookings) {
-    throw new Error("Failed to get bookings");
-  }
-
-  // Get the related users within this booking
-  const newBookingsPromise = bookings.map(async (booking) => {
-    const teacher = await teacherGet(
-      { teacherId: booking.teacherId },
-      bindings
-    );
-    const user = await userGet({ userId: teacher.userId }, bindings);
-    teacher.user = user;
-
-    booking.teacher = teacher;
-    booking.user = await userGet({ userId: booking.userId }, bindings);
-
-    return booking;
-  });
-  const newBookings = await Promise.all(newBookingsPromise);
-
-  // Create logs credit for the teachers
-  const logsCredits: LogsCreditCreate[] = [];
-  newBookings.forEach(async (booking) => {
-    const logsCredit: LogsCreditCreate = {
-      userId: booking.teacher!.userId,
-      amount: booking.amount,
-      title: `Booked class from student ${booking.user?.alias}`,
-      details: `Booked class at ${utilDateFormatter(
-        "en-US",
-        new Date(booking.start)
-      )} ${utilTimeFormatter("en-US", new Date(booking.start))}`,
-    };
-    logsCredits.push(logsCredit);
-  });
-
-  // Update teacher's credits
-  const teachers: User[] = [];
-  newBookings.forEach(async (booking) => {
-    const user = booking.teacher!.user;
-    if (!user) {
-      throw new Error("Failed to get teacher");
-    }
-    user.credits += booking.amount ?? 0;
-
-    teachers.push(user);
-  });
 
   const messages: MessageCreate[] = [];
-  newBookings.forEach(async (booking) => {
+  bookings.forEach(async (booking) => {
     const startDate = utilDateFormatter("zh-CN", new Date(booking.start));
     const startTime = utilTimeFormatter("zh-CN", new Date(booking.start));
     const message: MessageCreate = {
-      userId: booking.userId,
+      userId: booking.student.userId,
       messageTemplateId: 1,
-      phone: booking.user!.phone!,
+      phone: booking.student.user!.phone!,
       cron: "0 0 1 1 1",
       status: 1,
       sendAt: booking.start - 30 * 60 * 1000,
@@ -226,14 +133,18 @@ export async function cronConfirmBooking(timestsamp: number, bindings: Env) {
     messages.push(message);
   });
 
-  // Update bookings, logs credits, and teachers
-  const update = await bookingDbConfirmMany(
-    { bookings: newBookings, logsCredits, teachers, messages },
-    bindings
-  );
-  if (!update) {
-    throw new Error("Failed to update bookings");
-  }
+  const messageStmts = messages.map((message) => {
+    return messageDbCreate(message, bindings, 1);
+  });
+  const bookingStmts = bookings.map((booking) => {
+    return bookingDbUpdate({ id: booking.id, status: 2 }, bindings);
+  });
 
-  return true;
+  try {
+    await bindings.DB.batch([...messageStmts, ...bookingStmts]);
+    return true;
+  } catch (e) {
+    console.log(e);
+    throw new Error("Failed to create messages");
+  }
 }

@@ -10,7 +10,6 @@ import {
   studentDbGetAll,
   studentDbGetAllTotal,
 } from "../repositories/studentRepo";
-import { userGet } from "./userService";
 import { utilFailedResponse } from "./utilService";
 
 export async function studentGet(
@@ -35,6 +34,11 @@ export async function studentGet(
       const value = student[key as keyof Student];
       const newKey = key.replace("users_", "");
       user[newKey] = value;
+    } else if (key.startsWith("roles_")) {
+      const value = student[key as keyof Student];
+      const newKey = key.replace("roles_", "");
+      user.role = user.role ?? {};
+      user.role[newKey] = value;
     } else {
       data[key] = student[key as keyof Student];
     }
@@ -45,17 +49,11 @@ export async function studentGet(
 }
 
 export async function studentGetAll(params: StudentPagination, env: Env) {
-  const studentsQuery = await studentDbGetAll(params, env);
+  const students = await studentDbGetAll(params, env);
   const totalElements: number = await studentDbGetAllTotal(env);
 
-  const students: Student[] = [];
-  for (const student of studentsQuery.results) {
-    student.user = await userGet({ userId: student.userId }, env);
-    students.push(student);
-  }
-
   return {
-    content: students,
+    content: students as Student[],
     totalElements,
     page: params.page,
     size: params.size,

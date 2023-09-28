@@ -22,6 +22,9 @@ export async function studentGet(
   env: Env
 ) {
   const student = await studentDbGet(params, env);
+  if (!student) {
+    throw utilFailedResponse("Student not found", 404);
+  }
 
   return student as Student;
 }

@@ -86,7 +86,7 @@ export async function studentDbGet(
     const stmt = env.DB.prepare(query).bind(...queryParams);
     const student = await stmt.first<Student>();
     if (!student) {
-      throw utilFailedResponse("Student not found", 404);
+      return null;
     }
 
     const data: Record<string, any> = {};
@@ -176,7 +176,7 @@ export async function studentDbGetAll(params: StudentPagination, env: Env) {
       data.user = user as any;
       return data;
     });
-    return students;
+    return students as Student[];
   } catch (e) {
     console.log(e);
     throw utilFailedResponse("Cannot get all students", 500);

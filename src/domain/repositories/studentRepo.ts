@@ -84,7 +84,31 @@ export async function studentDbGet(
 
   try {
     const stmt = env.DB.prepare(query).bind(...queryParams);
-    return await stmt.first<Student>();
+    const student = await stmt.first<Student>();
+    if (!student) {
+      throw utilFailedResponse("Student not found", 404);
+    }
+
+    const data: Record<string, any> = {};
+    const user: Record<string, any> = {} as any;
+
+    Object.keys(student).forEach((key) => {
+      if (key.startsWith("users_")) {
+        const value = student[key as keyof Student];
+        const newKey = key.replace("users_", "");
+        user[newKey] = value;
+      } else if (key.startsWith("roles_")) {
+        const value = student[key as keyof Student];
+        const newKey = key.replace("roles_", "");
+        user.role = user.role ?? {};
+        user.role[newKey] = value;
+      } else {
+        data[key] = student[key as keyof Student];
+      }
+    });
+    data.user = user;
+
+    return data as Student;
   } catch (e) {
     console.log(e);
     throw utilFailedResponse("Cannot generate student statement", 500);

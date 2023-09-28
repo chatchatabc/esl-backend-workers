@@ -22,30 +22,8 @@ export async function studentGet(
   env: Env
 ) {
   const student = await studentDbGet(params, env);
-  if (!student) {
-    throw utilFailedResponse("Student not found", 404);
-  }
 
-  const data: Record<string, any> = {};
-  const user: Record<string, any> = {} as any;
-
-  Object.keys(student).forEach((key) => {
-    if (key.startsWith("users_")) {
-      const value = student[key as keyof Student];
-      const newKey = key.replace("users_", "");
-      user[newKey] = value;
-    } else if (key.startsWith("roles_")) {
-      const value = student[key as keyof Student];
-      const newKey = key.replace("roles_", "");
-      user.role = user.role ?? {};
-      user.role[newKey] = value;
-    } else {
-      data[key] = student[key as keyof Student];
-    }
-  });
-  data.user = user;
-
-  return data as Student;
+  return student as Student;
 }
 
 export async function studentGetAll(params: StudentPagination, env: Env) {

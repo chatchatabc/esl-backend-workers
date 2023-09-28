@@ -308,8 +308,7 @@ export async function bookingUpdateStatusMany(
     }
 
     if (booking.status !== params.status) {
-      const student = await studentGet({ studentId: booking.studentId }, env);
-      const teacher = await teacherGet({ teacherId: booking.teacherId }, env);
+      const { teacher, student } = booking;
 
       // Check if user is not an admin
       if (performedBy.roleId !== 1) {
@@ -384,9 +383,6 @@ export async function bookingUpdateStatusMany(
       }
     }
   }
-
-  console.log(users);
-  console.log(users[0]);
 
   const logsCreditStmts = logsCredits.map((logsCredit) => {
     return logsDbCreateCredit(logsCredit, env, performedBy.id);

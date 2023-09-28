@@ -7,9 +7,9 @@ import {
 import { utilFailedResponse, utilQuerySelect } from "../services/utilService";
 import { v4 as uuidv4 } from "uuid";
 import { userDbCreate } from "./userRepo";
-import { User, UserRole } from "../models/UserModel";
 import { userColumns } from "../services/userService";
 import { roleColumns } from "../services/roleService";
+import { studentColumns } from "../services/studentService";
 
 export async function studentDbGet(
   params: Partial<{
@@ -23,34 +23,35 @@ export async function studentDbGet(
   const { studentId, uuid, userUsername, userId } = params;
 
   const queryParams = [];
-  let querySelect = utilQuerySelect(
-    { users: userColumns(), roles: roleColumns() },
-    "students"
-  );
+  let querySelect = utilQuerySelect({
+    users: userColumns(),
+    roles: roleColumns(),
+    students: studentColumns(),
+  });
   let queryFrom =
     "students LEFT JOIN users ON students.userId = users.id LEFT JOIN roles ON users.roleId = roles.id";
   let queryWhere = "";
 
   if (studentId) {
-    queryWhere += `students.id = ?`;
+    queryWhere += `students_id = ?`;
     queryParams.push(studentId);
   }
 
   if (uuid) {
     queryWhere += queryWhere ? " AND " : "";
-    queryWhere += `students.uuid = ?`;
+    queryWhere += `students_uuid = ?`;
     queryParams.push(uuid);
   }
 
   if (userId) {
     queryWhere += queryWhere ? " AND " : "";
-    queryWhere += `students.userId = ?`;
+    queryWhere += `students_userId = ?`;
     queryParams.push(userId);
   }
 
   if (userUsername) {
     queryWhere += queryWhere ? " AND " : "";
-    queryWhere += `students.userId = (SELECT id FROM users WHERE username = ?)`;
+    queryWhere += `students_userId = (SELECT id FROM users WHERE username = ?)`;
     queryParams.push(userUsername);
   }
 
@@ -79,8 +80,9 @@ export async function studentDbGet(
       } else if (key.startsWith("roles_")) {
         const newKey = key.replace("roles_", "");
         data.user.role[newKey] = value;
-      } else {
-        data[key] = value;
+      } else if (key.startsWith("students_")) {
+        const newKey = key.replace("students_", "");
+        data[newKey] = value;
       }
     });
     return data as Student;
@@ -93,13 +95,11 @@ export async function studentDbGet(
 export async function studentDbGetAll(params: StudentPagination, env: Env) {
   const { page, size } = params;
 
-  let querySelect = utilQuerySelect(
-    {
-      users: userColumns(),
-      roles: roleColumns(),
-    },
-    "students"
-  );
+  let querySelect = utilQuerySelect({
+    users: userColumns(),
+    roles: roleColumns(),
+    students: studentColumns(),
+  });
   const queryParams = [];
 
   let query = `SELECT ${querySelect} FROM students LEFT JOIN users ON students.userId = users.id LEFT JOIN roles ON users.roleId = roles.id`;
@@ -123,8 +123,9 @@ export async function studentDbGetAll(params: StudentPagination, env: Env) {
         } else if (key.startsWith("roles_")) {
           const newKey = key.replace("roles_", "");
           data.user.role[newKey] = value;
-        } else {
-          data[key] = value;
+        } else if (key.startsWith("students_")) {
+          const newKey = key.replace("students_", "");
+          data[newKey] = value;
         }
       });
       return data;

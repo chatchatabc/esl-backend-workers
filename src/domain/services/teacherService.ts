@@ -78,3 +78,15 @@ export async function teacherUpdate(params: TeacherUpdate, env: Env) {
 
   return true;
 }
+
+export function teacherColumns() {
+  return [
+    "alias",
+    "bio",
+    "createdAt",
+    "id",
+    "status",
+    "updatedAt",
+    "userId",
+  ] as (keyof Teacher)[];
+}

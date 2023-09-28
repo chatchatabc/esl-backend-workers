@@ -15,7 +15,8 @@ database_name = "esl-test"                           # Test
 database_id = "6693c304-6758-4411-a7a7-64b3d935ae60" # Test
 
 [triggers]
-crons = ["9,19,29,39,49,59 * * * *"]
+# crons = ["9,19,29,39,49,59 * * * *"] # Production
+crons = ["1 * * 1 *"] # Dev
 
 [dev]
 port = 5000

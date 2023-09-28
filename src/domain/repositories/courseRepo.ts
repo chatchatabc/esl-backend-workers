@@ -16,14 +16,65 @@ import {
 } from "../services/utilService";
 
 export async function courseDbGet(params: { courseId: number }, env: Env) {
+  const { courseId } = params;
+
+  let querySelect = utilQuerySelect({
+    courses: courseColumns(),
+    teachers: teacherColumns(),
+    users: userColumns(),
+    roles: roleColumns(),
+  });
+  const queryFrom =
+    "courses LEFT JOIN teachers ON courses.teacherId = teachers.id LEFT JOIN users ON teachers.userId = users.id LEFT JOIN roles ON users.roleId = roles.id";
+  const queryParams = [];
+  let queryWhere = "";
+
+  if (courseId) {
+    queryWhere += "courses_id = ?";
+    queryParams.push(courseId);
+  }
+
+  let query = `SELECT ${querySelect} FROM ${queryFrom}`;
+  if (queryWhere) {
+    query += ` WHERE ${queryWhere}`;
+  }
+  query += " LIMIT 1";
+
   try {
-    const stmt = env.DB.prepare("SELECT * FROM courses WHERE id = ?").bind(
-      params.courseId
-    );
-    return await stmt.first<Course>();
+    const stmt = env.DB.prepare(query).bind(...queryParams);
+    const course = await stmt.first();
+    if (!course) {
+      return null;
+    }
+    const data = {
+      teacher: {
+        user: {
+          role: {} as any,
+        } as any,
+      } as any,
+    } as any;
+
+    Object.keys(course).forEach((key) => {
+      const value = course[key];
+      if (key.startsWith("courses_")) {
+        const newKey = key.replace("courses_", "");
+        data[newKey] = value;
+      } else if (key.startsWith("teachers_")) {
+        const newKey = key.replace("teachers_", "");
+        data.teacher[newKey] = value;
+      } else if (key.startsWith("users_")) {
+        const newKey = key.replace("users_", "");
+        data.teacher.user[newKey] = value;
+      } else if (key.startsWith("roles_")) {
+        const newKey = key.replace("roles_", "");
+        data.teacher.user.role[newKey] = value;
+      }
+    });
+
+    return data as Course;
   } catch (e) {
     console.log(e);
-    return null;
+    throw utilFailedResponse("Cannot get course", 500);
   }
 }
 

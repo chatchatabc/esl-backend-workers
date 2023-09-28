@@ -24,8 +24,6 @@ export async function teacherGet(
   if (!teacher) {
     throw utilFailedResponse("Cannot get teacher", 500);
   }
-  const user = await userGet({ userId: teacher.userId }, env);
-  teacher.user = user;
 
   return teacher as Teacher;
 }

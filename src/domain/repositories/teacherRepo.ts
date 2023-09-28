@@ -1,6 +1,7 @@
 import { Env } from "../..";
 import { CommonPagination } from "../models/CommonModel";
 import { Teacher, TeacherCreate, TeacherUpdate } from "../models/TeacherModel";
+import { User, UserRole } from "../models/UserModel";
 import { utilFailedResponse } from "../services/utilService";
 import { userDbCreate } from "./userRepo";
 
@@ -10,9 +11,36 @@ export async function teacherDbGet(
 ) {
   const { teacherId, userId, userUsername } = params;
 
+  const tables = {
+    roles: ["id", "name", "createdAt", "updatedAt"] as (keyof UserRole)[],
+    users: [
+      "id",
+      "username",
+      "alias",
+      "createdAt",
+      "credits",
+      "email",
+      "emailVerifiedAt",
+      "firstName",
+      "lastName",
+      "phone",
+      "phoneVerifiedAt",
+      "roleId",
+      "status",
+      "updatedAt",
+    ] as (keyof User)[],
+  };
+
   const queryParams = [];
-  let query = "SELECT * FROM teachers";
+  let querySelect = "teachers.*";
   let whereQuery = "";
+
+  Object.keys(tables).forEach((table) => {
+    tables[table as keyof typeof tables].forEach((column) => {
+      querySelect += querySelect ? ", " : "";
+      querySelect += `${table}.${column} AS ${table}_${column}`;
+    });
+  });
 
   if (teacherId) {
     whereQuery += "id = ?";
@@ -31,6 +59,8 @@ export async function teacherDbGet(
     queryParams.push(userUsername);
   }
 
+  let query = `SELECT ${querySelect} FROM teachers JOIN users ON teachers.userId = users.id JOIN roles ON users.roleId = roles.id`;
+
   if (whereQuery) {
     query += ` WHERE ${whereQuery}`;
   }
@@ -38,9 +68,30 @@ export async function teacherDbGet(
   try {
     const teacher = await env.DB.prepare(query)
       .bind(...queryParams)
-      .first<Teacher>();
+      .first();
+    if (!teacher) {
+      return null;
+    }
 
-    return teacher;
+    const data: Record<string, any> = {};
+    const user: Record<string, any> = {} as any;
+    Object.keys(teacher).forEach((key) => {
+      if (key.startsWith("users_")) {
+        const value = teacher[key];
+        const newKey = key.replace("users_", "");
+        user[newKey] = value;
+      } else if (key.startsWith("roles_")) {
+        const value = teacher[key];
+        const newKey = key.replace("roles_", "");
+        user.role = user.role ?? {};
+        user.role[newKey] = value;
+      } else {
+        data[key] = teacher[key];
+      }
+    });
+    data.user = user;
+
+    return data as Teacher;
   } catch (e) {
     console.log(e);
     return null;

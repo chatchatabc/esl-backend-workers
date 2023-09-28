@@ -9,7 +9,6 @@ import {
   teacherDbUpdate,
   teacherDbValidateCourse,
 } from "../repositories/teacherRepo";
-import { userGet } from "./userService";
 import { utilFailedResponse } from "./utilService";
 
 export async function teacherGet(

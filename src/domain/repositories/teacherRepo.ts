@@ -2,7 +2,10 @@ import { Env } from "../..";
 import { CommonPagination } from "../models/CommonModel";
 import { Teacher, TeacherCreate, TeacherUpdate } from "../models/TeacherModel";
 import { User, UserRole } from "../models/UserModel";
-import { utilFailedResponse } from "../services/utilService";
+import { roleColumns } from "../services/roleService";
+import { teacherColumns } from "../services/teacherService";
+import { userColumns } from "../services/userService";
+import { utilFailedResponse, utilQuerySelect } from "../services/utilService";
 import { userDbCreate } from "./userRepo";
 
 export async function teacherDbGet(
@@ -11,55 +14,32 @@ export async function teacherDbGet(
 ) {
   const { teacherId, userId, userUsername } = params;
 
-  const tables = {
-    roles: ["id", "name", "createdAt", "updatedAt"] as (keyof UserRole)[],
-    users: [
-      "id",
-      "username",
-      "alias",
-      "createdAt",
-      "credits",
-      "email",
-      "emailVerifiedAt",
-      "firstName",
-      "lastName",
-      "phone",
-      "phoneVerifiedAt",
-      "roleId",
-      "status",
-      "updatedAt",
-    ] as (keyof User)[],
-  };
-
   const queryParams = [];
-  let querySelect = "teachers.*";
+  let querySelect = utilQuerySelect({
+    teachers: teacherColumns(),
+    roles: roleColumns(),
+    users: userColumns(),
+  });
   let whereQuery = "";
 
-  Object.keys(tables).forEach((table) => {
-    tables[table as keyof typeof tables].forEach((column) => {
-      querySelect += querySelect ? ", " : "";
-      querySelect += `${table}.${column} AS ${table}_${column}`;
-    });
-  });
-
   if (teacherId) {
-    whereQuery += "teachers.id = ?";
+    whereQuery += "teachers_id = ?";
     queryParams.push(teacherId);
   }
 
   if (userId) {
     whereQuery += whereQuery ? " AND " : "";
-    whereQuery += "teachers.userId = ?";
+    whereQuery += "teachers_userId = ?";
     queryParams.push(userId);
   }
 
   if (userUsername) {
     whereQuery += whereQuery ? " AND " : "";
-    whereQuery += "teachers.userId = (SELECT id FROM users WHERE username = ?)";
+    whereQuery += "teachers_userId = (SELECT id FROM users WHERE username = ?)";
     queryParams.push(userUsername);
   }
 
-  let query = `SELECT ${querySelect} FROM teachers JOIN users ON teachers.userId = users.id JOIN roles ON users.roleId = roles.id`;
+  let query = `SELECT ${querySelect} FROM teachers LEFT JOIN users ON teachers.userId = users.id LEFT JOIN roles ON users.roleId = roles.id`;
 
   if (whereQuery) {
     query += ` WHERE ${whereQuery}`;
@@ -73,24 +53,24 @@ export async function teacherDbGet(
       return null;
     }
 
-    const data: Record<string, any> = {};
-    const user: Record<string, any> = {} as any;
+    const data = {
+      user: {
+        role: {} as any,
+      } as any,
+    } as any;
     Object.keys(teacher).forEach((key) => {
+      const value = teacher[key];
       if (key.startsWith("users_")) {
-        const value = teacher[key];
         const newKey = key.replace("users_", "");
-        user[newKey] = value;
+        data.user[newKey] = value;
       } else if (key.startsWith("roles_")) {
-        const value = teacher[key];
         const newKey = key.replace("roles_", "");
-        user.role = user.role ?? {};
-        user.role[newKey] = value;
-      } else {
+        data.user.role[newKey] = value;
+      } else if (key.startsWith("teachers_")) {
+        const newKey = key.replace("teachers_", "");
         data[key] = teacher[key];
       }
     });
-    data.user = user;
-
     return data as Teacher;
   } catch (e) {
     console.log(e);

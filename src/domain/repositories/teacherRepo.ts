@@ -43,19 +43,19 @@ export async function teacherDbGet(
   });
 
   if (teacherId) {
-    whereQuery += "id = ?";
+    whereQuery += "teachers.id = ?";
     queryParams.push(teacherId);
   }
 
   if (userId) {
     whereQuery += whereQuery ? " AND " : "";
-    whereQuery += "userId = ?";
+    whereQuery += "teachers.userId = ?";
     queryParams.push(userId);
   }
 
   if (userUsername) {
     whereQuery += whereQuery ? " AND " : "";
-    whereQuery += "userId = (SELECT id FROM users WHERE username = ?)";
+    whereQuery += "teachers.userId = (SELECT id FROM users WHERE username = ?)";
     queryParams.push(userUsername);
   }
 

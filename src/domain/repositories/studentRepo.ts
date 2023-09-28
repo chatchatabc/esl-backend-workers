@@ -4,10 +4,12 @@ import {
   StudentCreate,
   StudentPagination,
 } from "../models/StudentModel";
-import { utilFailedResponse } from "../services/utilService";
+import { utilFailedResponse, utilQuerySelect } from "../services/utilService";
 import { v4 as uuidv4 } from "uuid";
 import { userDbCreate } from "./userRepo";
 import { User, UserRole } from "../models/UserModel";
+import { userColumns } from "../services/userService";
+import { roleColumns } from "../services/roleService";
 
 export async function studentDbGet(
   params: Partial<{
@@ -20,38 +22,14 @@ export async function studentDbGet(
 ) {
   const { studentId, uuid, userUsername, userId } = params;
 
-  const tables = {
-    roles: ["id", "name", "createdAt", "updatedAt"] as (keyof UserRole)[],
-    users: [
-      "id",
-      "username",
-      "alias",
-      "createdAt",
-      "credits",
-      "email",
-      "emailVerifiedAt",
-      "firstName",
-      "lastName",
-      "phone",
-      "phoneVerifiedAt",
-      "roleId",
-      "status",
-      "updatedAt",
-    ] as (keyof User)[],
-  };
-
   const queryParams = [];
-  let querySelect = "students.*";
+  let querySelect = utilQuerySelect(
+    { users: userColumns(), roles: roleColumns() },
+    "students"
+  );
+  let queryFrom =
+    "students LEFT JOIN users ON students.userId = users.id LEFT JOIN roles ON users.roleId = roles.id";
   let queryWhere = "";
-
-  Object.keys(tables).forEach((table) => {
-    tables[table as keyof typeof tables].forEach((column) => {
-      querySelect += querySelect ? ", " : "";
-      querySelect += `${table}.${column} AS ${table}_${column}`;
-    });
-  });
-
-  let query = `SELECT ${querySelect} FROM students JOIN users ON students.userId = users.id JOIN roles ON users.roleId = roles.id`;
 
   if (studentId) {
     queryWhere += `students.id = ?`;
@@ -76,38 +54,35 @@ export async function studentDbGet(
     queryParams.push(userUsername);
   }
 
+  let query = `SELECT ${querySelect} FROM ${queryFrom}`;
   if (queryWhere) {
     query += ` WHERE ${queryWhere}`;
   }
-
   query += " LIMIT 1";
 
   try {
     const stmt = env.DB.prepare(query).bind(...queryParams);
-    const student = await stmt.first<Student>();
+    const student = await stmt.first();
     if (!student) {
       return null;
     }
-
-    const data: Record<string, any> = {};
-    const user: Record<string, any> = {} as any;
-
+    const data = {
+      user: {
+        role: {} as any,
+      } as any,
+    } as any;
     Object.keys(student).forEach((key) => {
+      const value = student[key];
       if (key.startsWith("users_")) {
-        const value = student[key as keyof Student];
         const newKey = key.replace("users_", "");
-        user[newKey] = value;
+        data.user[newKey] = value;
       } else if (key.startsWith("roles_")) {
-        const value = student[key as keyof Student];
         const newKey = key.replace("roles_", "");
-        user.role = user.role ?? {};
-        user.role[newKey] = value;
+        data.user.role[newKey] = value;
       } else {
-        data[key] = student[key as keyof Student];
+        data[key] = value;
       }
     });
-    data.user = user;
-
     return data as Student;
   } catch (e) {
     console.log(e);
@@ -118,62 +93,40 @@ export async function studentDbGet(
 export async function studentDbGetAll(params: StudentPagination, env: Env) {
   const { page, size } = params;
 
-  const tables = {
-    roles: ["id", "name", "createdAt", "updatedAt"] as (keyof UserRole)[],
-    users: [
-      "id",
-      "username",
-      "alias",
-      "createdAt",
-      "credits",
-      "email",
-      "emailVerifiedAt",
-      "firstName",
-      "lastName",
-      "phone",
-      "phoneVerifiedAt",
-      "roleId",
-      "status",
-      "updatedAt",
-    ] as (keyof User)[],
-  };
+  let querySelect = utilQuerySelect(
+    {
+      users: userColumns(),
+      roles: roleColumns(),
+    },
+    "students"
+  );
+  const queryParams = [];
 
-  let querySelect = "students.*";
-  let queryParams = [];
-
-  Object.keys(tables).forEach((table) => {
-    tables[table as keyof typeof tables].forEach((column) => {
-      querySelect += querySelect ? ", " : "";
-      querySelect += `${table}.${column} AS ${table}_${column}`;
-    });
-  });
-
-  let query = `SELECT ${querySelect} FROM students JOIN users ON students.userId = users.id JOIN roles ON users.roleId = roles.id`;
-
+  let query = `SELECT ${querySelect} FROM students LEFT JOIN users ON students.userId = users.id LEFT JOIN roles ON users.roleId = roles.id`;
   query += ` LIMIT ?, ?`;
   queryParams.push((page - 1) * size, size);
 
   try {
     const stmt = env.DB.prepare(query).bind(...queryParams);
-    const results = await stmt.all<Student>();
+    const results = await stmt.all();
     const students = results.results.map((student) => {
-      const data: Record<string, any> = {};
-      const user: Record<string, any> = {} as any;
+      const data = {
+        user: {
+          role: {} as any,
+        },
+      } as any;
       Object.keys(student).forEach((key) => {
+        const value = student[key];
         if (key.startsWith("users_")) {
-          const value = student[key as keyof Student];
           const newKey = key.replace("users_", "");
-          user[newKey] = value;
+          data.user[newKey] = value;
         } else if (key.startsWith("roles_")) {
-          const value = student[key as keyof Student];
           const newKey = key.replace("roles_", "");
-          user.role = user.role ?? {};
-          user.role[newKey] = value;
+          data.user.role[newKey] = value;
         } else {
-          data[key] = student[key as keyof Student];
+          data[key] = value;
         }
       });
-      data.user = user as any;
       return data;
     });
     return students as Student[];

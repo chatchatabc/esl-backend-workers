@@ -93,6 +93,7 @@ export async function userDbGet(
     });
     return data as User;
   } catch (e) {
+    console.log(e);
     throw utilFailedResponse("Cannot get user", 500);
   }
 }

@@ -34,3 +34,7 @@ export async function roleGetAll(params: CommonPagination, env: Env) {
     ...params,
   };
 }
+
+export function roleColumns() {
+  return ["createdAt", "id", "name", "updatedAt"] as (keyof UserRole)[];
+}

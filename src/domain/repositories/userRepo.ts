@@ -98,32 +98,49 @@ export async function userDbGet(
 }
 
 export async function userDbGetAll(params: UserPagination, env: Env) {
-  const { page, size, roleId, teacherId } = params;
+  const { page, size, roleId } = params;
 
+  let querySelect = utilQuerySelect({
+    users: userColumns(),
+    roles: roleColumns(),
+  });
+  let queryFrom = "users JOIN roles ON users.roleId = roles.id";
+  let queryWhere = "";
   const queryParams = [];
-  let query = "SELECT * FROM users";
-
-  if (teacherId) {
-    query =
-      "SELECT users.* FROM users JOIN (SELECT * FROM bookings WHERE teacherId = ? AND bookings.status IN (1,2) GROUP BY userId) as uniqueBookings ON users.id = uniqueBookings.userId";
-    queryParams.push(teacherId);
-  }
 
   if (roleId) {
-    query = utilQueryAddWhere(query, "roleId = ?");
+    queryWhere += `roleId = ?`;
     queryParams.push(roleId);
   }
 
+  let query = `SELECT ${querySelect} FROM ${queryFrom}`;
+  if (queryWhere) {
+    query += ` WHERE ${queryWhere}`;
+  }
   query += " LIMIT ?, ?";
   queryParams.push((page - 1) * size, size);
 
   try {
     const stmt = await env.DB.prepare(query).bind(...queryParams);
-    const users = await stmt.all<User>();
+    const results = await stmt.all();
+    const users = results.results.map((user) => {
+      const data = { role: {} as any } as any;
+      Object.keys(user).forEach((key) => {
+        const value = user[key];
+        if (key.startsWith("users_")) {
+          const newKey = key.replace("users_", "");
+          data[newKey] = value;
+        } else if (key.startsWith("roles_")) {
+          const newKey = key.replace("roles_", "");
+          data.role[newKey] = value;
+        }
+      });
+      return data as User;
+    });
     return users;
   } catch (e) {
     console.log(e);
-    return undefined;
+    throw utilFailedResponse("Cannot get users", 500);
   }
 }
 
@@ -142,17 +159,11 @@ export async function userDbGetAllRole(params: CommonPagination, env: Env) {
 }
 
 export async function userDbGetAllTotal(params: UserPagination, env: Env) {
-  const { teacherId, roleId } = params;
+  const { roleId } = params;
 
   try {
     let query = "SELECT COUNT(*) AS total FROM users";
     const queryParams = [];
-
-    if (teacherId) {
-      query =
-        "SELECT COUNT(*) AS total FROM users JOIN (SELECT * FROM bookings WHERE teacherId = ? AND bookings.status IN (1,2) GROUP BY userId) as uniqueBookings ON users.id = uniqueBookings.userId";
-      queryParams.push(teacherId);
-    }
 
     if (roleId) {
       query = utilQueryAddWhere(query, "roleId = ?");
@@ -160,11 +171,11 @@ export async function userDbGetAllTotal(params: UserPagination, env: Env) {
     }
 
     const stmt = env.DB.prepare(query).bind(...queryParams);
-    const total = await stmt.first("total");
-    return Number(total);
+    const total = await stmt.first<number>("total");
+    return total ?? 0;
   } catch (e) {
     console.log(e);
-    return null;
+    throw utilFailedResponse("Cannot get total users", 500);
   }
 }
 

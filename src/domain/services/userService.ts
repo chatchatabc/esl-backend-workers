@@ -35,25 +35,14 @@ export async function userGet(
 }
 
 export async function userGetAll(params: UserPagination, env: Env) {
-  const query = await userDbGetAll(params, env);
-  if (!query) {
-    throw utilFailedResponse("Unable to get users", 500);
-  }
-
-  const total = await userDbGetAllTotal(params, env);
-  if (total === null) {
-    throw utilFailedResponse("Unable to get users total", 500);
-  }
-
-  const users = query.results.map((user) => {
-    delete user.password;
-    return user;
-  });
+  const content: User[] = await userDbGetAll(params, env);
+  const totalElements: number = await userDbGetAllTotal(params, env);
 
   return {
-    ...params,
-    content: users as User[],
-    totalElements: Number(total),
+    page: params.page,
+    size: params.size,
+    content,
+    totalElements,
   };
 }
 

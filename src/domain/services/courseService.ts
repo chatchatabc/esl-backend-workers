@@ -25,20 +25,14 @@ export async function courseGet(params: { courseId: number }, env: Env) {
 }
 
 export async function courseGetAll(params: CoursePagination, env: Env) {
-  const courses = await courseDbGetAll(params, env);
-  if (!courses) {
-    throw utilFailedResponse("Cannot get courses", 500);
-  }
-
-  const totalElements = await courseDbGetAllTotal(params, env);
-  if (totalElements === null) {
-    throw utilFailedResponse("Cannot get total elements", 500);
-  }
+  const content: Course[] = await courseDbGetAll(params, env);
+  const totalElements: number = await courseDbGetAllTotal(params, env);
 
   return {
-    content: courses.results as Course[],
-    totalElements: totalElements as number,
-    ...params,
+    content,
+    totalElements,
+    page: params.page,
+    size: params.size,
   };
 }
 

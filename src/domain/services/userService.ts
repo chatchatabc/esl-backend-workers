@@ -14,7 +14,6 @@ import {
   userDbGetAllTotal,
   userDbUpdate,
 } from "../repositories/userRepo";
-import { roleGet } from "./roleService";
 import { utilFailedResponse, utilHashHmac256 } from "./utilService";
 
 export async function userGet(

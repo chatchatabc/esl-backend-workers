@@ -280,7 +280,7 @@ export async function bookingDbGet(params: { bookingId: number }, env: Env) {
 
   if (bookingId) {
     queryWhere += queryWhere ? " AND " : "";
-    queryWhere += "id = ?";
+    queryWhere += "bookings_id = ?";
     queryParams.push(bookingId);
   }
 

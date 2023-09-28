@@ -137,14 +137,12 @@ export async function scheduleDbValidateBooking(
     const stmt = env.DB.prepare(
       "SELECT COUNT(*) AS total FROM schedules WHERE teacherId = ? AND startTime <= ? AND endTime >= ?"
     ).bind(teacherId, startTime, endTime);
-    const total = await stmt.first("total");
-    if (total === 0) {
-      return false;
-    }
-    return true;
+    const total = await stmt.first<number>("total");
+    console.log(total);
+    return total ? true : false;
   } catch (e) {
     console.log(e);
-    return false;
+    throw utilFailedResponse("Cannot validate booking", 500);
   }
 }
 

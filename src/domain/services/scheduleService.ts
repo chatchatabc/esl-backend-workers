@@ -52,12 +52,14 @@ export async function scheduleUpdateMany(
 
     if (schedule.startTime) {
       const date = new Date(schedule.startTime);
-      startTime = date.getTime() % 86400000;
       weekDay = date.getUTCDay();
+      startTime = (date.getTime() % 86400000) + weekDay * 86400000;
     }
 
     if (schedule.endTime) {
-      endTime = new Date(schedule.endTime).getTime() % 86400000;
+      const date = new Date(schedule.endTime);
+      const endDay = date.getUTCDay();
+      endTime = (date.getTime() % 86400000) + endDay * 86400000;
     }
 
     return {

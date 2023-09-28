@@ -1,4 +1,5 @@
-name = "esl-trpc"
+# name = "esl-trpc"                 # Production
+name = "esl-trpc-test"            # Test
 main = "src/index.ts"
 compatibility_date = "2023-07-18"
 
@@ -8,8 +9,13 @@ kv_namespaces = [
 
 [[d1_databases]]
 binding = "DB"
-database_name = "esl"
-database_id = "5ac1b98b-3ca6-4079-8064-44e00c6d7f92"
+# database_name = "esl"                                # Production
+# database_id = "5ac1b98b-3ca6-4079-8064-44e00c6d7f92" # Production
+database_name = "esl-test"                           # Test
+database_id = "6693c304-6758-4411-a7a7-64b3d935ae60" # Test
 
 [triggers]
 crons = ["9,19,29,39,49,59 * * * *"]
+
+[dev]
+port = 5000

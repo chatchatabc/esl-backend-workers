@@ -13,9 +13,12 @@ import {
   utilFailedResponse,
   utilQueryAddWhere,
   utilQueryCreate,
+  utilQuerySelect,
   utilQueryUpdate,
 } from "../services/utilService";
 import { UserCreateSchema, UserUpdateSchema } from "../schemas/UserSchema";
+import { userColumns } from "../services/userService";
+import { roleColumns } from "../services/roleService";
 
 export function userDbCreate(user: UserCreate, env: Env, createdById: number) {
   const parse = safeParse(UserCreateSchema, user);
@@ -47,30 +50,48 @@ export async function userDbGet(
   const { userId, username } = params;
 
   const queryParams = [];
-  let query = "SELECT * FROM users";
+  let querySelect = utilQuerySelect({
+    users: userColumns(),
+    roles: roleColumns(),
+  });
+  let queryFrom = "users JOIN roles ON users.roleId = roles.id";
   let queryWhere = "";
 
   if (userId) {
-    queryWhere += `id = ?`;
+    queryWhere += `users_id = ?`;
     queryParams.push(userId);
   }
 
   if (username) {
     queryWhere += queryWhere ? " AND " : "";
-    queryWhere += `username = ?`;
+    queryWhere += `users_username = ?`;
     queryParams.push(username);
   }
 
+  let query = `SELECT ${querySelect} FROM ${queryFrom}`;
   if (queryWhere) {
     query += ` WHERE ${queryWhere}`;
   }
-
   query += " LIMIT 1";
 
   try {
     const stmt = env.DB.prepare(query).bind(...queryParams);
-    const user = await stmt.first<User>();
-    return user;
+    const user = await stmt.first();
+    if (!user) {
+      return null;
+    }
+    const data = { role: {} as any } as any;
+    Object.keys(user).forEach((key) => {
+      const value = user[key];
+      if (key.startsWith("users_")) {
+        const newKey = key.replace("users_", "");
+        data[newKey] = value;
+      } else if (key.startsWith("roles_")) {
+        const newKey = key.replace("roles_", "");
+        data.role[newKey] = value;
+      }
+    });
+    return data as User;
   } catch (e) {
     throw utilFailedResponse("Cannot get user", 500);
   }

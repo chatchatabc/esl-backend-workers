@@ -4,16 +4,13 @@ import {
   User,
   UserCreate,
   UserPagination,
-  UserRole,
   UserUpdate,
-  UserUpdateInput,
 } from "../models/UserModel";
 import {
   userDbAddCredit,
   userDbCreate,
   userDbGet,
   userDbGetAll,
-  userDbGetAllRole,
   userDbGetAllTotal,
   userDbUpdate,
 } from "../repositories/userRepo";
@@ -32,7 +29,6 @@ export async function userGet(
   if (!user) {
     throw utilFailedResponse("User not found", 404);
   }
-  user.role = await roleGet({ roleId: user.roleId }, env);
 
   delete user.password;
   return user as User;

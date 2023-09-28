@@ -68,7 +68,7 @@ export async function teacherDbGet(
         data.user.role[newKey] = value;
       } else if (key.startsWith("teachers_")) {
         const newKey = key.replace("teachers_", "");
-        data[key] = teacher[key];
+        data[newKey] = teacher[key];
       }
     });
     return data as Teacher;

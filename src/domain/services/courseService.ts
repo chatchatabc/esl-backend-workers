@@ -65,3 +65,15 @@ export async function courseUpdate(params: CourseUpdate, env: Env) {
 
   return query;
 }
+
+export function courseColumns() {
+  return [
+    "createdAt",
+    "description",
+    "id",
+    "name",
+    "price",
+    "teacherId",
+    "updatedAt",
+  ] as (keyof Course)[];
+}

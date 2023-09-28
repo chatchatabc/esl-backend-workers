@@ -29,21 +29,12 @@ export async function teacherGet(
 }
 
 export async function teacherGetAll(params: CommonPagination, env: Env) {
-  const query = await teacherDbGetAll(params, env);
-
-  const teachers = await Promise.all(
-    query.results.map(async (teacher) => {
-      const user = await userGet({ userId: teacher.userId }, env);
-      teacher.user = user;
-      return teacher;
-    })
-  );
-
-  const totalElements = await teacherDbGetAllTotal(env);
+  const content: Teacher[] = await teacherDbGetAll(params, env);
+  const totalElements: number = await teacherDbGetAllTotal(env);
 
   return {
-    content: teachers as Teacher[],
-    totalElements: totalElements as number,
+    content,
+    totalElements,
     page: params.page,
     size: params.size,
   };

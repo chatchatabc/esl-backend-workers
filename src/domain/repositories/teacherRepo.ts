@@ -101,9 +101,38 @@ export async function teacherDbGet(
 export async function teacherDbGetAll(params: CommonPagination, env: Env) {
   const { page, size } = params;
 
-  let query = "SELECT * FROM teachers";
+  const tables = {
+    roles: ["id", "name", "createdAt", "updatedAt"] as (keyof UserRole)[],
+    users: [
+      "id",
+      "username",
+      "alias",
+      "createdAt",
+      "credits",
+      "email",
+      "emailVerifiedAt",
+      "firstName",
+      "lastName",
+      "phone",
+      "phoneVerifiedAt",
+      "roleId",
+      "status",
+      "updatedAt",
+    ] as (keyof User)[],
+  };
+
+  let querySelect = "teachers.*";
   let queryWhere = "";
   const queryParams = [];
+
+  Object.keys(tables).forEach((table) => {
+    tables[table as keyof typeof tables].forEach((column) => {
+      querySelect += querySelect ? ", " : "";
+      querySelect += `${table}.${column} AS ${table}_${column}`;
+    });
+  });
+
+  let query = `SELECT ${querySelect} FROM teachers JOIN users ON teachers.userId = users.id JOIN roles ON users.roleId = roles.id`;
 
   if (queryWhere) {
     query += ` WHERE ${queryWhere}`;
@@ -114,7 +143,27 @@ export async function teacherDbGetAll(params: CommonPagination, env: Env) {
 
   try {
     const teachersStmt = await env.DB.prepare(query).bind(...queryParams);
-    const teachers = await teachersStmt.all<Teacher>();
+    const results = await teachersStmt.all();
+    const teachers = results.results.map((teacher: any) => {
+      const data: Record<string, any> = {};
+      const user: Record<string, any> = {} as any;
+      Object.keys(teacher).forEach((key) => {
+        if (key.startsWith("users_")) {
+          const value = teacher[key];
+          const newKey = key.replace("users_", "");
+          user[newKey] = value;
+        } else if (key.startsWith("roles_")) {
+          const value = teacher[key];
+          const newKey = key.replace("roles_", "");
+          user.role = user.role ?? {};
+          user.role[newKey] = value;
+        } else {
+          data[key] = teacher[key];
+        }
+      });
+      data.user = user;
+      return data as Teacher;
+    });
     return teachers;
   } catch (e) {
     console.log(e);

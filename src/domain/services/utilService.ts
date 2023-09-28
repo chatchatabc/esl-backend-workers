@@ -36,6 +36,7 @@ export function utilValidateOrigin(origin: string) {
     "https://esl-cca.pages.dev",
     "http://localhost:3000",
     "https://esl-admin.pages.dev",
+    "https://revamp.esl-admin.pages.dev",
   ];
   return allowedOrigins.includes(origin);
 }
@@ -53,19 +54,11 @@ export function utilHashHmac256(input: string) {
   return HmacSHA256(input, secret).toString();
 }
 
-export function utilGetTimestampTimeOnly(timestamp: number) {
-  const hour = new Date(timestamp).getUTCHours();
-  const minute = new Date(timestamp).getUTCMinutes();
-  const timestampTimeOnly = hour * 60 * 60 * 1000 + minute * 60 * 1000;
-
-  return timestampTimeOnly;
-}
-
 export function utilGetScheduleTimeAndDay(startTime: number, endTime: number) {
   const day = new Date(startTime).getUTCDay();
   const diff = endTime - startTime;
   const startTimeOfDay =
-    utilGetTimestampTimeOnly(startTime) + day * 24 * 60 * 60 * 1000;
+    (startTime % (24 * 60 * 60 * 1000)) + day * 24 * 60 * 60 * 1000;
   const endTimeOfDay = startTimeOfDay + diff;
 
   return [startTimeOfDay, endTimeOfDay, day];
@@ -86,15 +79,16 @@ export function utilCheckBookingTimeValid(
   booking: BookingCreate
 ) {
   const bookingStart = new Date(booking.start);
-  const bookingEnd = new Date(booking.end);
   const bookingWeekDay = bookingStart.getUTCDay();
+  let bookingEndTime = new Date(booking.end).getTime();
+  let bookingStartTime = bookingStart.getTime();
+  const bookingDiff = bookingEndTime - bookingStartTime;
+  bookingStartTime = (bookingStartTime % 86400000) + bookingWeekDay * 86400000;
+  bookingEndTime = bookingStartTime + bookingDiff;
 
   let validAcrossSchedule = false;
 
   for (const schedule of schedules) {
-    const bookingStartTime = bookingStart.getTime() % (24 * 60 * 60 * 1000);
-    const bookingEndTime = bookingEnd.getTime() % (24 * 60 * 60 * 1000);
-
     if (schedule.weekDay === bookingWeekDay) {
       if (
         schedule.startTime <= bookingStartTime &&

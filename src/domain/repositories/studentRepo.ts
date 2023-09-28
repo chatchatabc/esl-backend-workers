@@ -7,16 +7,51 @@ import {
 import { utilFailedResponse } from "../services/utilService";
 import { v4 as uuidv4 } from "uuid";
 import { userDbCreate } from "./userRepo";
+import { User, UserRole } from "../models/UserModel";
 
 export async function studentDbGet(
-  params: Partial<{ studentId: number; uuid: string }>,
+  params: Partial<{
+    studentId: number;
+    uuid: string;
+    userUsername: string;
+    userId: number;
+  }>,
   env: Env
 ) {
-  const { studentId, uuid } = params;
+  const { studentId, uuid, userUsername, userId } = params;
+
+  const tables = {
+    roles: ["id", "name", "createdAt", "updatedAt"] as (keyof UserRole)[],
+    users: [
+      "id",
+      "username",
+      "alias",
+      "createdAt",
+      "credits",
+      "email",
+      "emailVerifiedAt",
+      "firstName",
+      "lastName",
+      "phone",
+      "phoneVerifiedAt",
+      "roleId",
+      "status",
+      "updatedAt",
+    ] as (keyof User)[],
+  };
 
   const queryParams = [];
-  let query = "SELECT * FROM students";
+  let querySelect = "students.*";
   let queryWhere = "";
+
+  Object.keys(tables).forEach((table) => {
+    tables[table as keyof typeof tables].forEach((column) => {
+      querySelect += querySelect ? ", " : "";
+      querySelect += `${table}.${column} AS ${table}_${column}`;
+    });
+  });
+
+  let query = `SELECT ${querySelect} FROM students JOIN users ON students.userId = users.id JOIN roles ON users.roleId = roles.id`;
 
   if (studentId) {
     queryWhere += `id = ?`;
@@ -27,6 +62,18 @@ export async function studentDbGet(
     queryWhere += queryWhere ? " AND " : "";
     queryWhere += `uuid = ?`;
     queryParams.push(uuid);
+  }
+
+  if (userId) {
+    queryWhere += queryWhere ? " AND " : "";
+    queryWhere += `userId = ?`;
+    queryParams.push(userId);
+  }
+
+  if (userUsername) {
+    queryWhere += queryWhere ? " AND " : "";
+    queryWhere += `userId = (SELECT id FROM users WHERE username = ?)`;
+    queryParams.push(userUsername);
   }
 
   if (queryWhere) {
@@ -44,48 +91,40 @@ export async function studentDbGet(
   }
 }
 
-export async function studentDbGetByUser(
-  params: Partial<{ userId: number; username: string }>,
-  env: Env
-) {
-  const { userId, username } = params;
-
-  const queryParams = [];
-  let query = "SELECT * FROM students";
-  let queryWhere = "";
-
-  if (userId) {
-    queryWhere += `userId = ?`;
-    queryParams.push(userId);
-  }
-
-  if (username) {
-    queryWhere += queryWhere ? " AND " : "";
-    queryWhere += `userId = (SELECT id FROM users WHERE username = ?)`;
-    queryParams.push(username);
-  }
-
-  if (queryWhere) {
-    query += ` WHERE ${queryWhere}`;
-  }
-
-  query += " LIMIT 1";
-
-  try {
-    const stmt = env.DB.prepare(query).bind(...queryParams);
-    const results = await stmt.first<Student>();
-    return results;
-  } catch (e) {
-    console.log(e);
-    throw utilFailedResponse("Cannot generate student statement", 500);
-  }
-}
-
 export async function studentDbGetAll(params: StudentPagination, env: Env) {
   const { page, size } = params;
 
-  let query = "SELECT * FROM students";
+  const tables = {
+    roles: ["id", "name", "createdAt", "updatedAt"] as (keyof UserRole)[],
+    users: [
+      "id",
+      "username",
+      "alias",
+      "createdAt",
+      "credits",
+      "email",
+      "emailVerifiedAt",
+      "firstName",
+      "lastName",
+      "phone",
+      "phoneVerifiedAt",
+      "roleId",
+      "status",
+      "updatedAt",
+    ] as (keyof User)[],
+  };
+
+  let querySelect = "students.*";
   let queryParams = [];
+
+  Object.keys(tables).forEach((table) => {
+    tables[table as keyof typeof tables].forEach((column) => {
+      querySelect += querySelect ? ", " : "";
+      querySelect += `${table}.${column} AS ${table}_${column}`;
+    });
+  });
+
+  let query = `SELECT ${querySelect} FROM students JOIN users ON students.userId = users.id JOIN roles ON users.roleId = roles.id`;
 
   query += ` LIMIT ?, ?`;
   queryParams.push((page - 1) * size, size);
@@ -93,7 +132,27 @@ export async function studentDbGetAll(params: StudentPagination, env: Env) {
   try {
     const stmt = env.DB.prepare(query).bind(...queryParams);
     const results = await stmt.all<Student>();
-    return results;
+    const students = results.results.map((student) => {
+      const data: Record<string, any> = {};
+      const user: Record<string, any> = {} as any;
+      Object.keys(student).forEach((key) => {
+        if (key.startsWith("users_")) {
+          const value = student[key as keyof Student];
+          const newKey = key.replace("users_", "");
+          user[newKey] = value;
+        } else if (key.startsWith("roles_")) {
+          const value = student[key as keyof Student];
+          const newKey = key.replace("roles_", "");
+          user.role = user.role ?? {};
+          user.role[newKey] = value;
+        } else {
+          data[key] = student[key as keyof Student];
+        }
+      });
+      data.user = user as any;
+      return data;
+    });
+    return students;
   } catch (e) {
     console.log(e);
     throw utilFailedResponse("Cannot get all students", 500);

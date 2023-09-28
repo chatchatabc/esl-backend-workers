@@ -276,21 +276,7 @@ export async function bookingCreateMany(
 }
 
 export async function bookingGetAll(params: BookingPagination, env: Env) {
-  const bookings = await bookingDbGetAll(params, env);
-  const content: Booking[] = await Promise.all(
-    bookings.map(async (booking) => {
-      const teacher = await teacherGet({ teacherId: booking.teacherId }, env);
-      const course = await courseGet({ courseId: booking.courseId }, env);
-      const student = await studentGet({ studentId: booking.studentId }, env);
-
-      return {
-        ...booking,
-        teacher,
-        course,
-        student,
-      };
-    })
-  );
+  const content: Booking[] = await bookingDbGetAll(params, env);
   const totalElements: number = await bookingDbGetAllTotal(params, env);
 
   return {

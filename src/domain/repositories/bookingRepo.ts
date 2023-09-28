@@ -12,8 +12,15 @@ import {
   utilFailedResponse,
   utilQueryAddWhere,
   utilQueryCreate,
+  utilQuerySelect,
 } from "../services/utilService";
 import { BookingCreateSchema } from "../schemas/BookingSchema";
+import { bookingColumns } from "../services/bookingService";
+import { userColumns } from "../services/userService";
+import { roleColumns } from "../services/roleService";
+import { courseColumns } from "../services/courseService";
+import { teacherColumns } from "../services/teacherService";
+import { studentColumns } from "../services/studentService";
 
 export function bookingDbCreate(
   params: BookingCreate,
@@ -55,80 +62,144 @@ export async function bookingDbGetAll(params: BookingPagination, env: Env) {
   } = params;
 
   const queryParams = [];
-  let query = "SELECT * FROM bookings";
-  let whereQuery = "";
-  let endQuery = " ORDER BY createdAt DESC";
+  let querySelect = utilQuerySelect({
+    bookings: bookingColumns(),
+    courses: courseColumns(),
+    teachers: teacherColumns(),
+    students: studentColumns(),
+    teacherUsers: userColumns(),
+    teacherRoles: roleColumns(),
+    studentUsers: userColumns(),
+    studentRoles: roleColumns(),
+  });
+  const queryFrom =
+    "bookings LEFT JOIN courses ON bookings.courseId = courses.id LEFT JOIN students ON bookings.studentId = students.id LEFT JOIN users AS studentUsers ON students.userId = studentUsers.id LEFT JOIN roles AS studentRoles ON studentUsers.roleId = studentRoles.id LEFT JOIN teachers ON bookings.teacherId = teachers.id LEFT JOIN users AS teacherUsers ON teachers.userId = teacherUsers.id LEFT JOIN roles AS teacherRoles ON teacherUsers.roleId = teacherRoles.id";
+  let queryWhere = "";
+  let queryEnd = " ORDER BY createdAt DESC";
 
   if (studentId && teacherId) {
-    whereQuery += whereQuery ? " AND " : "";
-    whereQuery += "(studentId = ? OR teacherId = ?)";
+    queryWhere += queryWhere ? " AND " : "";
+    queryWhere += "(bookings_studentId = ? OR bookings_teacherId = ?)";
     queryParams.push(studentId, teacherId);
   } else if (teacherId) {
-    whereQuery += whereQuery ? " AND " : "";
-    whereQuery += "teacherId = ?";
+    queryWhere += queryWhere ? " AND " : "";
+    queryWhere += "bookings_teacherId = ?";
     queryParams.push(teacherId);
   } else if (studentId) {
-    whereQuery += whereQuery ? " AND " : "";
-    whereQuery += "studentId = ?";
+    queryWhere += queryWhere ? " AND " : "";
+    queryWhere += "bookings_studentId = ?";
     queryParams.push(studentId);
   }
 
   if (status) {
-    whereQuery += whereQuery ? " AND " : "";
-    whereQuery += "status IN (";
-    whereQuery += status.map(() => "?").join(",");
-    whereQuery += ")";
+    queryWhere += queryWhere ? " AND " : "";
+    queryWhere += "bookings_status IN (";
+    queryWhere += status.map(() => "?").join(",");
+    queryWhere += ")";
     queryParams.push(...status);
   }
 
   if (day !== undefined) {
-    whereQuery += whereQuery ? " AND " : "";
-    whereQuery +=
-      "strftime('%w', datetime(start / 1000, 'unixepoch', '+8 hours')) = ?";
+    queryWhere += queryWhere ? " AND " : "";
+    queryWhere +=
+      "strftime('%w', datetime(bookings_start / 1000, 'unixepoch', '+8 hours')) = ?";
     queryParams.push(String(day));
   }
 
   if (start !== undefined) {
-    whereQuery += whereQuery ? " AND " : "";
-    whereQuery += "start > ?";
+    queryWhere += queryWhere ? " AND " : "";
+    queryWhere += "bookings_start > ?";
     queryParams.push(start);
   }
 
   if (end !== undefined) {
-    whereQuery += whereQuery ? " AND " : "";
-    whereQuery += "end < ?";
+    queryWhere += queryWhere ? " AND " : "";
+    queryWhere += "bookings_end < ?";
     queryParams.push(end);
   }
 
   if (bookingIds) {
-    whereQuery += whereQuery ? " AND " : "";
-    whereQuery += "id IN (";
-    whereQuery += bookingIds.map(() => "?").join(",");
-    whereQuery += ")";
+    queryWhere += queryWhere ? " AND " : "";
+    queryWhere += "bookings_id IN (";
+    queryWhere += bookingIds.map(() => "?").join(",");
+    queryWhere += ")";
     queryParams.push(...bookingIds);
-  }
-
-  if (whereQuery) {
-    query += " WHERE " + whereQuery;
   }
 
   if (sort) {
     const sortArr = sort.split(",");
     const sortField = sortArr[0];
     const sortType = (sortArr[1] || "DESC").toUpperCase();
-    endQuery = ` ORDER BY ${sortField} ${sortType}`;
+    queryEnd = ` ORDER BY ${sortField} ${sortType}`;
   }
-
-  endQuery += " LIMIT ?, ?";
+  queryEnd += " LIMIT ?, ?";
   queryParams.push((page - 1) * size, size);
-  query += endQuery;
+
+  let query = `SELECT ${querySelect} FROM ${queryFrom}`;
+  if (queryWhere) {
+    query += " WHERE " + queryWhere;
+  }
+  query += queryEnd;
 
   try {
     const results = await env.DB.prepare(query)
       .bind(...queryParams)
-      .all<Booking>();
+      .all();
+    const bookings = results.results.map((booking) => {
+      const data = {
+        course: {
+          teacher: {
+            user: {
+              role: {} as any,
+            } as any,
+          } as any,
+        } as any,
+        teacher: {
+          user: {
+            role: {} as any,
+          } as any,
+        } as any,
+        student: {
+          user: {
+            role: {} as any,
+          } as any,
+        } as any,
+      } as any;
+      Object.keys(booking).forEach((key) => {
+        const value = booking[key];
+        if (key.startsWith("courses_")) {
+          const newKey = key.replace("courses_", "");
+          data.course[newKey] = value;
+        } else if (key.startsWith("teachers_")) {
+          const newKey = key.replace("teachers_", "");
+          data.teacher[newKey] = value;
+          data.course.teacher[newKey] = value;
+        } else if (key.startsWith("students_")) {
+          const newKey = key.replace("students_", "");
+          data.student[newKey] = value;
+        } else if (key.startsWith("teacherUsers_")) {
+          const newKey = key.replace("teacherUsers_", "");
+          data.course.teacher.user[newKey] = value;
+          data.teacher.user[newKey] = value;
+        } else if (key.startsWith("studentUsers_")) {
+          const newKey = key.replace("studentUsers_", "");
+          data.student.user[newKey] = value;
+        } else if (key.startsWith("teacherRoles_")) {
+          const newKey = key.replace("teacherRoles_", "");
+          data.course.teacher.user.role[newKey] = value;
+          data.teacher.user.role[newKey] = value;
+        } else if (key.startsWith("studentRoles_")) {
+          const newKey = key.replace("studentRoles_", "");
+          data.student.user.role[newKey] = value;
+        } else if (key.startsWith("bookings_")) {
+          const newKey = key.replace("bookings_", "");
+          data[newKey] = value;
+        }
+      });
+      return data as Booking;
+    });
 
-    return results.results;
+    return bookings;
   } catch (e) {
     console.log(e);
     throw utilFailedResponse("Cannot get bookings", 500);
@@ -192,25 +263,90 @@ export async function bookingDbGetAllTotal(
 export async function bookingDbGet(params: { bookingId: number }, env: Env) {
   const { bookingId } = params;
 
-  let query = "SELECT * FROM bookings";
-  let whereQuery = "";
+  let querySelect = utilQuerySelect({
+    bookings: bookingColumns(),
+    courses: courseColumns(),
+    teachers: teacherColumns(),
+    students: studentColumns(),
+    teacherUsers: userColumns(),
+    teacherRoles: roleColumns(),
+    studentUsers: userColumns(),
+    studentRoles: roleColumns(),
+  });
+  let queryWhere = "";
+  const queryFrom =
+    "bookings LEFT JOIN courses ON bookings.courseId = courses.id LEFT JOIN students ON bookings.studentId = students.id LEFT JOIN users AS studentUsers ON students.userId = studentUsers.id LEFT JOIN roles AS studentRoles ON studentUsers.roleId = studentRoles.id LEFT JOIN teachers ON bookings.teacherId = teachers.id LEFT JOIN users AS teacherUsers ON teachers.userId = teacherUsers.id LEFT JOIN roles AS teacherRoles ON teacherUsers.roleId = teacherRoles.id";
   const queryParams = [];
 
   if (bookingId) {
-    whereQuery += whereQuery ? " AND " : "";
-    whereQuery += "id = ?";
+    queryWhere += queryWhere ? " AND " : "";
+    queryWhere += "id = ?";
     queryParams.push(bookingId);
   }
 
-  if (whereQuery) {
-    query += " WHERE " + whereQuery;
-    query += " LIMIT 1";
+  let query = `SELECT ${querySelect} FROM ${queryFrom}`;
+  if (queryWhere) {
+    query += " WHERE " + queryWhere;
   }
+  query += " LIMIT 1";
 
   try {
     const stmt = env.DB.prepare(query).bind(...queryParams);
-    const results = await stmt.first<Booking>();
-    return results;
+    const booking = await stmt.first();
+    if (!booking) {
+      return null;
+    }
+    const data = {
+      course: {
+        teacher: {
+          user: {
+            role: {} as any,
+          } as any,
+        } as any,
+      } as any,
+      teacher: {
+        user: {
+          role: {} as any,
+        } as any,
+      } as any,
+      student: {
+        user: {
+          role: {} as any,
+        } as any,
+      } as any,
+    } as any;
+    Object.keys(booking).forEach((key) => {
+      const value = booking[key];
+      if (key.startsWith("courses_")) {
+        const newKey = key.replace("courses_", "");
+        data.course[newKey] = value;
+      } else if (key.startsWith("teachers_")) {
+        const newKey = key.replace("teachers_", "");
+        data.teacher[newKey] = value;
+        data.course.teacher[newKey] = value;
+      } else if (key.startsWith("students_")) {
+        const newKey = key.replace("students_", "");
+        data.student[newKey] = value;
+      } else if (key.startsWith("teacherUsers_")) {
+        const newKey = key.replace("teacherUsers_", "");
+        data.course.teacher.user[newKey] = value;
+        data.teacher.user[newKey] = value;
+      } else if (key.startsWith("studentUsers_")) {
+        const newKey = key.replace("studentUsers_", "");
+        data.student.user[newKey] = value;
+      } else if (key.startsWith("teacherRoles_")) {
+        const newKey = key.replace("teacherRoles_", "");
+        data.course.teacher.user.role[newKey] = value;
+        data.teacher.user.role[newKey] = value;
+      } else if (key.startsWith("studentRoles_")) {
+        const newKey = key.replace("studentRoles_", "");
+        data.student.user.role[newKey] = value;
+      } else if (key.startsWith("bookings_")) {
+        const newKey = key.replace("bookings_", "");
+        data[newKey] = value;
+      }
+    });
+    return data as Booking;
   } catch (e) {
     console.log(e);
     throw utilFailedResponse("Cannot get booking", 500);

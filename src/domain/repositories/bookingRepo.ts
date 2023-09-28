@@ -75,7 +75,7 @@ export async function bookingDbGetAll(params: BookingPagination, env: Env) {
   const queryFrom =
     "bookings LEFT JOIN courses ON bookings.courseId = courses.id LEFT JOIN students ON bookings.studentId = students.id LEFT JOIN users AS studentUsers ON students.userId = studentUsers.id LEFT JOIN roles AS studentRoles ON studentUsers.roleId = studentRoles.id LEFT JOIN teachers ON bookings.teacherId = teachers.id LEFT JOIN users AS teacherUsers ON teachers.userId = teacherUsers.id LEFT JOIN roles AS teacherRoles ON teacherUsers.roleId = teacherRoles.id";
   let queryWhere = "";
-  let queryEnd = " ORDER BY createdAt DESC";
+  let queryEnd = " ORDER BY bookings_createdAt DESC";
 
   if (studentId && teacherId) {
     queryWhere += queryWhere ? " AND " : "";

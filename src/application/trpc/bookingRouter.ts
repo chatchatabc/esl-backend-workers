@@ -21,9 +21,9 @@ import {
   bookingUpdate,
   bookingUpdateStatusMany,
 } from "../../domain/services/bookingService";
-import { studentGetByUser } from "../../domain/services/studentService";
 import { utilFailedResponse } from "../../domain/services/utilService";
 import { courseGet } from "../../domain/services/courseService";
+import { studentGet } from "../../domain/services/studentService";
 
 export default trpcRouterCreate({
   getAll: trpcProcedureUser.input(CommonPaginationInput).query((opts) => {
@@ -47,7 +47,7 @@ export default trpcRouterCreate({
     }
 
     const { userId, env } = opts.ctx;
-    const student = await studentGetByUser({ userId }, opts.ctx.env);
+    const student = await studentGet({ userId }, opts.ctx.env);
     const course = await courseGet({ courseId }, opts.ctx.env);
     const amount = course.price * ((end - start) / (1000 * 60 * 30));
 

@@ -9,38 +9,39 @@ import {
   studentDbGet,
   studentDbGetAll,
   studentDbGetAllTotal,
-  studentDbGetByUser,
 } from "../repositories/studentRepo";
 import { userGet } from "./userService";
 import { utilFailedResponse } from "./utilService";
 
 export async function studentGet(
-  params: Partial<{ studentId: number; uuid: string }>,
+  params: Partial<{
+    studentId: number;
+    uuid: string;
+    userUsername: string;
+    userId: number;
+  }>,
   env: Env
 ) {
-  const student: Student | null = await studentDbGet(params, env);
+  const student = await studentDbGet(params, env);
   if (!student) {
     throw utilFailedResponse("Student not found", 404);
   }
 
-  student.user = await userGet({ userId: student.userId }, env);
-  return student;
-}
+  const data: Record<string, any> = {};
+  const user: Record<string, any> = {} as any;
 
-export async function studentGetByUser(
-  params: Partial<{ userId: number; username: string }>,
-  env: Env
-) {
-  const { userId, username } = params;
-  if (!userId && !username) {
-    throw utilFailedResponse("User ID or username is required", 400);
-  }
-  const student = await studentDbGetByUser(params, env);
-  if (!student) {
-    throw utilFailedResponse("Student not found", 404);
-  }
-  student.user = await userGet({ userId: student.userId }, env);
-  return student as Student;
+  Object.keys(student).forEach((key) => {
+    if (key.startsWith("users_")) {
+      const value = student[key as keyof Student];
+      const newKey = key.replace("users_", "");
+      user[newKey] = value;
+    } else {
+      data[key] = student[key as keyof Student];
+    }
+  });
+  data.user = user;
+
+  return data as Student;
 }
 
 export async function studentGetAll(params: StudentPagination, env: Env) {

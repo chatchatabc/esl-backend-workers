@@ -55,3 +55,17 @@ export async function studentCreate(
     throw utilFailedResponse("Cannot create student", 500);
   }
 }
+
+export function studentColumns() {
+  return [
+    "alias",
+    "bio",
+    "createdAt",
+    "createdById",
+    "id",
+    "status",
+    "updatedAt",
+    "userId",
+    "uuid",
+  ] as (keyof Student)[];
+}

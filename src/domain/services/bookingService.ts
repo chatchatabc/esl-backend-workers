@@ -1,4 +1,3 @@
-import { Input } from "valibot";
 import { Env } from "../..";
 import {
   Booking,
@@ -475,4 +474,22 @@ export async function bookingStatisticsTeacher(
     students,
     ...statistics,
   };
+}
+
+export function bookingColumns() {
+  return [
+    "amount",
+    "courseId",
+    "createdAt",
+    "createdById",
+    "end",
+    "id",
+    "message",
+    "start",
+    "status",
+    "studentId",
+    "teacherId",
+    "updatedAt",
+    "uuid",
+  ] as (keyof Booking)[];
 }

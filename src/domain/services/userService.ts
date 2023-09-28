@@ -126,3 +126,22 @@ export async function userAddCredit(
   delete user.password;
   return user as User;
 }
+
+export function userColumns() {
+  return [
+    "id",
+    "username",
+    "alias",
+    "createdAt",
+    "credits",
+    "email",
+    "emailVerifiedAt",
+    "firstName",
+    "lastName",
+    "phone",
+    "phoneVerifiedAt",
+    "roleId",
+    "status",
+    "updatedAt",
+  ] as (keyof User)[];
+}

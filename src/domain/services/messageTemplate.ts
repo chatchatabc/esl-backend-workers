@@ -100,3 +100,17 @@ export async function messageTemplateGetAll(
     totalElements,
   };
 }
+
+export function messageTemplateColumns() {
+  return [
+    "createdAt",
+    "id",
+    "message",
+    "signature",
+    "smsId",
+    "status",
+    "title",
+    "updatedAt",
+    "variables",
+  ] as (keyof MessageTemplate)[];
+}

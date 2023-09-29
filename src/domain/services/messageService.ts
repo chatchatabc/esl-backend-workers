@@ -38,26 +38,13 @@ export async function messageGetAll(
   params: { page: number; size: number },
   env: Env
 ) {
-  const messages: Message[] = await messageDbGetAll(params, env);
+  const content: Message[] = await messageDbGetAll(params, env);
   const totalElements: number = await messageDbGetAllTotal(env);
-
-  const messagesComplete = await Promise.all(
-    messages.map(async (message) => {
-      message.messageTemplate = await messageTemplateGet(
-        { messageTemplateId: message.messageTemplateId },
-        env
-      );
-      if (message.userId) {
-        message.user = await userGet({ userId: message.userId }, env);
-      }
-      return message;
-    })
-  );
 
   return {
     page: params.page,
     size: params.size,
-    content: messagesComplete,
+    content,
     totalElements,
   };
 }

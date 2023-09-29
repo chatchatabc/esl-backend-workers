@@ -2,7 +2,15 @@ import { safeParse } from "valibot";
 import { Env } from "../..";
 import { Message, MessageCreate, MessageUpdate } from "../models/MessageModel";
 import { MessageCreateSchema } from "../schemas/MessageSchema";
-import { utilFailedResponse, utilQueryCreate } from "../services/utilService";
+import {
+  utilFailedResponse,
+  utilQueryCreate,
+  utilQuerySelect,
+} from "../services/utilService";
+import { userColumns } from "../services/userService";
+import { roleColumns } from "../services/roleService";
+import { messageColumns } from "../services/messageService";
+import { messageTemplateColumns } from "../services/messageTemplate";
 
 export function messageDbCreate(
   params: MessageCreate,
@@ -37,22 +45,83 @@ export function messageDbCreate(
 }
 
 export async function messageDbGetAll(
-  params: { page: number; size: number },
+  params: {
+    page: number;
+    size: number;
+    start?: number;
+    end?: number;
+    status?: number;
+  },
   env: Env
 ) {
-  const { page, size } = params;
+  const { page, size, start, end, status } = params;
 
-  let query = "SELECT * FROM messages";
+  let querySelect = utilQuerySelect({
+    users: userColumns(),
+    roles: roleColumns(),
+    messages: messageColumns(),
+    messageTemplates: messageTemplateColumns(),
+  });
+  let queryFrom =
+    "messages LEFT JOIN users ON messages.userId = users.id LEFT JOIN roles ON users.roleId = roles.id LEFT JOIN messageTemplates ON messages.messageTemplateId = messageTemplates.id";
+  let queryWhere = "";
   const queryParams = [];
 
-  query += " ORDER BY updatedAt DESC";
+  if (start !== undefined) {
+    queryWhere += "messages_sendAt >= ?";
+    queryParams.push(start);
+  }
+
+  if (end !== undefined) {
+    queryWhere += queryWhere ? " AND " : "";
+    queryWhere += "messages_sendAt <= ?";
+    queryParams.push(end);
+  }
+
+  if (status !== undefined) {
+    queryWhere += queryWhere ? " AND " : "";
+    queryWhere += "messages_status = ?";
+    queryParams.push(status);
+  }
+
+  let query = `SELECT ${querySelect} FROM ${queryFrom}`;
+
+  if (queryWhere) {
+    query += ` WHERE ${queryWhere}`;
+  }
+  query += " ORDER BY messages_updatedAt DESC";
   query += " LIMIT ?, ?";
   queryParams.push((page - 1) * size, size);
 
   try {
     const stmt = env.DB.prepare(query).bind(...queryParams);
-    const results = await stmt.all<Message>();
-    return results.results;
+    const results = await stmt.all();
+    const messages = results.results.map((message) => {
+      const data = {
+        messageTemplate: {} as any,
+        user: {
+          role: {} as any,
+        } as any,
+      } as any;
+      Object.keys(message).forEach((key) => {
+        const value = message[key];
+        if (key.startsWith("users_")) {
+          const newKey = key.replace("users_", "");
+          data.user[newKey] = value;
+        } else if (key.startsWith("roles_")) {
+          const newKey = key.replace("roles_", "");
+          data.user.role[newKey] = value;
+        } else if (key.startsWith("messages_")) {
+          const newKey = key.replace("messages_", "");
+          data[newKey] = value;
+        } else if (key.startsWith("messageTemplates_")) {
+          const newKey = key.replace("messageTemplates_", "");
+          data.messageTemplate[newKey] = value;
+        }
+      });
+      return data as Message;
+    });
+    return messages;
   } catch (e) {
     console.log(e);
     throw utilFailedResponse("Unable to get messages", 500);

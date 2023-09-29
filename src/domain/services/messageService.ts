@@ -122,3 +122,18 @@ export async function messageSend(
 
   return await messageCreate(message, env, createdById);
 }
+
+export function messageColumns() {
+  return [
+    "id",
+    "cron",
+    "createdAt",
+    "messageTemplateId",
+    "phone",
+    "sendAt",
+    "status",
+    "templateValues",
+    "updatedAt",
+    "userId",
+  ] as (keyof Message)[];
+}

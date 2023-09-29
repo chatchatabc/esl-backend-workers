@@ -51,11 +51,11 @@ export default {
     return new Response("Not found", { status: 404 });
   },
   async scheduled(event: ScheduledEvent, env: Env, ctx: ExecutionContext) {
-    if (event.cron === "9,19,29,39,49,59 * * * *") {
-      const parsedCron = cron.parseExpression("*/10 * * * *");
-      const timestamp = parsedCron.next().toDate().getTime();
+    // if (event.cron === "9,19,29,39,49,59 * * * *") {
 
-      ctx.waitUntil(cronService(timestamp, env));
-    }
+    // }
+    const parsedCron = cron.parseExpression("*/10 * * * *");
+    const timestamp = parsedCron.next().toDate().getTime();
+    ctx.waitUntil(cronService(timestamp, env));
   },
 };

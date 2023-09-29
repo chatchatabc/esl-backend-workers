@@ -8,6 +8,7 @@ import {
   BookingCreateSchema,
   BookingStatisticsTeacherSchema,
   BookingUpdateInput,
+  BookingUpdateSchema,
   BookingUpdateStatusManyInput,
 } from "../schemas/BookingSchema";
 import { Course } from "./CourseModel";
@@ -35,7 +36,7 @@ export type Booking = {
   course: Course;
 };
 
-export type BookingUpdate = Pick<Booking, "id" | "status">;
+export type BookingUpdate = Input<typeof BookingUpdateSchema>;
 
 export type BookingCreate = Input<typeof BookingCreateSchema>;
 

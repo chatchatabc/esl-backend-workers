@@ -4,6 +4,7 @@ import {
   Booking,
   BookingCreate,
   BookingPagination,
+  BookingUpdate,
 } from "../models/BookingModel";
 import { LogsCreditCreate } from "../models/LogsModel";
 import { MessageCreate } from "../models/MessageModel";
@@ -13,8 +14,12 @@ import {
   utilQueryAddWhere,
   utilQueryCreate,
   utilQuerySelect,
+  utilQueryUpdate,
 } from "../services/utilService";
-import { BookingCreateSchema } from "../schemas/BookingSchema";
+import {
+  BookingCreateSchema,
+  BookingUpdateSchema,
+} from "../schemas/BookingSchema";
 import { bookingColumns } from "../services/bookingService";
 import { userColumns } from "../services/userService";
 import { roleColumns } from "../services/roleService";
@@ -108,13 +113,13 @@ export async function bookingDbGetAll(params: BookingPagination, env: Env) {
 
   if (start !== undefined) {
     queryWhere += queryWhere ? " AND " : "";
-    queryWhere += "bookings_start > ?";
+    queryWhere += "bookings_start >= ?";
     queryParams.push(start);
   }
 
   if (end !== undefined) {
     queryWhere += queryWhere ? " AND " : "";
-    queryWhere += "bookings_end < ?";
+    queryWhere += "bookings_start <= ?";
     queryParams.push(end);
   }
 
@@ -583,33 +588,18 @@ export async function bookingDbConfirmMany(
   }
 }
 
-export function bookingDbUpdate(params: Booking, env: Env) {
-  const { id } = params;
+export function bookingDbUpdate(params: BookingUpdate, env: Env) {
+  const data = safeParse(BookingUpdateSchema, params);
+  if (!data.success) {
+    throw utilFailedResponse("Invalid booking params repo", 400);
+  }
+
+  const { id, ...booking } = data.data;
   const date = new Date().getTime();
 
-  let query = "UPDATE bookings";
-  let querySet = "";
-  const queryParams = [];
-
-  Object.keys(params).forEach((key) => {
-    const value = params[key as keyof Booking];
-    if (value !== undefined && typeof value !== "object") {
-      querySet += querySet ? ", " : "";
-      querySet += `${key} = ?`;
-      queryParams.push(params[key as keyof Booking]);
-    }
-  });
-
-  if (!querySet) {
-    throw utilFailedResponse("No update data for booking", 400);
-  } else {
-    querySet += `, updatedAt = ?`;
-    queryParams.push(date);
-
-    query += ` SET ${querySet}`;
-    query += ` WHERE id = ?`;
-    queryParams.push(id);
-  }
+  let { querySet, queryParams } = utilQueryUpdate(booking, "BOOKING");
+  const query = `UPDATE bookings SET ${querySet}, updatedAt = ? WHERE id = ?`;
+  queryParams.push(date, id);
 
   try {
     const stmt = env.DB.prepare(query).bind(...queryParams);

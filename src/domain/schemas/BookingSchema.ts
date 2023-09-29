@@ -80,6 +80,11 @@ export const BookingCreateSchema = transform(
   }
 );
 
+export const BookingUpdateSchema = merge([
+  pick(Schema, ["id"]),
+  partial(pick(Schema, ["status", "message"])),
+]);
+
 export const BookingCreateInput = transform(
   pick(Schema, ["teacherId", "start", "end", "courseId"]),
   (input) => {

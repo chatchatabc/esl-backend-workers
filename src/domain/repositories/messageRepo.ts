@@ -50,7 +50,7 @@ export async function messageDbGetAll(
     size: number;
     start?: number;
     end?: number;
-    status?: number;
+    status?: number[];
   },
   env: Env
 ) {
@@ -80,8 +80,15 @@ export async function messageDbGetAll(
 
   if (status !== undefined) {
     queryWhere += queryWhere ? " AND " : "";
-    queryWhere += "messages_status = ?";
-    queryParams.push(status);
+    queryWhere += "messages_status IN (";
+    status.forEach((value, index) => {
+      queryWhere += "?";
+      if (index < status.length - 1) {
+        queryWhere += ", ";
+      }
+      queryParams.push(value);
+    });
+    queryWhere += ")";
   }
 
   let query = `SELECT ${querySelect} FROM ${queryFrom}`;

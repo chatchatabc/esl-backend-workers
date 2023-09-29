@@ -1,6 +1,6 @@
 import { Env } from "../..";
 import { bookingDbGetAll, bookingDbUpdate } from "../repositories/bookingRepo";
-import { messageGetAllByDate, messageGetAllWithCron } from "./messageService";
+import { messageGetAllWithCron } from "./messageService";
 import cron from "cron-parser";
 import { utilDateFormatter, utilTimeFormatter } from "./utilService";
 import { MessageCreate } from "../models/MessageModel";
@@ -9,12 +9,13 @@ import { SmsSend } from "../models/SmsModel";
 import { messageTemplateGet } from "./messageTemplate";
 import {
   messageDbCreate,
+  messageDbGetAll,
   messageDbUpdateMany,
 } from "../repositories/messageRepo";
 
 export async function cronService(timestamp: number, env: Env) {
   await cronConfirmBooking(timestamp, env);
-  // await cronSendScheduledMessages(timestamp, env);
+  await cronSendScheduledMessages(timestamp, env);
 
   return true;
 }
@@ -27,17 +28,29 @@ export async function cronService(timestamp: number, env: Env) {
 export async function cronSendScheduledMessages(timestamp: number, env: Env) {
   const start = 0;
   const end = timestamp + 30 * 60 * 1000;
-  const messages = await messageGetAllByDate({ start, end }, env);
-  if (!messages) {
-    throw new Error("Failed to get messages");
-  }
+  const messages = await messageDbGetAll(
+    { start, end, page: 1, size: 10000, status: [1] },
+    env
+  );
+
+  const messageTemplateIds = messages
+    .map((message) => message.messageTemplateId)
+    .filter((value, index, self) => self.indexOf(value) === index);
+
+  const messageTemplates = await Promise.all(
+    messageTemplateIds.map(async (messageTemplateId) => {
+      return await messageTemplateGet({ messageTemplateId }, env);
+    })
+  );
 
   const newMesssages = [];
   for (const message of messages) {
-    const messageTemplate = await messageTemplateGet(
-      { messageTemplateId: message.messageTemplateId },
-      env
+    const messageTemplate = messageTemplates.find(
+      (messageTemplate) => messageTemplate.id === message.messageTemplateId
     );
+    if (!messageTemplate) {
+      throw new Error("Failed to get message template");
+    }
     const sms: SmsSend = {
       phoneNumbers: message.phone,
       signName: messageTemplate.signature,
@@ -141,7 +154,9 @@ export async function cronConfirmBooking(timestsamp: number, bindings: Env) {
   });
 
   try {
-    await bindings.DB.batch([...messageStmts, ...bookingStmts]);
+    if (messageStmts.length && bookingStmts.length) {
+      await bindings.DB.batch([...messageStmts, ...bookingStmts]);
+    }
     return true;
   } catch (e) {
     console.log(e);

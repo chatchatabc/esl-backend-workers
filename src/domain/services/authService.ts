@@ -103,7 +103,7 @@ export async function authGetPhoneToken(params: { userId: number }, env: Env) {
   let retry = 0;
   while (!isSuccess && retry < 5) {
     try {
-      await messageSend(message, env);
+      await messageSend(message, env, 1);
       isSuccess = true;
     } catch (e) {
       retry += 1;

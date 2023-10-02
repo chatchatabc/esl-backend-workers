@@ -53,6 +53,8 @@ export type BookingPagination = {
   start?: number;
   end?: number;
   bookingIds?: number[];
+  dateFrom?: number;
+  dateTo?: number;
 } & CommonPagination;
 
 export type BookingCancelInputAdmin = Input<typeof BookingCancelInputAdmin>;

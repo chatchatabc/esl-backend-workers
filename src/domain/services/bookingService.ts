@@ -98,7 +98,7 @@ export async function bookingUpdate(
   }
 
   // Update booking status
-  booking.status = params.status;
+  booking.status = params.status ?? 1;
 
   const logsCreditStmts = logsCredits.map((logsCredit) => {
     return logsDbCreateCredit(logsCredit, env, performedBy.id);
@@ -419,8 +419,8 @@ export async function bookingStatisticsTeacher(
     canceled: 0,
     confirmed: 0,
     cancellable: 0,
-    start: params.start,
-    end: params.end,
+    dateFrom: params.dateFrom,
+    dateTo: params.dateTo,
   };
 
   bookings.forEach((booking) => {

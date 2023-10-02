@@ -64,6 +64,8 @@ export async function bookingDbGetAll(params: BookingPagination, env: Env) {
     start,
     end,
     bookingIds,
+    dateFrom,
+    dateTo,
   } = params;
 
   const queryParams = [];
@@ -121,6 +123,18 @@ export async function bookingDbGetAll(params: BookingPagination, env: Env) {
     queryWhere += queryWhere ? " AND " : "";
     queryWhere += "bookings_start <= ?";
     queryParams.push(end);
+  }
+
+  if (dateFrom !== undefined) {
+    queryWhere += queryWhere ? " AND " : "";
+    queryWhere += "bookings_start >= ?";
+    queryParams.push(dateFrom);
+  }
+
+  if (dateTo !== undefined) {
+    queryWhere += queryWhere ? " AND " : "";
+    queryWhere += "bookings_start <= ?";
+    queryParams.push(dateTo);
   }
 
   if (bookingIds) {

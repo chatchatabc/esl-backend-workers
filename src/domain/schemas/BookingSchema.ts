@@ -59,6 +59,8 @@ const Schema = object({
       minValue(1, "Booking ID must be greater than 0"),
     ])
   ),
+  dateFrom: number("Date from must be a timestamp"),
+  dateTo: number("Date to must be a timestamp"),
 });
 
 export const BookingCreateSchema = transform(
@@ -127,12 +129,15 @@ export const BookingUpdateStatusManyInput = pick(Schema, [
 export const BookingUpdateInput = pick(Schema, ["status", "id"]);
 
 export const BookingStatisticsTeacherSchema = transform(
-  merge([pick(Schema, ["teacherId"]), partial(pick(Schema, ["start", "end"]))]),
+  merge([
+    pick(Schema, ["teacherId"]),
+    partial(pick(Schema, ["dateFrom", "dateTo"])),
+  ]),
   (input) => {
     return {
       ...input,
-      start: input.start ?? Date.now() - 1000 * 60 * 60 * 24 * 30,
-      end: input.end ?? Date.now(),
+      dateFrom: input.dateFrom ?? Date.now() - 1000 * 60 * 60 * 24 * 30,
+      dateTo: input.dateTo ?? Date.now(),
     };
   }
 );

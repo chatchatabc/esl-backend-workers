@@ -230,7 +230,10 @@ export async function bookingCreateMany(
     // Check if the booking overlaps with another booking
     const overlap = await bookingDbGetOverlap(booking, env);
     const validSchedule = utilCheckBookingTimeValid(schedules, booking);
-    if (!overlap && validSchedule) {
+    if (!validSchedule) {
+      throw utilFailedResponse("Schedule does not exist", 400);
+    }
+    if (!overlap) {
       // Add booking to array
       bookings.push(booking);
 

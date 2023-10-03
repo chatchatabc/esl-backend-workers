@@ -2,6 +2,7 @@ import { Input } from "valibot";
 import { CommonPagination } from "./CommonModel";
 import {
   BookingCancelInputAdmin,
+  BookingCompleteInput,
   BookingCompleteInputAdmin,
   BookingCreateByAdminInput,
   BookingCreateInput,
@@ -70,3 +71,5 @@ export type BookingUpdateStatusManyInput = Input<
 export type BookingStatisticsTeacher = Input<
   typeof BookingStatisticsTeacherSchema
 >;
+
+export type BookingCompleteInput = Input<typeof BookingCompleteInput>;

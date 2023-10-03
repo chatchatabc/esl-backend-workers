@@ -1,13 +1,4 @@
-import {
-  array,
-  coerce,
-  merge,
-  minValue,
-  number,
-  object,
-  partial,
-  pick,
-} from "valibot";
+import { array, merge, minValue, number, object, partial, pick } from "valibot";
 
 export const ScheduleSchema = object({
   id: number("ID must be a number", [minValue(1, "ID must be greater than 0")]),
@@ -23,9 +14,12 @@ export const ScheduleSchema = object({
   weekDay: number("Weekday must be a number"),
 });
 
-export const ScheduleCreateManyInput = object({
-  schedules: array(pick(ScheduleSchema, ["startTime", "endTime"])),
-});
+export const ScheduleCreateManyInput = merge([
+  object({
+    schedules: array(pick(ScheduleSchema, ["startTime", "endTime"])),
+  }),
+  pick(ScheduleSchema, ["teacherId"]),
+]);
 
 export const ScheduleUpdateSchema = merge([
   pick(ScheduleSchema, ["id"]),
@@ -49,7 +43,7 @@ export const ScheduleUpdateInput = pick(ScheduleSchema, [
 ]);
 
 export const ScheduleUpdateManyInput = object({
-  schedules: array(ScheduleSchema),
+  schedules: array(ScheduleUpdateInput),
 });
 
 export const ScheduleUpdateManyByAdminInput = merge([

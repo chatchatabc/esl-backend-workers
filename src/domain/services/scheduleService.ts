@@ -22,6 +22,7 @@ import {
 } from "./utilService";
 import { ScheduleUpdateSchema } from "../schemas/ScheduleSchema";
 import { User } from "../models/UserModel";
+import { teacherDbGet } from "../repositories/teacherRepo";
 
 export async function scheduleUpdateMany(
   params: {
@@ -34,6 +35,10 @@ export async function scheduleUpdateMany(
   const scheduleIds = schedules.map((schedule) => schedule.id);
   if (scheduleIds.length === 0) {
     throw utilFailedResponse("Invalid schedule id", 400);
+  }
+  const teacher = await teacherDbGet({ userId: performedBy.id }, env);
+  if (!teacher && performedBy.roleId !== 1) {
+    throw utilFailedResponse("Unauthorized", 401);
   }
 
   // Get old schedules
@@ -48,7 +53,7 @@ export async function scheduleUpdateMany(
     if (!oldSchedule) {
       throw utilFailedResponse("Schedule not found", 404);
     } else if (performedBy.roleId !== 1) {
-      if (oldSchedule.teacherId !== performedBy.id) {
+      if (oldSchedule.teacherId !== teacher?.id) {
         throw utilFailedResponse("Unauthorized", 401);
       }
     }
@@ -116,10 +121,13 @@ export async function scheduleDeleteMany(
 
   if (performedBy.roleId !== 1) {
     // Check if all schedules are owned by teacher
-    if (
+    const teacher = await teacherDbGet({ userId: performedBy.id }, env);
+    if (!teacher) {
+      throw utilFailedResponse("Unauthorized", 401);
+    } else if (
       !scheduleIds.every((scheduleId) => {
         const schedule = schedules.find((s) => s.id === scheduleId);
-        return schedule ? schedule.teacherId === performedBy.id : false;
+        return schedule ? schedule.teacherId === teacher.id : false;
       })
     ) {
       throw utilFailedResponse("Unauthorized", 401);

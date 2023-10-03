@@ -1,6 +1,7 @@
 import { Input } from "valibot";
 import { CommonPagination } from "./CommonModel";
 import {
+  BookingCancelInput,
   BookingCancelInputAdmin,
   BookingCompleteInput,
   BookingCompleteInputAdmin,
@@ -73,3 +74,5 @@ export type BookingStatisticsTeacher = Input<
 >;
 
 export type BookingCompleteInput = Input<typeof BookingCompleteInput>;
+
+export type BookingCancelInput = Input<typeof BookingCancelInput>;

@@ -47,46 +47,16 @@ export default trpcRouterCreate({
       return scheduleUpdateMany(opts.input, env, user);
     }),
 
-  updateManyAdmin: trpcProcedureAdmin
-    .input(ScheduleUpdateManyByAdminInput)
-    .mutation((opts) => {
-      const { env, user } = opts.ctx;
-      const { schedules } = opts.input;
-
-      if (
-        !schedules.every((schedule) => {
-          return schedule.startTime < schedule.endTime;
-        })
-      ) {
-        throw utilFailedResponse("Invalid time range");
-      }
-
-      return scheduleUpdateMany(opts.input, env, user);
-    }),
-
   createMany: trpcProcedureUser
     .input(ScheduleCreateManyInput)
     .mutation(async (opts) => {
-      const { userId, env } = opts.ctx;
-      const { schedules } = opts.input;
-
-      const teacher = await teacherGet({ userId }, env);
-
-      return scheduleCreateMany(
-        { teacherId: teacher.id, schedules },
-        env,
-        userId
-      );
-    }),
-
-  createManyAdmin: trpcProcedureAdmin
-    .input(ScheduleCreateManyInputAdmin)
-    .mutation((opts) => {
-      const { env, userId } = opts.ctx;
-      const { schedules } = opts.input;
-
+      const { userId, env, user } = opts.ctx;
+      if (user.roleId !== 1) {
+        const teacher = await teacherGet({ userId }, env);
+        opts.input.teacherId = teacher?.id;
+      }
       if (
-        !schedules.every((schedule) => {
+        !opts.input.schedules.every((schedule) => {
           return schedule.startTime < schedule.endTime;
         })
       ) {
@@ -99,14 +69,6 @@ export default trpcRouterCreate({
   deleteMany: trpcProcedureUser
     .input(ScheduleDeleteManyInput)
     .mutation(async (opts) => {
-      const { env, user } = opts.ctx;
-
-      return scheduleDeleteMany(opts.input, env, user);
-    }),
-
-  deleteManyAdmin: trpcProcedureAdmin
-    .input(ScheduleDeleteManyInputAdmin)
-    .mutation((opts) => {
       const { env, user } = opts.ctx;
 
       return scheduleDeleteMany(opts.input, env, user);

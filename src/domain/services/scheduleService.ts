@@ -4,7 +4,6 @@ import {
   Schedule,
   ScheduleCreateInput,
   SchedulePagination,
-  ScheduleUpdateInput,
 } from "../models/ScheduleModel";
 import {
   scheduleDbCreate,
@@ -13,7 +12,6 @@ import {
   scheduleDbGetAllTotal,
   scheduleDbGetOverlapMany,
   scheduleDbUpdate,
-  scheduleDbUpdateMany,
 } from "../repositories/scheduleRepo";
 import {
   utilCheckScheduleOverlap,

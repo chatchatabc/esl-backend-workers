@@ -56,10 +56,6 @@ export async function bookingUpdate(
   const bookingStartDate = utilDateFormatter("zh-CN", bookingStart);
   const bookingStartTime = utilTimeFormatter("zh-CN", bookingStart);
 
-  if (booking.status === params.status) {
-    throw utilFailedResponse("Cannot update to same status", 400);
-  }
-
   if (booking.status === 4) {
     throw utilFailedResponse("Cannot update a cancelled booking", 400);
   }
@@ -77,6 +73,9 @@ export async function bookingUpdate(
       amount: booking.amount,
     });
   } else if (booking.status === 3 && params.status !== 3) {
+    if (performedBy.roleId !== 1) {
+      throw utilFailedResponse("Unauthorized", 403);
+    }
     teacher.user.credits -= booking.amount;
     logsCredits.push({
       title: `Class ${bookingStartDate} ${bookingStartTime} - Cancelled by ${role.name}`,
@@ -97,15 +96,12 @@ export async function bookingUpdate(
     });
   }
 
-  // Update booking status
-  booking.status = params.status ?? 1;
-
   const logsCreditStmts = logsCredits.map((logsCredit) => {
     return logsDbCreateCredit(logsCredit, env, performedBy.id);
   });
   const studentStmt = userDbUpdate(student.user, env);
   const teacherStmt = userDbUpdate(teacher.user, env);
-  const bookingStmt = bookingDbUpdate(booking, env);
+  const bookingStmt = bookingDbUpdate(params, env);
 
   try {
     await env.DB.batch([

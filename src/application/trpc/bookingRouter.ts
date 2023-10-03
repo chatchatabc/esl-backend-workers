@@ -5,6 +5,7 @@ import {
 } from "../../domain/infra/trpc";
 import {
   BookingCancelInput,
+  BookingCompleteInput,
   BookingCompleteInputAdmin,
   BookingCreateByAdminInput,
   BookingCreateInput,
@@ -123,4 +124,13 @@ export default trpcRouterCreate({
       const { env } = opts.ctx;
       return bookingStatisticsTeacher(opts.input, env);
     }),
+
+  complete: trpcProcedureUser.input(BookingCompleteInput).mutation((opts) => {
+    const { env, user } = opts.ctx;
+    const { id, status, message } = opts.input;
+    if (status !== 3 && status !== 5) {
+      throw utilFailedResponse("Invalid status", 400);
+    }
+    return bookingUpdate({ id, status, message }, env, user);
+  }),
 });

@@ -53,3 +53,47 @@ The database used for this project is the Cloudflare D1 database. It is the best
 ### Online database backup
 
 D1 has built-in support for creating and restoring backups of the databases. If you wish to know more about this, you can visit [this link](https://developers.cloudflare.com/d1/learning/backups/) to learn more.
+
+## Project Structure
+
+```
+./
+├── src/
+│   ├── application/
+│   │   └── trpc/
+│   │       └── ...
+│   ├── domain/
+│   │   ├── infra/
+│   │   │   └── ...
+│   │   ├── models/
+│   │   │   └── ...
+│   │   ├── repositories/
+│   │   │   └── ...
+│   │   ├── schemas/
+│   │   │   └── ...
+│   │   └── services/
+│   │       └── ...
+│   ├── tests/
+│   │   └── ...
+│   └── index.ts
+├── dump_file.sql
+├── schema.sql
+├── wrangler.toml
+└── ...
+```
+
+### Definitions
+
+- **Application**: The application layer is the layer that is responsible for handling the requests and responses of the application.
+  - **Application/Trpc**: The trpc layer is the layer that is responsible for handling the requests and responses of the application using the tRPC framework.
+- **Domain**: The domain layer is the layer that is responsible for the business logic of the application.
+  - **Domain/Infra**: The infra layer is the layer that is responsible for the infrastructure of the application.
+  - **Domain/Models**: The models layer is the layer that is responsible for the models of the application.
+  - **Domain/Repositories**: The repositories layer is the layer that is responsible for the repositories of the application.
+  - **Domain/Schemas**: The schemas layer is the layer that is responsible for the type-safe schemas of the application.
+  - **Domain/Services**: The services layer is the layer that is responsible for the services of the application.
+- **Tests**: The tests layer is the layer that is responsible for the tests of the application.
+- **index.ts**: The index.ts file is the entry point of the application.
+- **dump_file.sql**: The dump_file.sql file is the file that contains the data of the database.
+- **schema.sql**: The schema.sql file is the file that contains the schema of the database.
+- **wrangler.toml**: The wrangler.toml file is the file that contains the configuration of the Cloudflare Workers.

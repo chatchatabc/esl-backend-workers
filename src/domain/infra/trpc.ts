@@ -1,8 +1,6 @@
 import { inferAsyncReturnType, initTRPC } from "@trpc/server";
 import { Env } from "../..";
-import { authGetTokenPayload } from "../services/authService";
-import { utilFailedResponse } from "../services/utilService";
-import { userGet } from "../services/userService";
+import { utilFailedResponse, utilGetJwtData } from "../services/utilService";
 
 type Props = {
   req: Request;
@@ -29,14 +27,14 @@ export function trpcContext({ resHeaders, req, ...props }: Props) {
   const token = tokenCookie?.trim()?.slice(6);
 
   // Get userID from token
-  const userId = authGetTokenPayload(token ?? "");
+  const user = utilGetJwtData(token ?? "");
 
   // Clear cookie if token is invalid
-  if (!userId && token) {
+  if (!user && token) {
     resHeaders.append("Set-Cookie", "token=; Max-Age=0");
   }
 
-  return { ...props, resHeaders, req, userId };
+  return { ...props, resHeaders, req, user };
 }
 
 // Initialize tRPC with context
@@ -52,33 +50,27 @@ export const trpcProcedure = trpc.procedure;
 
 export const trpcProcedureUser = trpcProcedure.use(
   trpc.middleware(async (opts) => {
-    const { userId } = opts.ctx;
-
-    if (!userId) {
+    const { user } = opts.ctx;
+    if (!user) {
       throw utilFailedResponse("Unauthorized", 401);
     }
-
-    const user = await userGet({ userId }, opts.ctx.env);
-
-    return opts.next({ ...opts, ctx: { ...opts.ctx, user, userId } });
+    return opts.next({ ...opts, ctx: { ...opts.ctx, user } });
   })
 );
 
 // tRPC procedure with admin middleware
 export const trpcProcedureAdmin = trpcProcedure.use(
   trpc.middleware(async (opts) => {
-    const { userId } = opts.ctx;
+    const { user } = opts.ctx;
 
-    if (!userId) {
+    if (!user) {
       throw utilFailedResponse("Unauthorized", 401);
     }
-
-    const user = await userGet({ userId }, opts.ctx.env);
 
     if (user.roleId !== 1) {
       throw utilFailedResponse("Forbidden Access", 403);
     }
 
-    return opts.next({ ...opts, ctx: { ...opts.ctx, user, userId } });
+    return opts.next({ ...opts, ctx: { ...opts.ctx, user } });
   })
 );

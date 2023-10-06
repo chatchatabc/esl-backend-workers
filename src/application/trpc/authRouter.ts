@@ -3,9 +3,9 @@ import {
   trpcProcedureUser,
   trpcRouterCreate,
 } from "../../domain/infra/trpc";
-import { authCreateJsonWebToken } from "../../domain/services/authService";
 import { userCreate, userGet } from "../../domain/services/userService";
 import {
+  utilCreateJwt,
   utilFailedResponse,
   utilHashHmac256,
 } from "../../domain/services/utilService";
@@ -35,7 +35,12 @@ export default trpcRouterCreate({
     await userCreate(userCreateData, opts.ctx.env, 1);
     const user = await userGet(opts.input, opts.ctx.env);
 
-    const token = authCreateJsonWebToken(user.id);
+    const data = JSON.stringify({
+      id: user.id,
+      roleId: user.roleId,
+    });
+
+    const token = utilCreateJwt(data);
     opts.ctx.resHeaders.append(
       "Set-Cookie",
       `token=${token}; Path=/; SameSite=None; Secure; HttpOnly`
@@ -55,8 +60,13 @@ export default trpcRouterCreate({
       throw utilFailedResponse("Invalid password", 400);
     }
 
+    const data = JSON.stringify({
+      id: user.id,
+      roleId: user.roleId,
+    });
+
     // Generate session token
-    const token = authCreateJsonWebToken(user.id);
+    const token = utilCreateJwt(data);
     opts.ctx.resHeaders.append(
       "Set-Cookie",
       `token=${token}; Path=/; SameSite=None; Secure; HttpOnly`

@@ -274,3 +274,37 @@ export function utilCreateJwt(data: string, days: number = 7) {
 
   return `${base64Header}.${base64Payload}.${signature}`;
 }
+
+export function utilGetJwtData(token: string) {
+  if (!token.startsWith("Bearer ")) {
+    return null;
+  }
+  token = token.slice("bearer ".length);
+  if (!utilValidateJwt(token)) {
+    return null;
+  }
+  const payload = utilDecodeBase64(token.split(".")[1]);
+  const data = JSON.parse(payload) as { data: string; exp: number };
+  if (data.exp < Date.now() / 1000) {
+    return null;
+  }
+
+  try {
+    return JSON.parse(data.data) as { id: number; roleId: number };
+  } catch (error) {
+    console.log(error);
+    return null;
+  }
+}
+
+export function utilValidateJwt(token: string) {
+  const [header, payload, signature] = token.split(".");
+  if (!header || !payload || !signature) {
+    return false;
+  }
+  const authSignature = utilHashHmac256(`${header}.${payload}`).toString();
+  if (signature !== authSignature) {
+    return false;
+  }
+  return true;
+}

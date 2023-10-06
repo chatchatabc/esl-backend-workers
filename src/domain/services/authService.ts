@@ -1,50 +1,9 @@
 import { Env } from "../..";
 import { userDbGet, userDbUpdate } from "../repositories/userRepo";
-import {
-  utilDecodeBase64,
-  utilEncodeBase64,
-  utilFailedResponse,
-  utilGenerateRandomCode,
-  utilHashHmac256,
-} from "./utilService";
+import { utilFailedResponse, utilGenerateRandomCode } from "./utilService";
 import { userGet } from "./userService";
 import { messageSend } from "./messageService";
 import { MessageSend } from "../models/MessageModel";
-
-const jwtHeader = JSON.stringify({ alg: "HS256", typ: "JWT" });
-const base64Header = utilEncodeBase64(jwtHeader);
-
-export function authValidateToken(token: string) {
-  const [header, payload, signature] = token.split(".");
-  if (!header || !payload || !signature) {
-    return false;
-  }
-  const authSignature = utilHashHmac256(`${header}.${payload}`).toString();
-  if (signature !== authSignature) {
-    return false;
-  }
-
-  return true;
-}
-
-export function authGetTokenPayload(token: string) {
-  if (token.startsWith("Bearer ")) {
-    token = token.slice("bearer ".length);
-  }
-
-  if (!authValidateToken(token)) {
-    return null;
-  }
-
-  const payload = utilDecodeBase64(token.split(".")[1]);
-  const data = JSON.parse(payload) as { id: number; exp: number };
-
-  if (data.exp < Date.now() / 1000) {
-    return null;
-  }
-
-  return data.id;
-}
 
 export async function authGetPhoneToken(params: { userId: number }, env: Env) {
   // Get user

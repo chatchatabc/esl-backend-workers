@@ -33,18 +33,18 @@ export default trpcRouterCreate({
 
   create: trpcProcedureAdmin.input(UserCreateInput).mutation((opts) => {
     const { confirmPassword, ...data } = opts.input;
-    const { env, userId } = opts.ctx;
+    const { env, user } = opts.ctx;
 
     if (confirmPassword !== data.password) {
       throw utilFailedResponse("Password not match", 400);
     }
 
     if (data.roleId === 2) {
-      return studentCreate({ ...data, bio: "" }, env, userId);
+      return studentCreate({ ...data, bio: "" }, env, user.id);
     } else if (data.roleId === 3) {
-      return teacherCreate({ ...data, bio: "" }, env, userId);
+      return teacherCreate({ ...data, bio: "" }, env, user.id);
     } else {
-      return userCreate(data, env, userId);
+      return userCreate(data, env, user.id);
     }
   }),
 
@@ -68,6 +68,6 @@ export default trpcRouterCreate({
 
   getProfile: trpcProcedureUser.query((opts) => {
     const { user } = opts.ctx;
-    return user;
+    return userGet({ userId: user.id }, opts.ctx.env);
   }),
 });

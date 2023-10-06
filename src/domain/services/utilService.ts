@@ -5,6 +5,9 @@ import { Schedule, ScheduleCreate } from "../models/ScheduleModel";
 import { v4 } from "uuid";
 import { BookingCreate } from "../models/BookingModel";
 
+const jwtHeader = JSON.stringify({ alg: "HS256", typ: "JWT" });
+const base64Header = utilEncodeBase64(jwtHeader);
+
 export function utilFailedResponse(message: string, status: number = 500) {
   let code: TRPC_ERROR_CODE_KEY = "INTERNAL_SERVER_ERROR";
   switch (status) {
@@ -259,4 +262,15 @@ export function utilQuerySelect(tables: Record<string, string[]>) {
   });
 
   return querySelect;
+}
+
+export function utilCreateJwt(data: string, days: number = 7) {
+  const iat = Math.floor(Date.now() / 1000);
+  const exp = iat + 60 * 60 * 24 * days;
+
+  const jwtPayload = JSON.stringify({ exp, data });
+  const base64Payload = utilEncodeBase64(jwtPayload);
+  const signature = utilHashHmac256(`${base64Header}.${base64Payload}`);
+
+  return `${base64Header}.${base64Payload}.${signature}`;
 }

@@ -276,13 +276,13 @@ export function utilCreateJwt(data: string, days: number = 7) {
 }
 
 export function utilGetJwtData(token: string) {
-  if (!token.startsWith("Bearer ")) {
-    return null;
+  if (token.startsWith("Bearer ")) {
+    token = token.slice("bearer ".length);
   }
-  token = token.slice("bearer ".length);
   if (!utilValidateJwt(token)) {
     return null;
   }
+
   const payload = utilDecodeBase64(token.split(".")[1]);
   const data = JSON.parse(payload) as { data: string; exp: number };
   if (data.exp < Date.now() / 1000) {

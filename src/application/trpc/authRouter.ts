@@ -76,7 +76,7 @@ export default trpcRouterCreate({
     return user;
   }),
 
-  logout: trpcProcedureUser.mutation((opts) => {
+  logout: trpcProcedure.mutation((opts) => {
     opts.ctx.resHeaders.append(
       "Set-Cookie",
       `token=; Path=/; SameSite=None; Secure; HttpOnly; Max-Age=0`

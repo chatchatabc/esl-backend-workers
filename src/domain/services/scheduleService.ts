@@ -4,7 +4,6 @@ import {
   Schedule,
   ScheduleCreateInput,
   SchedulePagination,
-  ScheduleUpdateInput,
 } from "../models/ScheduleModel";
 import {
   scheduleDbCreate,
@@ -13,7 +12,6 @@ import {
   scheduleDbGetAllTotal,
   scheduleDbGetOverlapMany,
   scheduleDbUpdate,
-  scheduleDbUpdateMany,
 } from "../repositories/scheduleRepo";
 import {
   utilCheckScheduleOverlap,
@@ -21,19 +19,29 @@ import {
   utilGetScheduleTimeAndDay,
 } from "./utilService";
 import { ScheduleUpdateSchema } from "../schemas/ScheduleSchema";
+import { User } from "../models/UserModel";
+import { teacherDbGet } from "../repositories/teacherRepo";
 
 export async function scheduleUpdateMany(
   params: {
-    teacherId: number;
     schedules: Input<typeof ScheduleUpdateSchema>[];
   },
-  env: Env
+  env: Env,
+  performedBy: User
 ) {
-  let { teacherId, schedules } = params;
+  let { schedules } = params;
+  const scheduleIds = schedules.map((schedule) => schedule.id);
+  if (scheduleIds.length === 0) {
+    throw utilFailedResponse("Invalid schedule id", 400);
+  }
+  const teacher = await teacherDbGet({ userId: performedBy.id }, env);
+  if (!teacher && performedBy.roleId !== 1) {
+    throw utilFailedResponse("Unauthorized", 401);
+  }
 
   // Get old schedules
   const oldSchedules = await scheduleDbGetAll(
-    { teacherId, page: 1, size: 10000 },
+    { scheduleIds, page: 1, size: 10000 },
     env
   );
 
@@ -42,8 +50,10 @@ export async function scheduleUpdateMany(
     const oldSchedule = oldSchedules.find((s) => s.id === schedule.id);
     if (!oldSchedule) {
       throw utilFailedResponse("Schedule not found", 404);
-    } else if (oldSchedule.teacherId !== teacherId) {
-      throw utilFailedResponse("Unauthorized", 401);
+    } else if (performedBy.roleId !== 1) {
+      if (oldSchedule.teacherId !== teacher?.id) {
+        throw utilFailedResponse("Unauthorized", 401);
+      }
     }
 
     let startTime = oldSchedule.startTime,
@@ -96,24 +106,30 @@ export async function scheduleUpdateMany(
 }
 
 export async function scheduleDeleteMany(
-  params: { scheduleIds: number[]; teacherId: number },
-  env: Env
+  params: { scheduleIds: number[] },
+  env: Env,
+  performedBy: User
 ) {
-  const { teacherId, scheduleIds } = params;
+  const { scheduleIds } = params;
 
   const schedules = await scheduleDbGetAll(
-    { teacherId, page: 1, size: 10000 },
+    { scheduleIds, page: 1, size: 10000 },
     env
   );
 
-  // Check if all schedules are owned by user
-  if (
-    !scheduleIds.every((scheduleId) => {
-      const schedule = schedules.find((s) => s.id === scheduleId);
-      return schedule ? true : false;
-    })
-  ) {
-    throw utilFailedResponse("Unauthorized", 401);
+  if (performedBy.roleId !== 1) {
+    // Check if all schedules are owned by teacher
+    const teacher = await teacherDbGet({ userId: performedBy.id }, env);
+    if (!teacher) {
+      throw utilFailedResponse("Unauthorized", 401);
+    } else if (
+      !scheduleIds.every((scheduleId) => {
+        const schedule = schedules.find((s) => s.id === scheduleId);
+        return schedule ? schedule.teacherId === teacher.id : false;
+      })
+    ) {
+      throw utilFailedResponse("Unauthorized", 401);
+    }
   }
 
   const success = await scheduleDbDeleteMany(scheduleIds, env);

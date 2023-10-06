@@ -23,4 +23,5 @@ export type ScheduleUpdateInput = Input<typeof ScheduleUpdateInput>;
 
 export type SchedulePagination = {
   teacherId?: number;
+  scheduleIds?: number[];
 } & CommonPagination;

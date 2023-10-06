@@ -5,6 +5,7 @@ import {
 } from "../../domain/infra/trpc";
 import {
   BookingCancelInput,
+  BookingCompleteInput,
   BookingCompleteInputAdmin,
   BookingCreateByAdminInput,
   BookingCreateInput,
@@ -24,12 +25,22 @@ import {
 import { utilFailedResponse } from "../../domain/services/utilService";
 import { courseGet } from "../../domain/services/courseService";
 import { studentGet } from "../../domain/services/studentService";
+import { teacherGet } from "../../domain/services/teacherService";
 
 export default trpcRouterCreate({
-  getAll: trpcProcedureUser.input(CommonPaginationInput).query((opts) => {
+  getAll: trpcProcedureUser.input(CommonPaginationInput).query(async (opts) => {
     const { input, ctx } = opts;
-    const { userId, env } = ctx;
-    input.userId = userId;
+    const { user, env } = ctx;
+
+    if (user.roleId === 2) {
+      const student = await studentGet({ userId: user.id }, env);
+      opts.input.studentId = student.id;
+      opts.input.teacherId = undefined;
+    } else if (user.roleId === 3) {
+      const teacher = await teacherGet({ userId: user.id }, env);
+      opts.input.teacherId = teacher.id;
+      opts.input.studentId = undefined;
+    }
 
     return bookingGetAll(input, env);
   }),
@@ -113,4 +124,13 @@ export default trpcRouterCreate({
       const { env } = opts.ctx;
       return bookingStatisticsTeacher(opts.input, env);
     }),
+
+  complete: trpcProcedureUser.input(BookingCompleteInput).mutation((opts) => {
+    const { env, user } = opts.ctx;
+    const { id, status, message } = opts.input;
+    if (status !== 3 && status !== 5) {
+      throw utilFailedResponse("Invalid status", 400);
+    }
+    return bookingUpdate({ id, status, message }, env, user);
+  }),
 });

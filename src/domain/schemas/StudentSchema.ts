@@ -17,7 +17,7 @@ export const StudentSchema = object({
   ]),
   uuid: string("UUID must be a string", [minLength(1, "UUID is required")]),
   id: number("ID must be a number", [minValue(1, "ID must be greater than 0")]),
-  username: string("Username must be a string", [
+  userUsername: string("Username must be a string", [
     minLength(1, "Username is required"),
   ]),
   status: number("Status must be a number", [
@@ -30,7 +30,7 @@ export const StudentSchema = object({
 export const StudentGetInput = pick(StudentSchema, ["id", "uuid"]);
 
 export const StudentGetByUserInput = partial(
-  pick(StudentSchema, ["userId", "username"])
+  pick(StudentSchema, ["userId", "userUsername"])
 );
 
 export const StudentCreateInput = transform(

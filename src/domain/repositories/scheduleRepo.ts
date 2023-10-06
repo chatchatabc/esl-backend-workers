@@ -16,7 +16,7 @@ import { Input, safeParse } from "valibot";
 import { ScheduleUpdateSchema } from "../schemas/ScheduleSchema";
 
 export async function scheduleDbGetAll(params: SchedulePagination, env: Env) {
-  const { teacherId, page, size } = params;
+  const { teacherId, page, size, scheduleIds } = params;
 
   const queryParams = [];
   let query = "SELECT * FROM schedules";
@@ -25,6 +25,10 @@ export async function scheduleDbGetAll(params: SchedulePagination, env: Env) {
   if (teacherId) {
     queryWhere += `teacherId = ?`;
     queryParams.push(teacherId);
+  }
+
+  if (scheduleIds) {
+    queryWhere += `id IN (${scheduleIds.join(",")})`;
   }
 
   if (queryWhere) {
